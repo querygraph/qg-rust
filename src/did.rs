@@ -3,6 +3,8 @@ use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DidDocument {
+    #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
+    pub context: Option<Vec<String>>,
     pub id: String,
     pub controller: String,
     pub public_key_multibase: String,
@@ -12,15 +14,20 @@ pub struct DidDocument {
 impl DidDocument {
     pub fn new_oyd(seed: impl AsRef<[u8]>, controller: impl Into<String>) -> Self {
         let digest = Sha256::digest(seed.as_ref());
-        let fingerprint = digest
-            .iter()
-            .map(|b| format!("{b:02x}"))
-            .collect::<String>();
-        let id = format!("did:oyd:z{}", &fingerprint[..46]);
+        let mut multihash = Vec::with_capacity(34);
+        multihash.push(0x12);
+        multihash.push(0x20);
+        multihash.extend_from_slice(&digest);
+        let fingerprint = bs58::encode(multihash).into_string();
+        let id = format!("did:oyd:z{fingerprint}");
         Self {
+            context: Some(vec![
+                "https://www.w3.org/ns/did/v1".to_string(),
+                "https://w3id.org/security/suites/ed25519-2020/v1".to_string(),
+            ]),
             id,
             controller: controller.into(),
-            public_key_multibase: format!("z{fingerprint}"),
+            public_key_multibase: format!("z{}", bs58::encode(digest).into_string()),
             service_endpoint: None,
         }
     }

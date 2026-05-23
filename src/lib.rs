@@ -1,4 +1,5 @@
 pub mod cdif;
+pub mod codata;
 pub mod croissant;
 pub mod did;
 pub mod navigator;

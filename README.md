@@ -9,6 +9,14 @@ QueryGraph is a Rust implementation sketch for the AI Navigator semantic layer. 
 
 The design is informed by QueryGraph.ai’s graph/search direction, AgStack Pale Fire’s knowledge-graph search architecture, CODATA CDIF profiles, Croissant Toolkit skills, CODATA local-agent patterns, The Minority Report’s multilingual controlled-vocabulary workflow, and ODRL/DID attribution patterns for local AI services.
 
+The QueryGraph resources page adds the standards spine:
+
+- W3C DID Core for DID documents, controllers, services, and resolution.
+- W3C ODRL Information Model 2.2 for permissions, prohibitions, duties, constraints, and policy profiles.
+- CODATA ODRL demo for URL-to-DID anchoring at `/api/did/create_from_url`.
+- DDI ISO/PAS 25955:2026 for research/statistical metadata interoperability.
+- MLCommons Croissant 1.1 for agent-ready provenance, vocabulary interoperability, and governance.
+
 ## Architecture
 
 ```text
@@ -17,6 +25,7 @@ src/
   cdif.rs        CDIF profile projection over a Croissant dataset
   did.rs         Deterministic local did:oyd identity document
   odrl.rs        Policy, permissions, prohibitions, and access checks
+  codata.rs      Client for CODATA ODRL demo DID anchoring APIs
   navigator.rs   AI Navigator composition pipeline
   main.rs        CLI entry point
 ```
@@ -32,6 +41,14 @@ cargo run -- navigator \
   --landing-page "https://querygraph.ai/datasets/hazards" \
   --data-url "https://querygraph.ai/datasets/hazards.csv"
 ```
+
+Reproduce the CODATA ODRL demo anchoring behavior for QueryGraph resources:
+
+```bash
+cargo run -- anchor-url --url "https://querygraph.ai/resources/"
+```
+
+This calls `https://odrl.dev.codata.org/api/did/create_from_url` and returns the `did:oyd` identifier plus the stored payload reported by the demo service.
 
 ## Test
 

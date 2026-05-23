@@ -158,7 +158,7 @@ mod tests {
 
         assert_eq!(output.croissant["@type"], "cr:Dataset");
         assert_eq!(output.cdif["@type"], "dcat:Dataset");
-        assert!(output.did.id.starts_with("did:oyd:z"));
+        assert!(output.did.id.starts_with("did:oyd:zQm"));
         assert_eq!(output.odrl["@type"], "odrl:Policy");
     }
 }

@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use querygraph::codata::CodataOdrlClient;
 use querygraph::{AiNavigator, NavigatorInput};
 
 #[derive(Debug, Parser)]
@@ -27,6 +28,13 @@ enum Commands {
         #[arg(long, default_value = "AI Navigator")]
         agent_name: String,
     },
+    /// Reproduce the CODATA ODRL demo's URL-to-DID anchoring call.
+    AnchorUrl {
+        #[arg(long, default_value = "https://querygraph.ai/resources/")]
+        url: String,
+        #[arg(long, default_value = "https://odrl.dev.codata.org")]
+        endpoint: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -50,6 +58,10 @@ fn main() -> Result<()> {
                 agent_name,
             });
             println!("{}", serde_json::to_string_pretty(&output.bundle)?);
+        }
+        Commands::AnchorUrl { url, endpoint } => {
+            let anchored = CodataOdrlClient::new(endpoint).create_did_from_url(&url)?;
+            println!("{}", serde_json::to_string_pretty(&anchored)?);
         }
     }
 

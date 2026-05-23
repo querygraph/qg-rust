@@ -20,11 +20,32 @@ This keeps QueryGraph aligned with FAIR cross-domain reuse rather than a domain-
 
 ## Layer 3: DID
 
-DID is the attribution layer. The current implementation creates deterministic `did:oyd`-style identities from local seeds so every generated bundle can identify the responsible agent or service. Later implementations can replace this with a real wallet-backed resolver without changing the semantic bundle shape.
+DID is the attribution layer. The implementation creates deterministic `did:oyd`-style identities from local seeds using a SHA-256 multihash encoded as base58btc, matching the `zQm...` shape returned by the CODATA ODRL demo. Every generated bundle can identify the responsible agent or service. A real wallet-backed resolver can replace this local generator without changing the semantic bundle shape.
+
+The CLI can also reproduce the CODATA demo flow:
+
+```bash
+cargo run -- anchor-url --url "https://querygraph.ai/resources/"
+```
+
+That command calls `https://odrl.dev.codata.org/api/did/create_from_url`, the same endpoint used by the demo SPA at `https://odrl.dev.codata.org/dids?ref=querygraph.ai`.
 
 ## Layer 4: ODRL
 
 ODRL is the rights layer. QueryGraph attaches policies directly to dataset targets. Policies can permit public reading with attribution, permit local indexing for a named DID, and prohibit derivative uses such as model training unless a separate agreement exists.
+
+The current ODRL model keeps the core Policy/Rule structure explicit and leaves richer Information Model features, such as duties, consequences, remedies, logical constraints, profile inheritance, and conflict strategies, as the next extension points.
+
+## Resource Spine
+
+The QueryGraph resources page points to the standards and partner materials that define the production target:
+
+- DID Core: identity documents, controllers, services, resolution, and DID URL dereferencing.
+- ODRL Information Model: policies over assets with permissions, prohibitions, obligations, duties, constraints, and profile support.
+- CODATA ODRL demo: practical DID creation, verification, policy testing, variable DIDs, Croissant DIDs, and group DIDs.
+- DDI ISO/PAS 25955:2026: statistical and research metadata interoperability based on DDI Common Core.
+- Croissant 1.1: agent-ready dataset metadata with provenance, vocabulary interoperability, and governance.
+- CODATA and CR4AI: the cross-domain FAIR and responsible AI ecosystem for this semantic layer.
 
 ## Composition
 
