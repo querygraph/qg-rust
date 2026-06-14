@@ -1,12 +1,8 @@
-flowchart TD
-    Principal["DID principal"] --> RBAC["role assignment"]
-    Asset["Croissant/CDIF target"] --> ODRL["ODRL policy layer"]
-    RBAC --> ODRL
-    ODRL --> Permit["permission"]
-    ODRL --> Prohibit["prohibition"]
-    ODRL --> Constraint["constraint"]
-    Permit --> Decision{"allowed action?"}
-    Prohibit --> Decision
-    Constraint --> Decision
-    Decision -->|yes| Receipt["access receipt"]
-    Decision -->|no| Denial["signed denial"]
+flowchart LR
+    Agent["Agent DID"] --> Request["TypeDID request"]
+    Dataset["Dataset or bundle DID"] --> Request
+    Issuer["Issuer DID"] --> Attestation["DID attestation"]
+    Request --> Action["authorized action"]
+    Action --> Response["signed response"]
+    Response --> Event["OpenLineage event hash"]
+    Event --> Attestation

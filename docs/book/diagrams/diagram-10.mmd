@@ -1,8 +1,11 @@
-flowchart TD
-    Term["Business term: energy burden"] --> Metric["Metric definition"]
-    Metric --> Variables["CDIF variables"]
-    Variables --> Fields["Croissant fields"]
-    Fields --> Columns["Sail columns"]
-    Term --> Dimension["Dimensions: geography, time, household"]
-    Dimension --> Fields
-    Term --> Policy["allowed uses and constraints"]
+flowchart LR
+    Dataset["Dataset"] --> File["File"]
+    File --> RecordSet["Record set"]
+    RecordSet --> Field["Field"]
+    Field --> Concept["Ontology concept"]
+    Concept --> Metric["OSI metric"]
+    Policy["ODRL policy"] --> Field
+    Agent["Agent DID"] --> Role["RBAC role"]
+    Role --> Policy
+    Run["OpenLineage run"] --> Dataset
+    Run --> Answer["signed answer"]

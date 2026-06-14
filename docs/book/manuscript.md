@@ -4,16 +4,25 @@ title: Querygraph
 
 # Preface
 
-Querygraph is an AI navigator over governed enterprise data. It treats a
-lakehouse as more than tables: each dataset is described by Semantic Croissant,
-projected through CDIF, governed by RBAC and ODRL, addressed by DIDs, and
-audited through OpenLineage.
+Querygraph is an AI Navigator over governed enterprise data. It starts from a
+simple disagreement with the dominant direction of AI infrastructure: serious
+knowledge work should not require throwing enormous, global, poorly scoped
+contexts at expensive GPU systems whenever a user asks a precise question.
+Most enterprise and scientific questions are local, contextual, permissioned,
+and reproducible. They deserve an architecture built for that reality.
+
+Querygraph treats a lakehouse as more than tables: each dataset is described
+by Semantic Croissant, projected through CDIF, governed by RBAC and ODRL,
+addressed by DIDs, and audited through OpenLineage. The result is a focused
+retrieval and reasoning environment where agents operate inside precise
+semantic contexts rather than wandering through giant prompt buffers.
 
 The implementation in this repository is intentionally practical. It can load
 Dataverse and CODATA data into Sail, materialize typed tables, generate
 Croissant and CDIF sidecars, wrap agent requests with TypeSec TypeDID
 envelopes, and emit OpenLineage events back into Sail. The point of this book
-is to make that architecture legible.
+is to make that architecture legible as a textbook: first the motivation, then
+the pieces, then the full working system.
 
 # The Vision from QueryGraph.ai
 
@@ -30,6 +39,14 @@ provider, and context window. For casual chat this may be charming. For
 science, policy, medicine, finance, infrastructure, and enterprise operations,
 it is a control failure. A reliable AI system needs context, provenance, and
 governance before it needs more tokens.
+
+The deeper critique is computational. Big AI often treats ambiguity by scaling
+up: bigger models, larger context windows, more embeddings, more GPU cycles,
+more remote inference, more global search. Querygraph takes the opposite bet:
+the best way to make AI useful is to reduce the problem before inference.
+Resolve the ontology. Find the exact dataset. Select the permitted fields.
+Reuse cached semantic descriptions. Retrieve the smallest responsible context.
+Then call a local or governed model only when the model is actually needed.
 
 The posts make several claims that become design principles in Querygraph:
 
@@ -177,6 +194,32 @@ flowchart LR
 This is the opposite of a giant ungoverned context window. It is a precise
 navigation path through meaning, authority, and permitted action.
 
+## Local-First, OSS AI
+
+Querygraph is local-first by design. Local-first does not mean isolated or
+small-minded. It means the organization keeps its data, metadata, policies,
+lineage, and agent traces inspectable on infrastructure it can understand.
+Open-source systems matter here because responsible AI is not only a model
+property. It is an operational property. If the routing, retrieval, policy,
+identity, and audit layers are opaque, the system cannot be fully governed.
+
+The practical target is not "never use GPUs" or "never call a frontier model."
+The target is to avoid making expensive global inference the default path for
+questions that can be answered by precise retrieval, graph traversal, cached
+semantic metadata, SQL, and compact local model calls. Querygraph tries to
+move as much work as possible into stable, CPU-friendly infrastructure:
+
+- parse and type the data once;
+- materialize Croissant, CDIF, and OSI once per dataset version;
+- cache graph neighborhoods and semantic projections;
+- use Sail and Spark SQL for table computation;
+- use Grust for relationship traversal;
+- use TypeSec and ODRL to prune unauthorized work before retrieval;
+- use local models such as Ollama only after the prompt has been narrowed.
+
+This is the AI Navigator thesis: a well-built semantic route is cheaper,
+safer, and more reproducible than a giant prompt.
+
 ## Source Posts
 
 This vision section synthesizes the QueryGraph.ai posts on CODATA, Semantic
@@ -191,6 +234,121 @@ Palefire, and AgStack:
 - <https://querygraph.ai/agstack/>
 - <https://querygraph.ai/palefire/>
 - <https://querygraph.ai/semantic-croissant/>
+
+# The AI Navigator Thesis
+
+An AI Navigator is a system for turning a broad question into a narrow,
+governed, reproducible computational path. It is not merely search, not merely
+RAG, and not merely an agent framework. It is a control system for context.
+
+The basic problem is easy to state. A person asks:
+
+> Which communities face overlapping fiscal capacity, energy burden, mobility
+> disruption, and climate-health risk?
+
+A Big AI system is tempted to gather everything that might be relevant: finance
+documents, energy surveys, mobility tables, climate reports, health studies,
+prior briefings, policy files, and maybe a few thousand embeddings. That
+creates a huge context-selection problem. The model must infer meanings,
+ignore irrelevant fields, respect permissions, remember provenance, avoid
+forbidden data, and explain its answer after the fact. Some of that work may
+happen inside a GPU-bound model call where the organization has the least
+control and the least reproducibility.
+
+Querygraph reverses the order. It does not begin with a model. It begins with
+the route:
+
+1. Identify the intent.
+2. Resolve the ontology terms.
+3. Find the datasets and fields that actually express those terms.
+4. Check rights and roles before retrieval.
+5. Use graph traversal and SQL before generative inference.
+6. Pass only the permitted, focused context to an agent or model.
+7. Return a signed summary or a signed denial.
+8. Record lineage so the route can be inspected later.
+
+```mermaid
+flowchart TD
+    Broad["Broad human question"] --> Resolve["Resolve terms and intent"]
+    Resolve --> Ontology["Ontology and OSI concepts"]
+    Ontology --> Assets["Croissant/CDIF fields and datasets"]
+    Assets --> Policy["DID, RBAC, ODRL, TypeSec"]
+    Policy --> Narrow["Small permitted context"]
+    Narrow --> Compute["SQL, graph traversal, cached summaries"]
+    Compute --> Model["Optional local or governed model"]
+    Model --> Answer["Signed answer"]
+    Compute --> Answer
+    Answer --> Audit["OpenLineage and DID attestation"]
+```
+
+The model becomes one component in a governed path, not the place where every
+hard problem is dumped.
+
+## The Alternative to Big AI
+
+Big AI is powerful, but its default architecture is poorly matched to many
+enterprise and scientific tasks. It rewards centralization, massive context,
+remote inference, opaque optimization, and constant recomputation. Those
+features are useful for some problems. They are costly and risky for governed
+knowledge work.
+
+Querygraph proposes a different stack:
+
+| Big AI default | Querygraph alternative |
+| --- | --- |
+| Send large context to a large model. | Build a small, permitted semantic context first. |
+| Treat retrieval as approximate chunks. | Resolve ontology terms, variables, fields, and policies. |
+| Recompute context for each question. | Cache dataset metadata, graph routes, and lineage. |
+| Centralize inference around GPU services. | Keep data local and use CPU-friendly SQL/graph work first. |
+| Govern after the model responds. | Govern before retrieval and before prompting. |
+| Trust logs after the fact. | Sign requests, responses, denials, and lineage roots. |
+| Accept model drift as inevitable. | Record versions, prompts, payload hashes, and data state. |
+
+The point is not to pretend that small models always beat large models. The
+point is to stop using large models as a substitute for data infrastructure.
+When the semantic route is precise, the model has less to guess. When the
+context is focused, inference is cheaper. When the policy is checked before
+retrieval, safety is structural rather than rhetorical. When lineage is stored
+in the lakehouse, reproducibility becomes part of the data platform.
+
+## Focused Context as a First-Class Artifact
+
+In Querygraph, context is not a bag of text. A focused context is a structured
+artifact with:
+
+- the user question and resolved intent;
+- ontology terms and OSI concepts;
+- Croissant record sets and fields;
+- CDIF discovery, access, and rights metadata;
+- Sail table and column references;
+- DID identities for requester, agent, and issuer;
+- ODRL permissions and prohibitions;
+- TypeSec capability receipts;
+- OpenLineage input and output references.
+
+That artifact can be cached, hashed, signed, replayed, compared, and audited.
+This is why Querygraph can be stable in a way that prompt-only systems are not.
+The expensive part of understanding the domain does not have to be regenerated
+inside a model context every time.
+
+## CPU-Bound Before GPU-Bound
+
+The CPU-friendly parts of the system are not second-class. They are the
+foundation. Parsing a Dataverse file, inferring column types, writing Parquet,
+loading a Sail table, traversing a Grust graph, evaluating an ODRL permission,
+computing a hash, and generating an OpenLineage event are all deterministic
+or nearly deterministic operations. They can be tested. They can run locally.
+They can be repeated.
+
+GPU-bound inference is reserved for the part that genuinely needs generation:
+summarizing a small body of permitted evidence, translating a user question
+into a candidate ontology term, or drafting a narrative from signed summaries.
+Even then, the model call is wrapped by TypeDID, bounded by ODRL, and recorded
+by OpenLineage.
+
+That is the practical alternative to Big AI: use conventional computing for
+what conventional computing does well, and use models only after the problem
+has been made small enough to govern.
 
 # The Querygraph Spine
 
@@ -244,6 +402,20 @@ more disciplined question: what datasets exist, what files belong to them,
 what record sets they contain, what fields exist, what those fields mean, and
 which types should be expected at runtime.
 
+The first principle is simple: a model should not have to inspect raw data in
+order to learn what the data is. If every agent begins by sampling files,
+guessing schemas, and inferring meanings from column names, the system wastes
+compute and invites mistakes. Semantic Croissant moves that knowledge into a
+stable metadata artifact. The file can be large, private, or expensive to
+query, while its shape remains small, public enough for planning, and cacheable.
+
+For an AI Navigator, this is the first compression step. Instead of asking a
+model to read a million-row survey to discover that a field means household
+energy source, Croissant gives the model and the policy engine a structured
+description of the field. That description can be reused across agents and
+runs. It can also be compared against the actual table, which makes drift
+visible.
+
 In Querygraph, Croissant is not decorative metadata. It is the first contract
 between the lakehouse and the agent. A model should not see raw rows until a
 semantic layer has explained the shape of those rows. That explanation is not
@@ -277,6 +449,11 @@ It describes the concrete files and tables that actually exist. Querygraph does
 not ask Croissant to decide access policy, replace business ontology, or store
 lineage events. It gives the navigator a trustworthy map of the terrain.
 
+Textbook rule: Croissant answers "what is physically and semantically present?"
+It does not answer "who may use it?" or "which business question does it
+serve?" Those are ODRL and OSI questions. Keeping those layers separate is how
+Querygraph avoids turning metadata into another ungoverned blob.
+
 # CDIF
 
 CDIF answers a different question from Croissant. Croissant says, "Here is how
@@ -284,6 +461,18 @@ this dataset is structured." CDIF says, "Here is how this dataset participates
 in a larger interoperable data ecosystem." That distinction matters because an
 AI Navigator must operate both inside a local lakehouse and across institutions,
 domains, catalogs, and communities of practice.
+
+The first principle of CDIF is interoperability. A local system can be precise
+and still be provincial. If each repository describes discovery, access,
+rights, variables, and provenance differently, agents cannot move responsibly
+across domains. CDIF gives Querygraph a way to publish local assets in a
+language that other FAIR data systems can understand.
+
+This is another answer to Big AI. Instead of asking a model to infer cross-
+domain meaning from whatever text happens to be nearby, CDIF makes the
+interoperability layer explicit. Discovery, manifest, data description, access,
+rights, vocabularies, integration, universals, and provenance become structured
+profiles rather than hidden prompt assumptions.
 
 In Querygraph, CDIF is the publication projection over the Croissant-grounded
 asset. The Rust module `cdif.rs` projects datasets into profiles for discovery,
@@ -318,6 +507,10 @@ the corresponding prepared data and Croissant sidecar. The validator checks
 that these semantic artifacts remain shaped correctly, because stale metadata
 is worse than no metadata: it gives an agent confidence in the wrong map.
 
+Textbook rule: Croissant makes a dataset locally legible; CDIF makes it
+federation-ready. Querygraph needs both because the navigator must be precise
+inside one Sail warehouse and intelligible across many catalogs.
+
 # DID
 
 DIDs give Querygraph names that do not depend on a single database row or
@@ -325,6 +518,18 @@ cloud account. In ordinary software, a user, job, dataset, or model run may be
 identified by whatever the local application happens to assign. In responsible
 agentic AI, that is too weak. The system needs identifiers that can be carried
 across messages, signatures, attestations, policies, and ledgers.
+
+The first principle is portable accountability. An agent is not merely a
+process. It is an actor in a chain of delegation. A dataset is not merely a
+path. It is an object that can be cited, governed, signed, and audited. A model
+answer is not merely text. It is a claim made by an identified actor over an
+identified context. DIDs give those actors and objects stable handles.
+
+This matters especially in local-first AI. A local system should not have to
+ask a central cloud service for permission to name its agents or sign its
+lineage. Deterministic local DIDs let demos and offline workflows preserve the
+same identity pattern that a production deployment can later anchor more
+strongly.
 
 Querygraph uses DIDs for agents, bundles, issuers, and attestations. The demo
 implementation in `did.rs` provides deterministic local `did:oyd` documents so
@@ -356,6 +561,10 @@ better for large queryable event bodies. The ledger should store roots,
 hashes, issuers, subjects, and signatures: enough to prove that the larger
 record has not been quietly rewritten.
 
+Textbook rule: DIDs identify and attest; they do not replace the warehouse,
+the catalog, or the policy engine. Their job is to keep accountability
+portable across those systems.
+
 # ODRL
 
 ODRL is the rights language in Querygraph. It is the place where permissions,
@@ -363,6 +572,17 @@ prohibitions, duties, constraints, targets, assigners, and assignees become
 machine-actionable. Querygraph should not invent a second name for that layer.
 It should use ODRL clearly and then explain how RBAC, DIDs, TypeSec, and Sail
 surround it.
+
+The first principle is that governance must happen before context assembly.
+Many AI systems retrieve first and redact later. That is backwards. If an
+agent is not allowed to read respondent-level health data, those rows should
+not enter its prompt, vector search, cache, or intermediate scratchpad. ODRL
+lets Querygraph express that rule as data rather than as a warning in a prompt.
+
+ODRL also turns denial into an accountable event. A system that only logs
+successful access is incomplete. Querygraph records signed denials because a
+future reviewer needs to know not only what evidence was used, but also what
+evidence was correctly excluded.
 
 The Rust implementation in `odrl.rs` models the part of ODRL needed by the
 current demos: policy targets, permissions, prohibitions, actions, assignees,
@@ -401,6 +621,9 @@ approval. Querygraph treats ODRL denials as first-class outputs. They are signed
 included in lineage, and passed to synthesis agents so the final answer knows
 which evidence was deliberately not used.
 
+Textbook rule: ODRL is a pre-retrieval filter, not a post-answer apology. It
+shrinks the computational problem while making the ethical boundary explicit.
+
 # TypeSec
 
 TypeSec is the security fabric that makes the policy layer programmable
@@ -408,6 +631,17 @@ without making it squishy. Querygraph needs more than bearer tokens. Agents
 delegate to other agents. Prompts become operational artifacts. Model calls
 need bounded capabilities. Responses need signed provenance. A token that says
 "this process is authenticated" is not enough.
+
+The first principle is typed authority. In ordinary API security, a service may
+receive a token and then decide what that token means inside application code.
+Agentic systems need something sharper. The system should know that this
+agent, in this conversation, may perform this action, over this resource, with
+this payload hash, under this policy. TypeSec gives Querygraph that shape.
+
+This is a direct alternative to "trust the orchestrator." A LangChain planner,
+an Ollama call, a local script, and a Rust service should all receive bounded
+capabilities rather than broad ambient authority. That keeps experimentation
+possible without letting every experiment become a privileged data channel.
 
 TypeSec brings typed security to that world. In Querygraph, `agent.rs` builds
 TypeDID request envelopes, access receipts, governed prompts, and signed
@@ -442,6 +676,10 @@ Querygraph preserve compartmentalization through an agent hierarchy. A
 synthesis agent can receive signed summaries from specialists without
 automatically receiving the raw permissions that produced those summaries.
 
+Textbook rule: DIDs say who is acting; ODRL says what action is allowed;
+TypeSec turns that decision into a typed, signed capability that software can
+carry safely.
+
 # Grust
 
 Grust gives Querygraph its graph mind. The lakehouse stores tables beautifully,
@@ -449,6 +687,18 @@ but an AI Navigator needs relationships: dataset contains file, file contains
 record set, record set contains field, field maps to concept, concept belongs
 to ontology, policy targets asset, agent has role, run consumed input, answer
 derived from summary. These are graph-shaped facts.
+
+The first principle is that meaning is relational. A column does not become
+useful merely because it has a name. It becomes useful because it is connected
+to a dataset, record set, ontology term, policy, lineage event, and agent
+workflow. A table engine is excellent at scanning rows. A graph engine is
+excellent at following those relationships.
+
+This is why Querygraph does not treat vector search as the whole retrieval
+story. Vectors can find similarity, but they do not by themselves prove that a
+field belongs to an approved concept, that an agent has the right role, or
+that a previous answer used the same dataset version. Grust gives the
+navigator the explicit route.
 
 In Querygraph, Grust is the property graph substrate that makes those facts
 traversable from Rust. The module `sail.rs` stages Dataverse metadata and
@@ -482,12 +732,28 @@ is part of a security boundary. Querygraph benefits from explicit types,
 predictable serialization, careful error handling, and the ability to keep
 graph, policy, metadata, and CLI code in one compiled implementation.
 
+Textbook rule: use vectors for fuzzy discovery; use graphs for accountable
+navigation. Querygraph needs both, but the graph is what turns retrieval into
+a route that can be explained.
+
 # OSI
 
 Open Semantic Interchange is the business-meaning layer. Croissant knows the
 shape of a dataset. CDIF knows how to publish it across ecosystems. OSI names
 the business concepts that make the dataset useful to an enterprise or public
 mission: metrics, dimensions, terms, relationships, and semantic models.
+
+The first principle is that users ask business and scientific questions, not
+table questions. "Energy burden" is not a file format. "Fiscal capacity" is
+not a column type. "Mobility disruption" is not guaranteed to appear as a
+literal label. OSI gives those concepts a stable home so the navigator can map
+human intent onto executable data.
+
+This is how Querygraph avoids the worst form of RAG: retrieving documents that
+sound related and hoping the model invents the right metric. With OSI, a term
+can point to dimensions, measures, expressions, fields, units, and allowed
+uses. The model can still help interpret the user question, but it is no
+longer solely responsible for defining the domain.
 
 Without OSI, an AI Navigator can still find columns. With OSI, it can find the
 right concept. That distinction matters when users ask ordinary human
@@ -516,6 +782,10 @@ OSI is where ontology-driven AI becomes pleasant to use. Users should not need
 to know table names to ask precise questions. Agents should not need to infer
 business meaning from column labels alone. OSI provides the semantic bridge.
 
+Textbook rule: OSI is the layer that turns local metadata into domain language.
+It is what lets focused retrieval start from a human question rather than a
+warehouse schema.
+
 # OpenLineage
 
 OpenLineage is the memory of what actually happened. Querygraph can generate
@@ -523,6 +793,17 @@ beautiful metadata and enforce careful policies, but an operator still needs
 the operational story: which run executed, when it started, which job produced
 which output, which datasets were inputs, which facets described the run, and
 which event completed the derivation.
+
+The first principle is reproducibility. A responsible answer is not only an
+answer that sounds right. It is an answer with a route behind it. If two runs
+produce different results, the operator should be able to compare data
+versions, prompts, model paths, policies, and input scopes. OpenLineage gives
+Querygraph an operational grammar for that comparison.
+
+This is also a cost-control mechanism. Lineage lets the system reuse what is
+already known. If a dataset has been loaded, profiled, summarized, and
+attested, a future agent can inspect that history before recomputing. Stable
+history is one of the ways Querygraph avoids wasteful global recomputation.
 
 The implementation in `lineage.rs` constructs OpenLineage events, writes JSONL
 and HTTP sinks, writes Sail audit rows, and creates TypeSec-backed DID
@@ -550,6 +831,9 @@ flowchart LR
 This is reproducibility as a product feature. The answer is not just text. It
 is text with an execution trail.
 
+Textbook rule: lineage makes context durable. Without lineage, every answer is
+a rumor; with lineage, an answer becomes an inspectable derivation.
+
 # Sail
 
 Sail is the right lakehouse substrate for Querygraph because it makes the data
@@ -558,6 +842,18 @@ to load real Dataverse and CODATA assets, infer strong column types, expose
 tables to PySpark and Spark Connect, and store audit events next to the data.
 Sail gives that work a serious execution surface without forcing the demo into
 a remote warehouse account.
+
+The first principle is that governed AI needs a governed data substrate.
+Prompting over loose files is not enough. The system needs typed tables, stable
+locations, query execution, catalog records, and audit tables. Sail gives
+Querygraph a local lakehouse where data and evidence can live together.
+
+Sail is also part of the alternative to Big AI. If ordinary SQL and Spark
+operations can answer part of a question, they should. Counting rows, joining
+tables, filtering by geography, and reading audit events do not require a
+large language model. They require a reliable execution engine. The model
+should receive the result of that focused computation, not the entire raw
+warehouse.
 
 The local schema is `qg_lakehouse`. It contains typed tables and catalog
 records such as `lakehouse_datasets`, `lakehouse_files`, and
@@ -596,6 +892,10 @@ types harder to confuse. Cargo keeps the CLI, library, tests, and book examples
 close enough to evolve together. Sail gives the execution layer; Rust gives the
 control layer.
 
+Textbook rule: Sail is where focused retrieval becomes executable. It keeps
+the data local and queryable so the AI layer can remain small, governed, and
+inspectable.
+
 # Python Interop
 
 Rust is the control plane for Querygraph, but Python is the working surface for
@@ -603,6 +903,13 @@ many of the people who will use it. Data scientists live in notebooks. Spark
 users expect PySpark. AI engineers assemble agents with Python libraries.
 Analysts want to inspect a Sail warehouse without learning the Rust internals.
 The sister project `qg-python` exists for that world.
+
+The first principle is that responsible AI must meet practitioners where they
+work without abandoning the system's guarantees. If the Rust implementation is
+precise but the Python notebook path is loose, the platform fails. If the
+notebook can bypass ODRL, TypeDID, or lineage, the local-first story collapses.
+The Python ecosystem therefore mirrors the same concepts with Python-native
+tools rather than inventing a separate, weaker layer.
 
 The Python implementation is not a toy wrapper around a command line. It is a
 Python-native ecosystem over the same concepts:
@@ -641,6 +948,9 @@ This division is deliberate. Rust is where Querygraph wants tight control:
 ingestion, typing, hashing, policy boundaries, graph staging, and reproducible
 CLI workflows. Python is where Querygraph wants fluent exploration: notebooks,
 PySpark queries, LangChain tool composition, and domain-agent iteration.
+
+Textbook rule: Python is the laboratory; Rust is the contract. Both must speak
+the same semantic, policy, identity, and lineage language.
 
 ## Pydantic
 
@@ -715,6 +1025,18 @@ finance, energy, transportation, health, climate, social science, geospatial
 assets, and reference data so the navigator has to cross real semantic
 boundaries.
 
+The first principle is that an AI Navigator should be demonstrated on messy,
+multi-domain data, not a polished single-table example. The point is not to
+show that a model can summarize a CSV. The point is to show that governed AI
+can move across domains while keeping each dataset's shape, rights, lineage,
+and meaning visible.
+
+The corpus is also a computational argument. A Big AI demonstration might
+stuff documents and table samples into a prompt. Querygraph instead turns the
+corpus into a lakehouse, sidecars, graph nodes, policies, and lineage. Once
+that work is done, later questions reuse the structure. The system pays the
+metadata cost once, then benefits from focused retrieval many times.
+
 | Dataset | Category | Persistent ID or source | Typed tables | Rows | Why it matters |
 | --- | --- | --- | ---: | ---: | --- |
 | Government Finance Database | finance | `doi:10.7910/DVN/LMS8NT` | 6 | 1,724,447 | Fiscal capacity, county/municipal/district budgeting, and public-sector constraints. |
@@ -772,6 +1094,14 @@ The answer is not a single omniscient model response. It is a governed
 multi-agent run over Sail, Grust, Semantic Croissant, CDIF, OSI, DIDs, ODRL,
 TypeSec, OpenLineage, and optional Ollama inference.
 
+Read this chapter as a worked example, not merely a demo. Each step removes
+work from the model and moves it into a more reliable layer. Loading removes
+file ambiguity. Croissant removes schema ambiguity. CDIF removes publication
+ambiguity. OSI removes domain ambiguity. Grust removes route ambiguity. DID,
+ODRL, and TypeSec remove authority ambiguity. OpenLineage removes historical
+ambiguity. The final model call, if used, is smaller because the system has
+already done the disciplined work.
+
 ## Step 1: Load the Lakehouse
 
 The first step is ingestion. `lakehouse.rs` downloads the default Dataverse and
@@ -779,6 +1109,12 @@ CODATA corpus, normalizes parseable assets, infers strong column types, writes
 typed tables, and records a manifest. This is where Rust earns its keep: every
 file has to become either a typed table, a cataloged non-tabular asset, or an
 explicitly reported unavailable/restricted asset.
+
+From a textbook perspective, ingestion is not plumbing. It is the first act of
+responsibility. If the system cannot say what it loaded, what it skipped, what
+it typed, and how many rows it verified, later AI claims have no foundation.
+Local ingestion also means the organization can inspect the data path without
+trusting a remote indexing service.
 
 The lakehouse does not hide partial success. A LiDAR asset can be cataloged
 even when it is not a table. A restricted survey can contribute metadata while
@@ -795,6 +1131,11 @@ For each loaded dataset, Querygraph writes a `semantic/croissant.json` sidecar.
 This sidecar names files, record sets, and fields so agents can inspect the
 data before requesting access. It is the catalog entry an agent can actually
 understand.
+
+This step turns raw storage into a reusable context cache. The model does not
+need to rediscover schema. The policy layer can target fields. The graph can
+connect metadata to concepts. A future run can compare its expected fields
+against the sidecar before touching the data.
 
 In the story, FinanceAgent does not receive a vague instruction to "look at
 finance data." It receives a semantic projection of the government-finance
@@ -813,6 +1154,10 @@ schema can be inspected by Spark, the sidecars can be shared with FAIR data
 tools, and the graph can connect local variables to broader community
 semantics.
 
+This step matters because local-first should not mean isolated. Querygraph can
+keep computation local while making metadata interoperable. That is the
+combination serious scientific and enterprise systems need.
+
 ## Step 4: Build the OSI Semantic Model
 
 The OSI layer turns dataset metadata into business concepts. In the example,
@@ -825,6 +1170,10 @@ deployment, this is where domain experts make the navigator precise: they
 define the terms the organization actually uses and connect them to the data
 that can support those terms.
 
+This is the step that changes retrieval from lexical matching to domain
+navigation. The navigator can ask which fields express fiscal capacity or
+energy burden because those concepts have been modeled before inference.
+
 ## Step 5: Load the Grust Graph
 
 Grust turns semantic metadata into navigable relationships. The graph can say
@@ -833,6 +1182,10 @@ concept appears in a policy, an agent has a role, and a run produced an answer.
 
 The graph does not replace Sail. It makes Sail usable by agents. Sail answers
 table questions. Grust answers route questions.
+
+This step is the difference between retrieval and navigation. Retrieval says
+"here are possible matches." Navigation says "this is the route from question
+to concept, dataset, field, policy, run, and answer." Routes can be audited.
 
 ```mermaid
 flowchart LR
@@ -852,6 +1205,10 @@ DIDs and carried through TypeDID envelopes.
 The supervisor is powerful, but not magical. Its DID allows orchestration. It
 does not automatically grant raw access to every compartment. That is the
 central discipline of the platform.
+
+This step prevents agent hierarchies from becoming privilege laundries. A
+supervisor can coordinate work, but each specialist still acts under its own
+identity and scoped authority.
 
 ## Step 7: Apply ODRL Rights
 
@@ -873,6 +1230,10 @@ but cannot reveal raw restricted health records.
 The signed denial is as important as the signed summary. It prevents a
 supervisor from silently assuming evidence was considered when it was not.
 
+This step is where focused computation becomes responsible computation. The
+system does less work because it excludes forbidden data early, and it becomes
+safer because the exclusion is explicit.
+
 ## Step 8: Mint TypeSec Capabilities
 
 Once a policy decision is made, TypeSec turns it into typed capability evidence.
@@ -883,6 +1244,10 @@ perform this operation on this semantic asset for this run."
 TypeDID envelopes carry the request and response. They bind the agent identity,
 resource, action, payload hash, and signature. The result is an agent protocol
 that can be logged, replayed, and audited.
+
+This step turns a policy decision into a software object. That object can move
+through Python, Rust, LangChain, Ollama, and audit tables without losing its
+meaning.
 
 ## Step 9: Route to Compartmentalized Agents
 
@@ -917,6 +1282,10 @@ This is the human organizational model reflected in software. A supervisor can
 coordinate experts without becoming every expert and without inheriting every
 restricted permission.
 
+This step is also a cost-control pattern. Specialists receive small contexts
+and produce small signed summaries. The synthesis agent aggregates summaries
+rather than raw datasets.
+
 ## Step 10: Call Ollama Through TypeDID
 
 When the run uses a local model, Querygraph calls Ollama only after TypeSec has
@@ -927,6 +1296,10 @@ restricted rows merely because a prompt asked nicely.
 In the JSON report, this appears under the Ollama TypeDID path. The important
 thing is not Ollama specifically. It is the pattern: any model runtime should
 be downstream of identity, semantics, policy, and lineage.
+
+This step is the local-first model story. Querygraph can use an open-source
+local model when generation is useful, but the model call is not the system's
+source of truth. It is a bounded operation over a prepared context.
 
 ## Step 11: Synthesize Without Boundary Collapse
 
@@ -941,6 +1314,10 @@ into a resilience briefing:
 This is the product experience Querygraph is aiming for: a useful answer that
 also tells the truth about its limits.
 
+This step proves that aggregation does not require universal access. A system
+can combine evidence without flattening compartments into one privileged
+prompt.
+
 ## Step 12: Emit OpenLineage to Sail
 
 The run emits a `COMPLETE` OpenLineage event. Inputs include each Sail scope.
@@ -952,12 +1329,19 @@ AI behavior. Which datasets were used in this briefing? Which model path was
 called? Which runs touched energy survey data? Which answers included a
 restricted-data denial?
 
+This step keeps AI operations inside the data platform. Audit is not a PDF
+appendix or a vendor dashboard. It is queryable data.
+
 ## Step 13: Anchor the DID Attestation
 
 Finally, Querygraph signs a compact attestation root. The full event remains
 in Sail. The DID ledger carries the issuer, subject, Merkle root, signature,
 and payload hash. This gives the platform a verifiable memory without turning
 the ledger into a dumping ground for operational data.
+
+This step separates evidence from proof. Sail stores the full queryable event.
+The DID attestation stores the compact proof that the event existed in this
+form. That keeps the ledger small and the audit trail useful.
 
 ```mermaid
 flowchart TD
@@ -1273,6 +1657,64 @@ cargo run -- dataverse-e2e \
   --openlineage-file .querygraph/openlineage/events.jsonl \
   --did-ledger-file .querygraph/did-ledger/attestations.jsonl
 ```
+
+# Why Querygraph Is an Alternative to Big AI
+
+Querygraph is not anti-model. It is anti-waste, anti-ambiguity, and
+anti-ungoverned computation. The difference matters. A model can be powerful
+and still be the wrong place to solve every part of the problem.
+
+Big AI often asks organizations to centralize data, trust opaque retrieval,
+expand context windows, and pay for repeated GPU inference. Querygraph asks a
+different question: how much of the work can be made precise, cached, local,
+typed, governed, and reproducible before a model is called?
+
+The answer is: a lot.
+
+Semantic Croissant can describe files and fields without a model. CDIF can
+publish discovery and access metadata without a model. OSI can define business
+terms without a model. ODRL can deny unauthorized access without a model.
+Grust can traverse the route from question to concept to field without a
+model. Sail can execute SQL without a model. OpenLineage can record the run
+without a model. DIDs and TypeSec can identify and bound agents without a
+model.
+
+When all of that work is done first, the model receives a smaller and more
+meaningful task. It summarizes. It drafts. It explains. It may help resolve an
+ambiguous phrase. It does not have to impersonate the entire data platform.
+
+```mermaid
+flowchart LR
+    Big["Big AI default"] --> BigContext["huge prompt or global retrieval"]
+    BigContext --> BigGpu["expensive GPU inference"]
+    BigGpu --> BigAnswer["answer with fragile provenance"]
+    QG["Querygraph"] --> Cache["cached semantic metadata"]
+    Cache --> Route["graph and ontology route"]
+    Route --> Rights["pre-retrieval rights check"]
+    Rights --> Local["SQL, graph, local model if needed"]
+    Local --> Signed["signed answer and lineage"]
+```
+
+This is the proof of the alternative:
+
+- If the question can be answered by SQL, use Sail.
+- If the question needs relationships, use Grust.
+- If the question needs meaning, use OSI and ontologies.
+- If the question needs dataset shape, use Croissant.
+- If the question needs interoperability, use CDIF.
+- If the question needs permission, use ODRL and TypeSec.
+- If the question needs accountability, use DIDs and OpenLineage.
+- If the question still needs language generation, use a model over the
+  smallest responsible context.
+
+Querygraph therefore competes with Big AI not by claiming that smaller models
+are always smarter, but by changing the unit of intelligence. Intelligence is
+not only in the model weights. It is in the route, the metadata, the policy,
+the graph, the lineage, the cache, and the disciplined refusal to compute over
+what the agent should never have seen.
+
+That is why the AI Navigator matters. It makes precision cheaper than
+guesswork.
 
 # Where Querygraph Goes Next
 

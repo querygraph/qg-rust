@@ -1,13 +1,19 @@
-flowchart TD
-    Load["load typed Sail tables"] --> Croissant["Croissant sidecars"]
-    Croissant --> CDIF["CDIF projection"]
-    CDIF --> OSI["OSI concepts"]
-    OSI --> Grust["Grust graph"]
-    Grust --> DID["agent DIDs"]
-    DID --> ODRL["ODRL rights"]
-    ODRL --> TypeSec["typed capabilities"]
-    TypeSec --> Agents["compartment agents"]
-    Agents --> Ollama["optional governed Ollama"]
-    Agents --> Synthesis["signed synthesis"]
-    Synthesis --> OpenLineage["OpenLineage in Sail"]
-    OpenLineage --> Attestation["DID attestation root"]
+sequenceDiagram
+    participant S as SupervisorAgent
+    participant F as FinanceAgent
+    participant E as EnergyAgent
+    participant M as MobilityAgent
+    participant C as ClimateHealthAgent
+    participant R as RestrictedDataBroker
+    participant Y as SynthesisAgent
+    S->>F: TypeDID finance delegation
+    S->>E: TypeDID energy delegation
+    S->>M: TypeDID mobility delegation
+    S->>C: TypeDID climate-health delegation
+    S->>R: TypeDID restricted metadata request
+    F-->>Y: signed fiscal-capacity summary
+    E-->>Y: signed energy-burden summary
+    M-->>Y: signed mobility-disruption summary
+    C-->>Y: signed climate-health summary
+    R-->>Y: signed denial receipt
+    Y-->>S: aggregated governed briefing

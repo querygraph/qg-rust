@@ -1,11 +1,8 @@
-flowchart TD
-    Croissant["Croissant dataset"] --> Discovery["CDIF discovery profile"]
-    Croissant --> Manifest["CDIF manifest profile"]
-    Croissant --> Description["CDIF data-description profile"]
-    Croissant --> Access["CDIF data-access profile"]
-    Croissant --> Rights["CDIF access-rights profile"]
-    Croissant --> Vocabulary["CDIF controlled-vocabulary profile"]
-    Croissant --> Provenance["CDIF provenance profile"]
-    Discovery --> Catalog["searchable catalog"]
-    Rights --> Policy["governed access planning"]
-    Provenance --> Audit["reproducibility evidence"]
+flowchart LR
+    Raw["Raw file"] --> Loader["Rust loader"]
+    Loader --> Typed["Typed Sail table"]
+    Loader --> Croissant["croissant.json"]
+    Croissant --> Fields["fields with names, types, meanings"]
+    Fields --> Agent["agent planning context"]
+    Typed --> Query["bounded table access"]
+    Agent --> Query

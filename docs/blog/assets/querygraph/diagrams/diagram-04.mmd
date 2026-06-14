@@ -1,8 +1,14 @@
-flowchart LR
-    Raw["Raw file"] --> Loader["Rust loader"]
-    Loader --> Typed["Typed Sail table"]
-    Loader --> Croissant["croissant.json"]
-    Croissant --> Fields["fields with names, types, meanings"]
-    Fields --> Agent["agent planning context"]
-    Typed --> Query["bounded table access"]
-    Agent --> Query
+flowchart TD
+    Human["Human supervisor"] --> Navigator["Querygraph AI Navigator"]
+    Navigator --> Meaning["Semantic Croissant + CDIF + OSI"]
+    Navigator --> Rights["DID + ODRL + TypeSec"]
+    Navigator --> Graph["Grust semantic graph"]
+    Navigator --> Lake["Sail lakehouse"]
+    Lake --> Data["Typed tables, files, catalog"]
+    Graph --> Context["Concepts, policies, lineage, agents"]
+    Rights --> Agents["Compartmentalized agents"]
+    Agents --> Model["Ollama or other governed model"]
+    Agents --> Summaries["Signed summaries and denials"]
+    Summaries --> Briefing["Responsible answer"]
+    Briefing --> Lineage["OpenLineage in Sail"]
+    Lineage --> Ledger["DID attestation root"]

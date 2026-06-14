@@ -1,11 +1,12 @@
-flowchart TD
-    Rust["qg-rust loaders and policy kernel"] --> Sail["Sail warehouse"]
-    Rust --> Sidecars["Croissant/CDIF/OSI sidecars"]
-    Rust --> Audit["OpenLineage and DID audit"]
-    Python["qg-python"] --> PySpark["PySpark notebooks"]
-    Python --> Pydantic["Pydantic TypeDID models"]
-    Python --> LangChain["LangChain tools"]
-    PySpark --> Sail
-    Pydantic --> Sidecars
-    LangChain --> Pydantic
-    Python --> Audit
+flowchart TB
+    subgraph Sail["Sail instance"]
+      Lake["qg_lakehouse typed data"]
+      Catalog["dataset, file, column catalog"]
+      Audit["qg_audit lineage and attestations"]
+    end
+    Rust["Querygraph Rust loaders"] --> Lake
+    Rust --> Catalog
+    Rust --> Audit
+    Spark["PySpark / Spark Connect"] --> Lake
+    Navigator["AI Navigator"] --> Catalog
+    Navigator --> Audit

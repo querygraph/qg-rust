@@ -1,5 +1,11 @@
 flowchart LR
-    Question["resilience question"] --> OSI["OSI concepts"]
-    OSI --> Graph["Grust traversal"]
-    Graph --> Assets["datasets, fields, policies"]
-    Assets --> Sail["Sail execution"]
+    Finance["Finance: 1.72M rows"] --> Risk["resilience risk view"]
+    Energy["Energy access and insecurity"] --> Risk
+    Mobility["Dockless trips and injury severity"] --> Risk
+    Climate["Climate-health pathways"] --> Risk
+    Social["Global Party Survey"] --> Context["institutional context"]
+    Reference["CODATA constants"] --> Normalize["unit normalization"]
+    Restricted["HAALSI metadata"] --> Denial["signed denial"]
+    Context --> Risk
+    Normalize --> Risk
+    Denial --> Risk

@@ -1,7 +1,8 @@
-flowchart LR
-    Inputs["Sail input scopes"] --> Run["OpenLineage run"]
-    Job["qglake-story job"] --> Run
-    Run --> Output["resilience briefing"]
-    Run --> Event["event JSON in qg_audit"]
-    Event --> Hash["event hash"]
-    Hash --> Attestation["DID attestation"]
+flowchart TD
+    Term["Business term: energy burden"] --> Metric["Metric definition"]
+    Metric --> Variables["CDIF variables"]
+    Variables --> Fields["Croissant fields"]
+    Fields --> Columns["Sail columns"]
+    Term --> Dimension["Dimensions: geography, time, household"]
+    Dimension --> Fields
+    Term --> Policy["allowed uses and constraints"]
