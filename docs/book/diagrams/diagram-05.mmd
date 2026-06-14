@@ -1,0 +1,11 @@
+flowchart TD
+    Croissant["Croissant dataset"] --> Discovery["CDIF discovery profile"]
+    Croissant --> Manifest["CDIF manifest profile"]
+    Croissant --> Description["CDIF data-description profile"]
+    Croissant --> Access["CDIF data-access profile"]
+    Croissant --> Rights["CDIF access-rights profile"]
+    Croissant --> Vocabulary["CDIF controlled-vocabulary profile"]
+    Croissant --> Provenance["CDIF provenance profile"]
+    Discovery --> Catalog["searchable catalog"]
+    Rights --> Policy["governed access planning"]
+    Provenance --> Audit["reproducibility evidence"]

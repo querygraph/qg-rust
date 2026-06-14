@@ -1,0 +1,11 @@
+flowchart LR
+    Finance["Finance: 1.72M rows"] --> Risk["resilience risk view"]
+    Energy["Energy access and insecurity"] --> Risk
+    Mobility["Dockless trips and injury severity"] --> Risk
+    Climate["Climate-health pathways"] --> Risk
+    Social["Global Party Survey"] --> Context["institutional context"]
+    Reference["CODATA constants"] --> Normalize["unit normalization"]
+    Restricted["HAALSI metadata"] --> Denial["signed denial"]
+    Context --> Risk
+    Normalize --> Risk
+    Denial --> Risk

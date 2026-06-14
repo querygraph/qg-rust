@@ -1,0 +1,8 @@
+flowchart LR
+    Agent["Agent DID"] --> Request["TypeDID request"]
+    Dataset["Dataset or bundle DID"] --> Request
+    Issuer["Issuer DID"] --> Attestation["DID attestation"]
+    Request --> Action["authorized action"]
+    Action --> Response["signed response"]
+    Response --> Event["OpenLineage event hash"]
+    Event --> Attestation

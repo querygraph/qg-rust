@@ -1,0 +1,11 @@
+flowchart LR
+    Dataset["Dataset"] --> File["File"]
+    File --> RecordSet["Record set"]
+    RecordSet --> Field["Field"]
+    Field --> Concept["Ontology concept"]
+    Concept --> Metric["OSI metric"]
+    Policy["CDRL policy"] --> Field
+    Agent["Agent DID"] --> Role["RBAC role"]
+    Role --> Policy
+    Run["OpenLineage run"] --> Dataset
+    Run --> Answer["signed answer"]

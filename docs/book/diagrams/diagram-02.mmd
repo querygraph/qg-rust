@@ -1,0 +1,11 @@
+flowchart LR
+    Question["Question"] --> Ontology["Ontology term"]
+    Ontology --> Variable["CDIF variable"]
+    Variable --> Field["Croissant field"]
+    Field --> Column["Sail column"]
+    Column --> Policy["ODRL + TypeSec"]
+    Policy --> Prompt["Governed prompt"]
+    Prompt --> Model["Ollama / local model"]
+    Model --> Claim["Answer claim"]
+    Claim --> Graph["Grust knowledge graph"]
+    Claim --> Lineage["OpenLineage + DID attestation"]

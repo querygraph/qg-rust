@@ -1,0 +1,13 @@
+flowchart TD
+    Load["load typed Sail tables"] --> Croissant["Croissant sidecars"]
+    Croissant --> CDIF["CDIF projection"]
+    CDIF --> OSI["OSI concepts"]
+    OSI --> Grust["Grust graph"]
+    Grust --> DID["agent DIDs"]
+    DID --> CDRL["CDRL rights"]
+    CDRL --> TypeSec["typed capabilities"]
+    TypeSec --> Agents["compartment agents"]
+    Agents --> Ollama["optional governed Ollama"]
+    Agents --> Synthesis["signed synthesis"]
+    Synthesis --> OpenLineage["OpenLineage in Sail"]
+    OpenLineage --> Attestation["DID attestation root"]

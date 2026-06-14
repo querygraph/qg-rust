@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant A as Agent
+    participant T as TypeSec Gateway
+    participant P as CDRL Policy
+    participant M as Ollama
+    A->>T: TypeDID prompt request
+    T->>P: verify DID, resource, action
+    P-->>T: typed capability ai:infer
+    T->>M: governed prompt
+    M-->>T: model response
+    T-->>A: signed TypeDID response

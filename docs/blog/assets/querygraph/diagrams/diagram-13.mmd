@@ -1,0 +1,11 @@
+flowchart TD
+    Rust["qg-rust loaders and policy kernel"] --> Sail["Sail warehouse"]
+    Rust --> Sidecars["Croissant/CDIF/OSI sidecars"]
+    Rust --> Audit["OpenLineage and DID audit"]
+    Python["qg-python"] --> PySpark["PySpark notebooks"]
+    Python --> Pydantic["Pydantic TypeDID models"]
+    Python --> LangChain["LangChain tools"]
+    PySpark --> Sail
+    Pydantic --> Sidecars
+    LangChain --> Pydantic
+    Python --> Audit

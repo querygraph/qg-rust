@@ -1,0 +1,7 @@
+flowchart LR
+    Inputs["Sail input scopes"] --> Run["OpenLineage run"]
+    Job["qglake-story job"] --> Run
+    Run --> Output["resilience briefing"]
+    Run --> Event["event JSON in qg_audit"]
+    Event --> Hash["event hash"]
+    Hash --> Attestation["DID attestation"]

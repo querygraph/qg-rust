@@ -1,2 +1,7 @@
 /target
 .codex-artifacts/
+.querygraph/
+spark-warehouse/
+lakehouse/python/.venv/
+docs/book/build/
+docs/book/dist/* (*).epub

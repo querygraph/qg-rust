@@ -1,0 +1,10 @@
+flowchart TD
+    Ask["Human or agent question"] --> Intent["Intent and ontology resolution"]
+    Intent --> Meaning["CDIF variables, units, concepts"]
+    Meaning --> Location["Croissant files, record sets, fields"]
+    Location --> Trust["DIDs, provenance, certificates"]
+    Trust --> Policy["ODRL and TypeSec capabilities"]
+    Policy --> Retrieval["Graph/vector/lakehouse retrieval"]
+    Retrieval --> Answer["Signed answer or denial"]
+    Answer --> Lineage["OpenLineage event"]
+    Lineage --> Replay["Reproduce, compare, audit, improve"]

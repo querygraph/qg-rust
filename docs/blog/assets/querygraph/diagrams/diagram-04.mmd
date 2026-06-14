@@ -1,0 +1,8 @@
+flowchart LR
+    Raw["Raw file"] --> Loader["Rust loader"]
+    Loader --> Typed["Typed Sail table"]
+    Loader --> Croissant["croissant.json"]
+    Croissant --> Fields["fields with names, types, meanings"]
+    Fields --> Agent["agent planning context"]
+    Typed --> Query["bounded table access"]
+    Agent --> Query

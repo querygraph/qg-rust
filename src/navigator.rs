@@ -34,15 +34,6 @@ pub struct AiNavigator;
 
 impl AiNavigator {
     pub fn build(&self, input: NavigatorInput) -> NavigatorOutput {
-        let did = DidDocument::new_oyd(
-            format!(
-                "{}:{}:{}",
-                input.agent_name, input.creator, input.dataset_name
-            ),
-            input.agent_name.clone(),
-        )
-        .with_service_endpoint(input.landing_page.clone());
-
         let dataset_id = format!("{}/#dataset", input.landing_page.trim_end_matches('/'));
         let dataset = CroissantDataset {
             id: dataset_id.clone(),
@@ -80,8 +71,34 @@ impl AiNavigator {
                 "ODRL".to_string(),
             ],
         };
+        self.build_from_croissant(
+            dataset,
+            input.landing_page,
+            input.data_url,
+            input.creator,
+            input.agent_name,
+        )
+    }
 
-        let cdif = CdifResource::from_croissant(&dataset, input.landing_page, input.data_url);
+    pub fn build_from_croissant(
+        &self,
+        dataset: CroissantDataset,
+        landing_page: impl Into<String>,
+        access_service: impl Into<String>,
+        creator: impl Into<String>,
+        agent_name: impl Into<String>,
+    ) -> NavigatorOutput {
+        let landing_page = landing_page.into();
+        let access_service = access_service.into();
+        let creator = creator.into();
+        let agent_name = agent_name.into();
+        let did = DidDocument::new_oyd(
+            format!("{}:{}:{}", agent_name, creator, dataset.name),
+            agent_name,
+        )
+        .with_service_endpoint(landing_page.clone());
+
+        let dataset_id = dataset.id.clone();
         let policy = Policy {
             id: format!("{dataset_id}/policy/default"),
             target: dataset_id.clone(),
@@ -106,8 +123,10 @@ impl AiNavigator {
         };
 
         let croissant_json = dataset.to_json_ld();
-        let cdif_json = cdif.to_json_ld();
         let odrl_json = policy.to_json_ld();
+        let cdif_json = CdifResource::from_croissant(&dataset, landing_page, access_service)
+            .with_odrl_policy(policy.id, odrl_json.clone())
+            .to_json_ld();
         let generated_at = Utc::now();
         let bundle = json!({
             "@context": {
