@@ -47,7 +47,6 @@ const coverValues = {
   titleStem,
   subtitle: readYamlString(metadataSource, "subtitle"),
   author: readYamlString(metadataSource, "author"),
-  coauthor: readYamlString(metadataSource, "coauthor"),
   rights: readYamlString(metadataSource, "rights"),
   versionSubtitle: `covers ${titleStem} (${packageVersion})`,
 };
@@ -59,7 +58,7 @@ const escapeTypstMarkup = (value) =>
 
 const coverSource = await readFile(cover, "utf8");
 const renderedCoverMarkdown = coverSource.replace(
-  /\{\{(title|subtitle|author|coauthor|rights|versionSubtitle)\}\}/g,
+  /\{\{(title|subtitle|author|rights|versionSubtitle)\}\}/g,
   (_match, key, offset) => {
     const before = coverSource.slice(0, offset);
     const typstFence = before.lastIndexOf("```{=typst}");

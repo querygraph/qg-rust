@@ -10,11 +10,7 @@
   #v(5em)
   #text(size: 20pt, weight: "medium")[{{author}}]
   #v(0.4em)
-  #text(size: 13pt)[chiefscientist.org]
-  #v(1.6em)
-  #text(size: 11pt, style: "italic")[&]
-  #v(0.35em)
-  #text(size: 13pt, style: "italic")[{{coauthor}}]
+  #text(size: 13pt)[querygraph.ai]
 ]
 ```
 
@@ -24,8 +20,6 @@
   <div class="cover-version">{{versionSubtitle}}</div>
   <div class="cover-subtitle">{{subtitle}}</div>
   <div class="cover-author">{{author}}</div>
-  <div class="cover-author-site">chiefscientist.org</div>
-  <div class="cover-credit-mark">&amp;</div>
-  <div class="cover-coauthor">{{coauthor}}</div>
+  <div class="cover-author-site">querygraph.ai</div>
 </section>
 ```

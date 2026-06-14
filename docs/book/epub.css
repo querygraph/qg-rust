@@ -39,18 +39,6 @@ body {
   margin-bottom: 1.5em;
 }
 
-.cover-credit-mark {
-  font-size: 0.85em;
-  font-style: italic;
-  margin-bottom: 0.35em;
-}
-
-.cover-coauthor {
-  font-size: 0.95em;
-  font-style: italic;
-  margin-bottom: 0;
-}
-
 code {
   font-family: monospace;
   font-size: 0.9em;
