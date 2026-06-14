@@ -4,7 +4,7 @@ flowchart LR
     RecordSet --> Field["Field"]
     Field --> Concept["Ontology concept"]
     Concept --> Metric["OSI metric"]
-    Policy["CDRL policy"] --> Field
+    Policy["ODRL policy"] --> Field
     Agent["Agent DID"] --> Role["RBAC role"]
     Role --> Policy
     Run["OpenLineage run"] --> Dataset

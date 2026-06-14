@@ -205,7 +205,7 @@ That promise becomes the spine of the platform:
 1. Semantic Croissant describes the data as agents will encounter it.
 2. CDIF publishes the same data as interoperable FAIR metadata.
 3. DIDs identify agents, datasets, bundles, issuers, and attestations.
-4. CDRL expresses governed data rights in an ODRL-compatible layer.
+4. ODRL expresses governed data rights as machine-actionable policies.
 5. TypeSec turns those identities and policies into typed capabilities.
 6. Grust gives the navigator a graph of meaning, policy, lineage, and agents.
 7. OSI gives business concepts stable names and relationships.
@@ -217,7 +217,7 @@ That promise becomes the spine of the platform:
 flowchart TD
     Human["Human supervisor"] --> Navigator["Querygraph AI Navigator"]
     Navigator --> Meaning["Semantic Croissant + CDIF + OSI"]
-    Navigator --> Rights["DID + CDRL + TypeSec"]
+    Navigator --> Rights["DID + ODRL + TypeSec"]
     Navigator --> Graph["Grust semantic graph"]
     Navigator --> Lake["Sail lakehouse"]
     Lake --> Data["Typed tables, files, catalog"]
@@ -356,21 +356,21 @@ better for large queryable event bodies. The ledger should store roots,
 hashes, issuers, subjects, and signatures: enough to prove that the larger
 record has not been quietly rewritten.
 
-# CDRL
+# ODRL
 
-The user-facing name in this architecture is CDRL: the Contracted Data Rights
-Layer. Its job is to make data rights concrete enough for agents to obey.
-Under the hood, Querygraph implements this today with ODRL-style policy
-objects in `odrl.rs`: targets, permissions, prohibitions, actions, and a simple
-decision function used by the demos.
+ODRL is the rights language in Querygraph. It is the place where permissions,
+prohibitions, duties, constraints, targets, assigners, and assignees become
+machine-actionable. Querygraph should not invent a second name for that layer.
+It should use ODRL clearly and then explain how RBAC, DIDs, TypeSec, and Sail
+surround it.
 
-The distinction is useful. ODRL is the standards vocabulary for expressing
-rights. CDRL is the Querygraph product layer that puts those rights into the
-agent workflow. It is where enterprise contracts, role assignments, retention
-rules, redaction requirements, embargoes, derivation limits, and model-use
-constraints become a decision the navigator can enforce.
+The Rust implementation in `odrl.rs` models the part of ODRL needed by the
+current demos: policy targets, permissions, prohibitions, actions, assignees,
+and a simple `allows` decision. That is intentionally small, but it preserves
+the key discipline: an agent action is allowed only when the policy grants it
+and does not prohibit it.
 
-A CDRL policy should be able to say:
+An ODRL policy should be able to say:
 
 - this agent may read public finance data;
 - this agent may summarize energy survey data but may not export raw rows;
@@ -383,11 +383,11 @@ A CDRL policy should be able to say:
 ```mermaid
 flowchart TD
     Principal["DID principal"] --> RBAC["role assignment"]
-    Asset["Croissant/CDIF target"] --> CDRL["Contracted Data Rights Layer"]
-    RBAC --> CDRL
-    CDRL --> Permit["permission"]
-    CDRL --> Prohibit["prohibition"]
-    CDRL --> Constraint["constraint"]
+    Asset["Croissant/CDIF target"] --> ODRL["ODRL policy layer"]
+    RBAC --> ODRL
+    ODRL --> Permit["permission"]
+    ODRL --> Prohibit["prohibition"]
+    ODRL --> Constraint["constraint"]
     Permit --> Decision{"allowed action?"}
     Prohibit --> Decision
     Constraint --> Decision
@@ -397,7 +397,7 @@ flowchart TD
 
 This chapter is where responsibility stops being a slogan. A responsible
 system must be able to deny access in a way that is as legible and auditable as
-approval. Querygraph treats denials as first-class outputs. They are signed,
+approval. Querygraph treats ODRL denials as first-class outputs. They are signed,
 included in lineage, and passed to synthesis agents so the final answer knows
 which evidence was deliberately not used.
 
@@ -427,7 +427,7 @@ loose string.
 sequenceDiagram
     participant A as Agent
     participant T as TypeSec Gateway
-    participant P as CDRL Policy
+    participant P as ODRL Policy
     participant M as Ollama
     A->>T: TypeDID prompt request
     T->>P: verify DID, resource, action
@@ -470,7 +470,7 @@ flowchart LR
     RecordSet --> Field["Field"]
     Field --> Concept["Ontology concept"]
     Concept --> Metric["OSI metric"]
-    Policy["CDRL policy"] --> Field
+    Policy["ODRL policy"] --> Field
     Agent["Agent DID"] --> Role["RBAC role"]
     Role --> Policy
     Run["OpenLineage run"] --> Dataset
@@ -617,7 +617,7 @@ Python-native ecosystem over the same concepts:
 - `lakehouse.py` registers Sail warehouse Parquet tables in a PySpark/Spark
   Connect session.
 - `lineage.py` emits OpenLineage run events and DID-style attestations.
-- `cdrl.py` and `rbac.py` give Python agents the same rights checks used in
+- `odrl_rights.py` and `rbac.py` give Python agents the same rights checks used in
   the Rust story.
 - `dataverse.py` projects Dataverse native API payloads into Semantic
   Croissant.
@@ -664,7 +664,7 @@ that can be validated, logged, hashed, and compared to the Rust implementation.
 
 LangChain fits as an adapter layer, not as the source of authority. Querygraph
 does not ask LangChain to decide whether a model may see restricted data. That
-decision belongs to DID identity, CDRL/ODRL policy, TypeSec capability checks,
+decision belongs to DID identity, ODRL policy, TypeSec capability checks,
 and the semantic target in Croissant/CDIF/OSI. LangChain receives a governed
 tool only after those boundaries exist.
 
@@ -769,7 +769,7 @@ The story asks a mission-shaped question:
 > without violating restricted-data boundaries?
 
 The answer is not a single omniscient model response. It is a governed
-multi-agent run over Sail, Grust, Semantic Croissant, CDIF, OSI, DIDs, CDRL,
+multi-agent run over Sail, Grust, Semantic Croissant, CDIF, OSI, DIDs, ODRL,
 TypeSec, OpenLineage, and optional Ollama inference.
 
 ## Step 1: Load the Lakehouse
@@ -853,12 +853,12 @@ The supervisor is powerful, but not magical. Its DID allows orchestration. It
 does not automatically grant raw access to every compartment. That is the
 central discipline of the platform.
 
-## Step 7: Apply CDRL Rights
+## Step 7: Apply ODRL Rights
 
-The CDRL layer evaluates what each agent may do. FinanceAgent can read or
-summarize finance assets. EnergyAgent can derive approved energy summaries.
-RestrictedDataBroker can inspect restricted metadata but cannot reveal raw
-restricted health records.
+The ODRL layer evaluates what each agent may do against a semantic target.
+FinanceAgent can read or summarize finance assets. EnergyAgent can derive
+approved energy summaries. RestrictedDataBroker can inspect restricted metadata
+but cannot reveal raw restricted health records.
 
 | Agent | Compartment | Allowed action | Explicit boundary |
 | --- | --- | --- | --- |
@@ -966,8 +966,8 @@ flowchart TD
     CDIF --> OSI["OSI concepts"]
     OSI --> Grust["Grust graph"]
     Grust --> DID["agent DIDs"]
-    DID --> CDRL["CDRL rights"]
-    CDRL --> TypeSec["typed capabilities"]
+    DID --> ODRL["ODRL rights"]
+    ODRL --> TypeSec["typed capabilities"]
     TypeSec --> Agents["compartment agents"]
     Agents --> Ollama["optional governed Ollama"]
     Agents --> Synthesis["signed synthesis"]
@@ -1045,7 +1045,7 @@ cargo run -- qglake-story --json
 
 The Rust story is intentionally elaborate. It creates a supervisor, specialist
 agents, restricted broker, synthesis agent, TypeDID requests and responses,
-RBAC and CDRL/ODRL receipts, Semantic Croissant and CDIF projections, an
+RBAC and ODRL receipts, Semantic Croissant and CDIF projections, an
 OpenLineage event, and a DID attestation. It demonstrates the product rule:
 aggregate signed summaries without collapsing raw-data boundaries.
 
@@ -1283,7 +1283,7 @@ The current codebase is the compact kernel:
 - OSI model projection;
 - Grust-backed semantic graph loading;
 - DID and TypeSec TypeDID agent envelopes;
-- CDRL/ODRL rights, RBAC, approvals, and denials;
+- ODRL rights, RBAC, approvals, and denials;
 - OpenLineage in Sail with DID attestation.
 
 The next product shape is a long-running `querygraphd` service with APIs for
