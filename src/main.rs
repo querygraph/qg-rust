@@ -1,3 +1,5 @@
+use std::fs;
+
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use querygraph::agent::{QueryGraphAgent, call_ollama_via_typedid};
@@ -128,6 +130,13 @@ enum Commands {
     LakecatVerify {
         #[arg(long)]
         bundle: String,
+    },
+    /// Verify a LakeCat bundle and write a QueryGraph import plan.
+    LakecatImport {
+        #[arg(long)]
+        bundle: String,
+        #[arg(long)]
+        output: String,
     },
     /// Run the QGLake permissioned multi-agent story.
     QglakeStory {
@@ -365,6 +374,17 @@ fn main() -> Result<()> {
             let bundle = LakeCatBootstrapBundle::from_path(bundle)?;
             let verification = bundle.verify_manifest()?;
             println!("{}", serde_json::to_string_pretty(&verification)?);
+        }
+        Commands::LakecatImport { bundle, output } => {
+            let bundle = LakeCatBootstrapBundle::from_path(bundle)?;
+            let plan = bundle.import_plan()?;
+            if let Some(parent) = std::path::Path::new(&output).parent() {
+                if !parent.as_os_str().is_empty() {
+                    fs::create_dir_all(parent)?;
+                }
+            }
+            fs::write(&output, serde_json::to_vec_pretty(&plan)?)?;
+            println!("{}", serde_json::to_string_pretty(&plan.verification)?);
         }
         Commands::QglakeStory { json } => {
             let report = run_qglake_story()?;

@@ -89,8 +89,20 @@ cargo run -- lakecat-verify --bundle lakecat-bootstrap.json
 ```
 
 The verifier recomputes the LakeCat manifest hashes for Croissant, CDIF, OSI,
-ODRL, and OpenLineage artifacts and fails before graph import if any artifact
-does not match the bundle manifest.
+ODRL, OpenLineage artifacts, and the outer bundle hash, failing before graph
+import if anything does not match the bundle manifest.
+
+Write a QueryGraph import plan after verification:
+
+```bash
+cargo run -- lakecat-import \
+  --bundle lakecat-bootstrap.json \
+  --output .querygraph/lakecat/import-plan.json
+```
+
+The import plan records verified tables, semantic artifact labels, and the
+catalog graph envelope size. Reusable graph ingest mechanics still belong in
+Grust; this command is the QueryGraph-side acceptance handoff.
 
 Run the Dataverse-to-Sail-to-agent vertical slice without external services:
 
