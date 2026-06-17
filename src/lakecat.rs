@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::Path;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -98,23 +98,13 @@ impl LakeCatBootstrapBundle {
 
     pub fn import_plan(&self) -> Result<LakeCatImportPlan> {
         let verification = self.verify_manifest()?;
-        let graph_nodes = self
-            .graph
-            .get("nodes")
-            .and_then(Value::as_array)
-            .context("LakeCat bootstrap graph envelope is missing a nodes array")?
-            .len();
-        let graph_edges = self
-            .graph
-            .get("edges")
-            .and_then(Value::as_array)
-            .context("LakeCat bootstrap graph envelope is missing an edges array")?
-            .len();
+        let catalog_graph = grust::LakeCatCatalogGraph::from_json_value(&self.graph)
+            .map_err(|err| anyhow!("LakeCat bootstrap graph validation failed: {err}"))?;
 
         Ok(LakeCatImportPlan {
             verification,
-            graph_nodes,
-            graph_edges,
+            graph_nodes: catalog_graph.node_count(),
+            graph_edges: catalog_graph.edge_count(),
             tables: self.tables.iter().map(LakeCatImportTable::from).collect(),
         })
     }
@@ -289,7 +279,27 @@ mod tests {
                 open_lineage_hash: content_hash_json(&open_lineage).unwrap(),
             },
             tables: vec![table],
-            graph: json!({"nodes":[],"edges":[]}),
+            graph: json!({
+                "nodes": [
+                    {
+                        "id": "lakecat:catalog:local",
+                        "label": "Catalog",
+                        "properties": {"warehouse": "local"}
+                    },
+                    {
+                        "id": "lakecat:table:local:default:events",
+                        "label": "Table",
+                        "properties": {"stableId": "lakecat:table:local:default:events"}
+                    }
+                ],
+                "edges": [
+                    {
+                        "from": "lakecat:catalog:local",
+                        "to": "lakecat:table:local:default:events",
+                        "label": "HAS_TABLE"
+                    }
+                ]
+            }),
             open_lineage,
         };
         let bundle = LakeCatBootstrapBundle {
@@ -307,7 +317,8 @@ mod tests {
         assert_eq!(verification.bundle_hash, bundle.bundle_hash);
 
         let plan = bundle.import_plan().unwrap();
-        assert_eq!(plan.graph_nodes, 0);
+        assert_eq!(plan.graph_nodes, 2);
+        assert_eq!(plan.graph_edges, 1);
         assert_eq!(
             plan.tables[0].stable_id,
             "lakecat:table:local:default:events"
@@ -395,5 +406,61 @@ mod tests {
 
         let err = bundle.verify_manifest().unwrap_err().to_string();
         assert!(err.contains("bundle hash mismatch"));
+    }
+
+    #[test]
+    fn rejects_lakecat_bootstrap_graph_with_invalid_edges() {
+        let croissant = json!({"name":"events"});
+        let table = LakeCatTableProjection {
+            ident: json!({}),
+            stable_id: "lakecat:table:local:default:events".to_string(),
+            location: "file:///tmp/events".to_string(),
+            metadata_location: None,
+            version: 0,
+            format_version: None,
+            croissant: croissant.clone(),
+            cdif: json!({}),
+            osi: json!({}),
+            odrl: json!({}),
+        };
+        let bundle = LakeCatBootstrapBundle {
+            warehouse: "local".to_string(),
+            bundle_hash: "pending".to_string(),
+            manifest: LakeCatBootstrapManifest {
+                schema_version: "lakecat.querygraph.bootstrap.v1".to_string(),
+                producer: "https://querygraph.ai/lakecat".to_string(),
+                standards: vec!["Croissant".to_string()],
+                table_artifacts: vec![LakeCatTableArtifactHashes {
+                    stable_id: table.stable_id.clone(),
+                    croissant_hash: content_hash_json(&croissant).unwrap(),
+                    cdif_hash: content_hash_json(&json!({})).unwrap(),
+                    osi_hash: content_hash_json(&json!({})).unwrap(),
+                    odrl_hash: content_hash_json(&json!({})).unwrap(),
+                }],
+                open_lineage_hash: content_hash_json(&json!({})).unwrap(),
+            },
+            tables: vec![table],
+            graph: json!({
+                "nodes": [
+                    {"id": "lakecat:catalog:local", "label": "Catalog"}
+                ],
+                "edges": [
+                    {
+                        "from": "lakecat:catalog:local",
+                        "to": "lakecat:table:missing",
+                        "label": "HAS_TABLE"
+                    }
+                ]
+            }),
+            open_lineage: json!({}),
+        };
+        let bundle = LakeCatBootstrapBundle {
+            bundle_hash: bundle.computed_bundle_hash().unwrap(),
+            ..bundle
+        };
+
+        let err = bundle.import_plan().unwrap_err().to_string();
+        assert!(err.contains("LakeCat bootstrap graph validation failed"));
+        assert!(err.contains("edge destination"));
     }
 }

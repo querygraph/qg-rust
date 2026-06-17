@@ -1053,6 +1053,7 @@ version = "0.9.0"
 dependencies = [
  "grust-core",
  "grust-sail",
+ "serde_json",
 ]
 
 [[package]]

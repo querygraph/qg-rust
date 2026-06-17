@@ -101,8 +101,8 @@ cargo run -- lakecat-import \
 ```
 
 The import plan records verified tables, semantic artifact labels, and the
-catalog graph envelope size. Reusable graph ingest mechanics still belong in
-Grust; this command is the QueryGraph-side acceptance handoff.
+catalog graph size after validating the LakeCat graph envelope through Grust.
+This command is the QueryGraph-side acceptance handoff.
 
 Run the Dataverse-to-Sail-to-agent vertical slice without external services:
 
