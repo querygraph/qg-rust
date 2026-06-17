@@ -4,6 +4,7 @@ pub mod codata;
 pub mod croissant;
 pub mod dataverse;
 pub mod did;
+pub mod lakecat;
 pub mod lakehouse;
 pub mod lineage;
 pub mod navigator;

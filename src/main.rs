@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 use querygraph::agent::{QueryGraphAgent, call_ollama_via_typedid};
 use querygraph::codata::CodataOdrlClient;
 use querygraph::dataverse::{DataverseClient, sample_datasets};
+use querygraph::lakecat::LakeCatBootstrapBundle;
 use querygraph::lakehouse::{
     DEFAULT_SCHEMA, LakehouseLoadOptions, load_default_lakehouse, report_summary,
     verify_lakehouse_report,
@@ -122,6 +123,11 @@ enum Commands {
         report: String,
         #[arg(long)]
         openlineage_file: Option<String>,
+    },
+    /// Verify a LakeCat QueryGraph bootstrap bundle before graph import.
+    LakecatVerify {
+        #[arg(long)]
+        bundle: String,
     },
     /// Run the QGLake permissioned multi-agent story.
     QglakeStory {
@@ -354,6 +360,11 @@ fn main() -> Result<()> {
             if !validation.ok() {
                 std::process::exit(1);
             }
+        }
+        Commands::LakecatVerify { bundle } => {
+            let bundle = LakeCatBootstrapBundle::from_path(bundle)?;
+            let verification = bundle.verify_manifest()?;
+            println!("{}", serde_json::to_string_pretty(&verification)?);
         }
         Commands::QglakeStory { json } => {
             let report = run_qglake_story()?;

@@ -26,6 +26,7 @@ src/
   cdif.rs        CDIF profile projection over a Croissant dataset
   dataverse.rs   Dataverse Native/Search API ingest and Croissant projection
   did.rs         Deterministic local did:oyd identity document
+  lakecat.rs     LakeCat QueryGraph bootstrap bundle verification
   lineage.rs     OpenLineage event plus TypeDID-style lineage attestation
   odrl.rs        Policy, permissions, prohibitions, and access checks
   codata.rs      Client for CODATA ODRL demo DID anchoring APIs
@@ -79,6 +80,17 @@ cargo run -- anchor-url --url "https://querygraph.ai/resources/"
 ```
 
 This calls `https://odrl.dev.codata.org/api/did/create_from_url` and returns the `did:oyd` identifier plus the stored payload reported by the demo service.
+
+Verify a LakeCat QueryGraph bootstrap bundle before importing its semantic
+artifacts or loading catalog graph projections:
+
+```bash
+cargo run -- lakecat-verify --bundle lakecat-bootstrap.json
+```
+
+The verifier recomputes the LakeCat manifest hashes for Croissant, CDIF, OSI,
+ODRL, and OpenLineage artifacts and fails before graph import if any artifact
+does not match the bundle manifest.
 
 Run the Dataverse-to-Sail-to-agent vertical slice without external services:
 
