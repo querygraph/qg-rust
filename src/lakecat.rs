@@ -301,6 +301,7 @@ pub struct LakeCatViewReceiptEvidence {
     pub stable_id: String,
     pub view_version: u64,
     pub receipt_hash: String,
+    pub receipt_chain_hash: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -444,6 +445,12 @@ fn validate_view_receipt_evidence(
         if record.receipt_hash.is_empty() {
             bail!(
                 "LakeCat QueryGraph import contract view receipt evidence for {} is missing a receipt hash",
+                view.stable_id
+            );
+        }
+        if record.receipt_chain_hash.is_empty() {
+            bail!(
+                "LakeCat QueryGraph import contract view receipt evidence for {} is missing a receipt-chain hash",
                 view.stable_id
             );
         }
@@ -833,6 +840,7 @@ mod tests {
             stable_id: "lakecat:view:local:default:active_customers".to_string(),
             view_version: 1,
             receipt_hash: "sha256:view-version-receipt".to_string(),
+            receipt_chain_hash: "sha256:view-receipt-chain".to_string(),
         }];
         let mut bundle = LakeCatBootstrapBundle {
             warehouse: "local".to_string(),
