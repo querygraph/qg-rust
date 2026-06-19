@@ -1048,6 +1048,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "grust-cypher"
+version = "0.9.0"
+dependencies = [
+ "async-trait",
+ "grust-core",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "grust-graph"
 version = "0.9.0"
 dependencies = [
@@ -1063,6 +1074,7 @@ dependencies = [
  "arrow",
  "async-trait",
  "grust-core",
+ "grust-cypher",
  "prost",
  "prost-types",
  "serde",
@@ -2754,7 +2766,7 @@ checksum = "40ce102ab67701b8526c123c1bab5cbe42d7040ccfd0f64af1a385808d2f43de"
 
 [[package]]
 name = "typesec-core"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "chrono",
  "serde",
@@ -2765,7 +2777,7 @@ dependencies = [
 
 [[package]]
 name = "typesec-integrations"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "chacha20poly1305",
  "chrono",

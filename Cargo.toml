@@ -21,5 +21,5 @@ serde_yaml = "0.9"
 sha2 = "0.10"
 thiserror = "2.0"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-typesec-integrations = { version = "0.7.0", path = "../../typesec/crates/typesec-integrations" }
-typesec-core = { version = "0.7.0", path = "../../typesec/crates/typesec-core" }
+typesec-integrations = { version = "0.8.0", path = "../../typesec/crates/typesec-integrations" }
+typesec-core = { version = "0.8.0", path = "../../typesec/crates/typesec-core" }
