@@ -1,10 +1,11 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname);
 const workspaceRoot = path.resolve(root, "../..");
-const cargoToml = path.join(workspaceRoot, "Cargo.toml");
+const versionFile = path.join(root, "dist", "VERSION.md");
 const metadata = path.join(root, "metadata.yaml");
 const cover = path.join(root, "cover.md");
 const manuscript = path.join(root, "manuscript.md");
@@ -34,11 +35,16 @@ const readYamlString = (yaml, key) => {
   return match[1];
 };
 
-const cargoSource = await readFile(cargoToml, "utf8");
-const packageVersion = cargoSource.match(/^\s*version\s*=\s*"([^"]+)"/m)?.[1];
-if (!packageVersion) {
-  throw new Error(`Missing package version in ${cargoToml}`);
-}
+const readSimpleYamlValue = (yaml, key, sourcePath) => {
+  const match = yaml.match(new RegExp(`^${key}:\\s*(.+?)\\s*$`, "m"));
+  if (!match) {
+    throw new Error(`Missing ${key} in ${sourcePath}`);
+  }
+  return match[1].replace(/^["']|["']$/g, "");
+};
+
+const versionSource = await readFile(versionFile, "utf8");
+const kindleName = readSimpleYamlValue(versionSource, "kindle_name", versionFile);
 
 const metadataSource = await readFile(metadata, "utf8");
 const titleStem = readYamlString(metadataSource, "title_stem");
@@ -48,7 +54,7 @@ const coverValues = {
   subtitle: readYamlString(metadataSource, "subtitle"),
   author: readYamlString(metadataSource, "author"),
   rights: readYamlString(metadataSource, "rights"),
-  versionSubtitle: `covers ${titleStem} (${packageVersion})`,
+  versionSubtitle: `covers ${kindleName}`,
 };
 
 const escapeHtml = (value) =>
@@ -83,6 +89,30 @@ const copyFile = (source, target) => {
   }
 };
 
+const renderMermaid = (input, output, config) => {
+  const args = ["-i", input, "-o", output, "-b", "transparent", "-p", puppeteerConfig, "-s", "2"];
+  if (config) {
+    args.push("-c", config);
+  }
+  const result = spawnSync("mmdc", args, { stdio: "inherit" });
+  if (result.status !== 0) {
+    throw new Error(`mmdc failed for ${input}`);
+  }
+};
+
+const pngSize = (file) => {
+  const buffer = readFileSync(file);
+  if (buffer.toString("ascii", 1, 4) !== "PNG") {
+    throw new Error(`Expected PNG output at ${file}`);
+  }
+  return {
+    width: buffer.readUInt32BE(16),
+    height: buffer.readUInt32BE(20),
+  };
+};
+
+let referenceDiagramWidth = null;
+
 const source = await readFile(manuscript, "utf8");
 let diagramIndex = 0;
 const renderedMarkdown = source.replace(
@@ -93,18 +123,36 @@ const renderedMarkdown = source.replace(
     const input = path.join(buildDiagramDir, `${stem}.mmd`);
     const output = path.join(buildDiagramDir, `${stem}.png`);
     const sourceText = `${diagram.trim()}\n`;
-    spawnSync("bash", ["-lc", `cat > "$1"`, "bash", input], {
-      input: sourceText,
-      stdio: ["pipe", "inherit", "inherit"],
-    });
-    const result = spawnSync(
-      "mmdc",
-      ["-i", input, "-o", output, "-b", "transparent", "-p", puppeteerConfig, "-s", "2"],
-      { stdio: "inherit" },
-    );
-    if (result.status !== 0) {
-      throw new Error(`mmdc failed for ${input}`);
+    writeFileSync(input, sourceText);
+    renderMermaid(input, output);
+
+    const { width } = pngSize(output);
+    if (referenceDiagramWidth === null) {
+      referenceDiagramWidth = width;
     }
+
+    const visualScale = width / referenceDiagramWidth;
+    if (visualScale > 1.05) {
+      const fontSize = Math.round(16 * visualScale);
+      const config = path.join(buildDiagramDir, `${stem}.json`);
+      writeFileSync(
+        config,
+        `${JSON.stringify({
+          theme: "default",
+          themeVariables: {
+            fontSize: `${fontSize}px`,
+          },
+          sequence: {
+            fontSize,
+            actorFontSize: fontSize,
+            messageFontSize: fontSize,
+            noteFontSize: fontSize,
+          },
+        })}\n`,
+      );
+      renderMermaid(input, output, config);
+    }
+
     copyFile(input, path.join(bookDiagramDir, `${stem}.mmd`));
     copyFile(output, path.join(bookDiagramDir, `${stem}.png`));
     copyFile(input, path.join(blogDiagramDir, `${stem}.mmd`));
@@ -117,4 +165,4 @@ await writeFile(rendered, renderedMarkdown);
 console.log(`Rendered ${diagramIndex} Mermaid diagram(s) to ${rendered}`);
 console.log(`Materialized diagrams in ${bookDiagramDir}`);
 console.log(`Copied blog diagrams to ${blogDiagramDir}`);
-console.log(`Rendered cover for ${coverValues.titleStem} (${packageVersion}) to ${renderedCover}`);
+console.log(`Rendered cover for ${kindleName} to ${renderedCover}`);

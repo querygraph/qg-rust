@@ -1359,6 +1359,96 @@ flowchart TD
     OpenLineage --> Attestation["DID attestation root"]
 ```
 
+# LakeCat as the QueryGraph Catalog Boundary
+
+LakeCat is where QueryGraph stops pretending that catalog state is background
+plumbing. A QueryGraph import is only useful if the catalog can prove what
+table, view, policy, lineage, and receipt state it accepted. LakeCat gives that
+proof while staying a thin Iceberg-compatible catalog: normal clients still see
+standard table access, while QueryGraph receives derived control-plane evidence.
+
+The current QGLake handoff has four durable artifacts:
+
+- a LakeCat bootstrap bundle with table, view, graph, OSI, ODRL, Croissant,
+  CDIF, OpenLineage, and QueryGraph import hashes;
+- a lineage-drain artifact replaying the outbox and OpenLineage evidence that
+  produced the bundle;
+- a QueryGraph import plan generated from the verified bundle;
+- a compact handoff summary binding the saved files, captured command output,
+  tenant scope, governed scan proof, credential proof, commit-history proof,
+  view receipt-chain proof, and graph counts.
+
+The important new rule is the view-chain rule. Active accepted views must carry
+an `acceptedReceiptChainHash` that appears in namespace
+`receiptChains[].chainHashes`. That prevents a handoff from pairing a valid
+view receipt with unrelated namespace chain evidence. Tombstoned accepted views
+are different: their accepted chain can be a prefix of the later tombstone
+chain, so the proof must instead include tombstone receipt evidence whose
+`expectedViewVersion` preserves the accepted view version.
+
+```mermaid
+flowchart LR
+    LakeCat["LakeCat catalog"]
+    Bundle["bootstrap bundle"]
+    Replay["lineage drain replay"]
+    Import["QueryGraph import plan"]
+    Summary["handoff summary"]
+    Graph["Grust graph validation"]
+    Agent["agentic QGLake workflow"]
+
+    LakeCat --> Bundle
+    LakeCat --> Replay
+    Bundle --> Import
+    Bundle --> Graph
+    Replay --> Summary
+    Import --> Summary
+    Graph --> Summary
+    Summary --> Agent
+
+    subgraph ViewProof["view receipt-chain proof"]
+      Active["active view: chain hash covered"]
+      Tombstone["tombstone: expected version guarded"]
+    end
+
+    Bundle --> ViewProof
+    Replay --> ViewProof
+    ViewProof --> Summary
+```
+
+The local integration test is intentionally concrete:
+
+```bash
+cd ../lakecat
+scripts/qglake-handoff-local.sh
+```
+
+That command starts LakeCat, creates the local QGLake fixture, drains lineage,
+asks QueryGraph to verify and import the saved bundle, writes
+`querygraph-import-plan.json`, and verifies `handoff-summary.json`. The current
+passing handoff proves one table, one view, 26 outbox/lineage events, and 53
+catalog graph events. QueryGraph rejects the handoff if the saved bundle, saved
+drain, captured output, compact summary, graph envelope, view receipt evidence,
+or QueryGraph import plan drift from one another.
+
+The same boundary shows up in code:
+
+```bash
+cargo run -- lakecat-verify \
+  --bundle ../lakecat/target/qglake-handoff/lakecat-bootstrap.json
+
+cargo run -- lakecat-import \
+  --bundle ../lakecat/target/qglake-handoff/lakecat-bootstrap.json \
+  --output ../lakecat/target/qglake-handoff/querygraph-import-plan.json
+```
+
+`lakecat-verify` recomputes the LakeCat manifest hashes for tables, views,
+OpenLineage, graph, and the outer bundle. It also validates the QueryGraph
+import compatibility contract, including `receipt-chain-hash` in view receipt
+evidence. `lakecat-import` then creates the import plan only after that proof
+has survived round-trip JSON parsing. QueryGraph does not invent catalog truth;
+it accepts LakeCat proof, validates the Grust graph shape, and builds the next
+agent context from the smallest verified scope.
+
 # Rust Examples
 
 The Rust examples are the reference implementation. They show the system from

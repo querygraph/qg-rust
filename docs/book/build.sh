@@ -5,7 +5,6 @@ cd "$(dirname "$0")"
 
 mkdir -p build dist
 
-node build.mjs
 pubdate="$(date -u +%F)"
 version="$(
   awk '
@@ -48,7 +47,21 @@ if [[ -z "$version" || -z "$title_stem" || -z "$visible_title" ]]; then
   exit 1
 fi
 
-kindle_title="$title_stem ($version)"
+commit_suffix="$(git -C ../.. rev-parse --short HEAD)"
+if [[ -z "$commit_suffix" ]]; then
+  echo "could not read git commit suffix" >&2
+  exit 1
+fi
+
+kindle_title="$title_stem ($version-$commit_suffix)"
+{
+  printf 'kindle_name: %s\n' "$kindle_title"
+  printf 'built_at: %s\n' "$pubdate"
+  printf 'epub_file: %s.epub\n' "$title_stem"
+  printf 'kindle_link: %s.epub\n' "$kindle_title"
+} > dist/VERSION.md
+
+node build.mjs
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 sed '/^```{=typst}$/,/^```$/d' build/cover.rendered.md > "$tmpdir/cover.epub.md"
@@ -90,12 +103,6 @@ pandoc --from markdown+smart \
 
 find dist -maxdepth 1 -name "$title_stem (*).epub" -exec rm -f {} +
 ln -s "$title_stem.epub" "dist/$kindle_title.epub"
-{
-  printf 'kindle_name: %s\n' "$kindle_title"
-  printf 'built_at: %s\n' "$pubdate"
-  printf 'epub_file: %s.epub\n' "$title_stem"
-  printf 'kindle_link: %s.epub\n' "$kindle_title"
-} > dist/VERSION.md
 
 ./check_epub_metadata.sh "dist/$title_stem.epub" "$kindle_title" "$visible_title"
 

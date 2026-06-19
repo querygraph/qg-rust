@@ -50,27 +50,27 @@ Stable deliverables:
 - `docs/book/dist/querygraph.mobi`
 - `docs/book/dist/VERSION.md`
 
-The Kindle/catalog title and upload filename are generated from
-`title_stem` plus the package version in `Cargo.toml`:
+The Kindle/catalog title and upload filename are generated from `title_stem`,
+the package version in `Cargo.toml`, and the current short git commit:
 
 ```text
-querygraph (0.1.0)
-querygraph (0.1.0).epub
+querygraph (0.1.0-13ca95f)
+querygraph (0.1.0-13ca95f).epub
 ```
 
 The versioned EPUB path is a generated symlink:
 
 ```text
-docs/book/dist/querygraph (0.1.0).epub -> querygraph.epub
+docs/book/dist/querygraph (0.1.0-13ca95f).epub -> querygraph.epub
 ```
 
 `VERSION.md` must contain:
 
 ```yaml
-kindle_name: querygraph (0.1.0)
+kindle_name: querygraph (0.1.0-13ca95f)
 built_at: YYYY-MM-DD
 epub_file: querygraph.epub
-kindle_link: querygraph (0.1.0).epub
+kindle_link: querygraph (0.1.0-13ca95f).epub
 ```
 
 Track the stable EPUB, PDF, MOBI, `VERSION.md`, source files, and stable diagram
@@ -100,12 +100,14 @@ paths that do not depend on the generated build directory.
 Keep reader-facing and catalog-facing titles separate:
 
 - Cover, navigation title, NCX title, table of contents: `Querygraph`
-- OPF `dc:title` and title-sort metadata: `querygraph (<version>)`
+- OPF `dc:title` and title-sort metadata: `querygraph (<version>-<commit>)`
 - Stable file: `querygraph.epub`
-- Upload/delivery file: `querygraph (<version>).epub`
+- Upload/delivery file: `querygraph (<version>-<commit>).epub`
 
-Do not hard-code the version in the manuscript or cover. The build script reads
-`Cargo.toml` and `metadata.yaml`, then renders `{{versionSubtitle}}`.
+Do not hard-code the version in the manuscript or cover. The build script writes
+`docs/book/dist/VERSION.md` from `Cargo.toml`, `metadata.yaml`, and the current
+short git commit, then renders `{{versionSubtitle}}` from that generated version
+file.
 
 ## Cover Rules
 
@@ -126,6 +128,13 @@ centered text and margins, no flexbox.
 `docs/book/epub.css` owns compact code-block spacing and cover styling. Keep
 code spacing fixes in CSS rather than changing manuscript formatting.
 
+The rendered cover version subtitle is derived from `kindle_name` in
+`docs/book/dist/VERSION.md`:
+
+```text
+covers querygraph (0.1.0-13ca95f)
+```
+
 ## Build
 
 From the repository root:
@@ -137,20 +146,23 @@ docs/book/build.sh
 The build:
 
 1. Reads the package version from `Cargo.toml`.
-2. Reads `title`, `title_stem`, and cover metadata from `metadata.yaml`.
-3. Renders cover placeholders into `docs/book/build/cover.rendered.md`.
-4. Renders Mermaid diagrams into `.mmd` and `.png` assets.
-5. Copies stable diagram assets into `docs/book/diagrams/` and
+2. Reads the current short git commit for the version suffix.
+3. Reads `title`, `title_stem`, and cover metadata from `metadata.yaml`.
+4. Writes `docs/book/dist/VERSION.md`.
+5. Renders cover placeholders into `docs/book/build/cover.rendered.md` from
+   `docs/book/dist/VERSION.md`.
+6. Renders Mermaid diagrams into `.mmd` and `.png` assets.
+7. Copies stable diagram assets into `docs/book/diagrams/` and
    `docs/blog/assets/querygraph/diagrams/`.
-6. Builds a standalone cover PDF.
-7. Builds the body PDF with a table of contents.
-8. Merges cover and body into `docs/book/dist/querygraph.pdf`.
-9. Builds `docs/book/dist/querygraph.epub`.
-10. Runs `fix_epub_layout.sh`.
-11. Creates the versioned EPUB symlink.
-12. Writes `docs/book/dist/VERSION.md`.
-13. Runs `check_epub_metadata.sh`.
-14. Converts the EPUB to `docs/book/dist/querygraph.mobi`.
+8. Builds a standalone cover PDF.
+9. Builds the body PDF with a table of contents.
+10. Merges cover and body into `docs/book/dist/querygraph.pdf`.
+11. Builds `docs/book/dist/querygraph.epub`.
+12. Runs `fix_epub_layout.sh`.
+13. Creates the versioned EPUB symlink.
+14. Keeps `docs/book/dist/VERSION.md` next to the generated artifacts.
+15. Runs `check_epub_metadata.sh`.
+16. Converts the EPUB to `docs/book/dist/querygraph.mobi`.
 
 Calibre is expected either on `PATH` as `ebook-convert` or at:
 
@@ -165,7 +177,7 @@ The build script runs the EPUB validator automatically. To rerun it manually:
 ```sh
 docs/book/check_epub_metadata.sh \
   docs/book/dist/querygraph.epub \
-  'querygraph (0.1.0)' \
+  'querygraph (0.1.0-13ca95f)' \
   Querygraph
 ```
 
@@ -192,7 +204,7 @@ pdftotext -f 2 -l 2 docs/book/dist/querygraph.pdf -
 Check the versioned EPUB link:
 
 ```sh
-readlink 'docs/book/dist/querygraph (0.1.0).epub'
+readlink 'docs/book/dist/querygraph (0.1.0-13ca95f).epub'
 ```
 
 Expected:
@@ -216,7 +228,7 @@ For iCloud Books delivery, derive the exact upload filename from
 `docs/book/dist/VERSION.md` and copy the versioned EPUB path:
 
 ```sh
-cp 'docs/book/dist/querygraph (0.1.0).epub' "$HOME/icloud/books/"
+cp 'docs/book/dist/querygraph (0.1.0-13ca95f).epub' "$HOME/icloud/books/"
 ```
 
 This produces a regular file at the destination with the versioned filename.

@@ -1,0 +1,9 @@
+flowchart LR
+    Big["Big AI default"] --> BigContext["huge prompt or global retrieval"]
+    BigContext --> BigGpu["expensive GPU inference"]
+    BigGpu --> BigAnswer["answer with fragile provenance"]
+    QG["Querygraph"] --> Cache["cached semantic metadata"]
+    Cache --> Route["graph and ontology route"]
+    Route --> Rights["pre-retrieval rights check"]
+    Rights --> Local["SQL, graph, local model if needed"]
+    Local --> Signed["signed answer and lineage"]
