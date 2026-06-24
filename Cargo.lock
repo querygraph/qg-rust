@@ -86,7 +86,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -97,7 +97,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -853,7 +853,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1030,6 +1030,8 @@ dependencies = [
 [[package]]
 name = "grust-core"
 version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "86badaf7a85606f348aa3a4960b4642a10344d540f6c33159105793474741462"
 dependencies = [
  "async-trait",
  "quick-xml 0.40.1",
@@ -1042,6 +1044,8 @@ dependencies = [
 [[package]]
 name = "grust-cypher"
 version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7e90db5881c293bc731095c4166bfc4c3b5a921ac0278084297d50859ec0cfd"
 dependencies = [
  "async-trait",
  "grust-core",
@@ -1053,6 +1057,8 @@ dependencies = [
 [[package]]
 name = "grust-graph"
 version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc30c0ad719e5360b454f4a122ac88ef918ae1ef3d53be5e55ed556e05ac4821"
 dependencies = [
  "grust-core",
  "grust-sail",
@@ -1062,6 +1068,8 @@ dependencies = [
 [[package]]
 name = "grust-sail"
 version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e98d2a856dc076a9b9f56a39e05aec31faa2a0dc0761dfff4f509e00612fb911"
 dependencies = [
  "arrow",
  "async-trait",
@@ -1846,7 +1854,7 @@ dependencies = [
 
 [[package]]
 name = "querygraph"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "arrow",
@@ -2115,7 +2123,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2340,7 +2348,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2433,7 +2441,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2725,6 +2733,8 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 [[package]]
 name = "typesec-core"
 version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e749300147f3a391a22dbc050164f6d7eb6c70e05ff8172195be85bf168ff426"
 dependencies = [
  "chrono",
  "serde",
@@ -2736,6 +2746,8 @@ dependencies = [
 [[package]]
 name = "typesec-integrations"
 version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "893a67c368fa2a3ea16f6b2c26345c0c6a69e398b9ce63fe3d6c4946568a2655"
 dependencies = [
  "chacha20poly1305",
  "chrono",

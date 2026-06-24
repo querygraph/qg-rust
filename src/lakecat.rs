@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
@@ -55,6 +56,28 @@ impl LakeCatBootstrapBundle {
                 self.views.len()
             );
         }
+        validate_duplicate_free_stable_ids(
+            "LakeCat bootstrap table projections",
+            self.tables.iter().map(|table| table.stable_id.as_str()),
+        )?;
+        validate_duplicate_free_stable_ids(
+            "LakeCat bootstrap table artifacts",
+            self.manifest
+                .table_artifacts
+                .iter()
+                .map(|artifact| artifact.stable_id.as_str()),
+        )?;
+        validate_duplicate_free_stable_ids(
+            "LakeCat bootstrap view projections",
+            self.views.iter().map(|view| view.stable_id.as_str()),
+        )?;
+        validate_duplicate_free_stable_ids(
+            "LakeCat bootstrap view artifacts",
+            self.manifest
+                .view_artifacts
+                .iter()
+                .map(|artifact| artifact.stable_id.as_str()),
+        )?;
 
         let open_lineage_hash = content_hash_json(&self.open_lineage)?;
         if self.manifest.open_lineage_hash != open_lineage_hash {
@@ -458,6 +481,19 @@ fn validate_view_receipt_evidence(
     Ok(())
 }
 
+fn validate_duplicate_free_stable_ids<'a>(
+    label: &str,
+    values: impl IntoIterator<Item = &'a str>,
+) -> Result<()> {
+    let mut seen = BTreeSet::new();
+    for value in values {
+        if !seen.insert(value) {
+            bail!("{label} must be duplicate-free by stable id: {value}");
+        }
+    }
+    Ok(())
+}
+
 fn table_only_artifact(artifact: &LakeCatTableArtifactHashes) -> Value {
     serde_json::json!({
         "stable-id": artifact.stable_id,
@@ -663,6 +699,61 @@ mod tests {
         bundle.manifest.table_artifacts.clear();
         let err = bundle.verify_manifest().unwrap_err().to_string();
         assert!(err.contains("table artifact count"));
+    }
+
+    #[test]
+    fn rejects_duplicate_lakecat_table_stable_ids() {
+        let table = LakeCatTableProjection {
+            ident: json!({}),
+            stable_id: "lakecat:table:local:default:events".to_string(),
+            location: "file:///tmp/events".to_string(),
+            metadata_location: None,
+            version: 0,
+            format_version: None,
+            croissant: json!({}),
+            cdif: json!({}),
+            osi: json!({}),
+            odrl: json!({}),
+            policy_bindings: Vec::new(),
+        };
+        let bundle = LakeCatBootstrapBundle {
+            warehouse: "local".to_string(),
+            bundle_hash: "sha256:not-checked-before-identity-validation".to_string(),
+            manifest: LakeCatBootstrapManifest {
+                schema_version: "lakecat.querygraph.bootstrap.v1".to_string(),
+                producer: "https://querygraph.ai/lakecat".to_string(),
+                standards: Vec::new(),
+                table_artifacts: vec![
+                    LakeCatTableArtifactHashes {
+                        stable_id: table.stable_id.clone(),
+                        croissant_hash: "sha256:not-checked".to_string(),
+                        cdif_hash: "sha256:not-checked".to_string(),
+                        osi_hash: "sha256:not-checked".to_string(),
+                        odrl_hash: "sha256:not-checked".to_string(),
+                        policy_bindings_hash: None,
+                    },
+                    LakeCatTableArtifactHashes {
+                        stable_id: table.stable_id.clone(),
+                        croissant_hash: "sha256:not-checked".to_string(),
+                        cdif_hash: "sha256:not-checked".to_string(),
+                        osi_hash: "sha256:not-checked".to_string(),
+                        odrl_hash: "sha256:not-checked".to_string(),
+                        policy_bindings_hash: None,
+                    },
+                ],
+                view_artifacts: Vec::new(),
+                graph_hash: None,
+                open_lineage_hash: "sha256:not-checked".to_string(),
+                querygraph_import: None,
+            },
+            tables: vec![table.clone(), table],
+            views: Vec::new(),
+            graph: json!({}),
+            open_lineage: json!({}),
+        };
+
+        let err = bundle.verify_manifest().unwrap_err().to_string();
+        assert!(err.contains("LakeCat bootstrap table projections must be duplicate-free"));
     }
 
     #[test]
