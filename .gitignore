@@ -5,3 +5,4 @@ spark-warehouse/
 lakehouse/python/.venv/
 docs/book/build/
 docs/book/dist/* (*).epub
+docs/book/dist/* (*).pdf

@@ -106,6 +106,11 @@ ln -s "$title_stem.epub" "dist/$kindle_title.epub"
 
 ./check_epub_metadata.sh "dist/$title_stem.epub" "$kindle_title" "$visible_title"
 
+# Maintain a versioned symlink for the PDF too (mirrors the EPUB symlink), so
+# both formats carry the `stem (version-hash)` name.
+find dist -maxdepth 1 -name "$title_stem (*).pdf" -exec rm -f {} +
+ln -s "$title_stem.pdf" "dist/$kindle_title.pdf"
+
 EBOOK_CONVERT="${EBOOK_CONVERT:-}"
 if [[ -z "$EBOOK_CONVERT" ]]; then
   if command -v ebook-convert >/dev/null 2>&1; then
@@ -120,10 +125,22 @@ fi
 
 "$EBOOK_CONVERT" "dist/$title_stem.epub" "dist/$title_stem.mobi"
 
+# Publish both versioned formats to the local iCloud books library, if present.
+# Dereference the symlinks so the destination holds regular, versioned files.
+books_dir="$HOME/icloud/books"
+if [[ -d "$books_dir" ]]; then
+  cp -L "dist/$kindle_title.epub" "$books_dir/$kindle_title.epub"
+  cp -L "dist/$kindle_title.pdf"  "$books_dir/$kindle_title.pdf"
+  echo "Published to $books_dir:"
+  echo "  $kindle_title.epub"
+  echo "  $kindle_title.pdf"
+fi
+
 echo "Built:"
 echo "  docs/book/dist/$title_stem.pdf"
 echo "  docs/book/dist/$title_stem.epub"
 echo "  docs/book/dist/$kindle_title.epub -> $title_stem.epub"
+echo "  docs/book/dist/$kindle_title.pdf -> $title_stem.pdf"
 echo "  docs/book/dist/$title_stem.mobi"
 echo "  docs/book/dist/VERSION.md"
 echo "  docs/book/diagrams/*.mmd and *.png"

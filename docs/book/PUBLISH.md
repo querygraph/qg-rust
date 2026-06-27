@@ -58,10 +58,12 @@ querygraph (0.1.0-13ca95f)
 querygraph (0.1.0-13ca95f).epub
 ```
 
-The versioned EPUB path is a generated symlink:
+Both the EPUB **and** the PDF carry a generated versioned symlink under that
+`stem (version-hash)` name:
 
 ```text
 docs/book/dist/querygraph (0.1.0-13ca95f).epub -> querygraph.epub
+docs/book/dist/querygraph (0.1.0-13ca95f).pdf  -> querygraph.pdf
 ```
 
 `VERSION.md` must contain:
@@ -74,7 +76,8 @@ kindle_link: querygraph (0.1.0-13ca95f).epub
 ```
 
 Track the stable EPUB, PDF, MOBI, `VERSION.md`, source files, and stable diagram
-assets. The versioned EPUB symlink is generated and ignored by `.gitignore`.
+assets. The versioned EPUB and PDF symlinks are generated and ignored by
+`.gitignore` (`docs/book/dist/* (*).epub` and `* (*).pdf`).
 
 ## Diagram Contract
 
@@ -159,10 +162,12 @@ The build:
 10. Merges cover and body into `docs/book/dist/querygraph.pdf`.
 11. Builds `docs/book/dist/querygraph.epub`.
 12. Runs `fix_epub_layout.sh`.
-13. Creates the versioned EPUB symlink.
+13. Creates the versioned EPUB **and** PDF symlinks (`stem (version-hash)`).
 14. Keeps `docs/book/dist/VERSION.md` next to the generated artifacts.
 15. Runs `check_epub_metadata.sh`.
 16. Converts the EPUB to `docs/book/dist/querygraph.mobi`.
+17. Publishes both versioned files to `~/icloud/books` when that directory
+    exists (see Delivery).
 
 Calibre is expected either on `PATH` as `ebook-convert` or at:
 
@@ -224,16 +229,22 @@ locations.
 
 ## Delivery
 
-For iCloud Books delivery, derive the exact upload filename from
-`docs/book/dist/VERSION.md` and copy the versioned EPUB path:
+We always publish **both** the versioned EPUB and the versioned PDF to the local
+iCloud books library at `~/icloud/books`, under the `stem (version-hash)` name
+derived from `docs/book/dist/VERSION.md`. `build.sh` does this automatically when
+`~/icloud/books` exists; to deliver by hand, dereference the symlinks so the
+destination holds regular files:
 
 ```sh
-cp 'docs/book/dist/querygraph (0.1.0-13ca95f).epub' "$HOME/icloud/books/"
+KT="$(awk -F': ' '/kindle_name/{print $2}' docs/book/dist/VERSION.md)"
+cp -L "docs/book/dist/$KT.epub" "$HOME/icloud/books/$KT.epub"
+cp -L "docs/book/dist/$KT.pdf"  "$HOME/icloud/books/$KT.pdf"
 ```
 
-This produces a regular file at the destination with the versioned filename.
-Do not rely on broad `~/icloud/books` directory listings; exact-path `stat`,
-`cmp`, or `cp` checks are more reliable on this Mac.
+This produces regular files at the destination with the versioned filenames
+(e.g. `querygraph (0.2.0-77c3174).epub` and `.pdf`). Do not rely on broad
+`~/icloud/books` directory listings; exact-path `stat`, `cmp`, or `cp` checks are
+more reliable on this Mac.
 
 ## Blog TextPacks
 
