@@ -29,6 +29,7 @@ struct Cli {
 }
 
 #[derive(Debug, Subcommand)]
+#[allow(clippy::large_enum_variant)]
 enum Commands {
     /// Build a four-layer semantic bundle: Croissant, CDIF, DID, and ODRL.
     Navigator {
@@ -378,10 +379,10 @@ fn main() -> Result<()> {
         Commands::LakecatImport { bundle, output } => {
             let bundle = LakeCatBootstrapBundle::from_path(bundle)?;
             let plan = bundle.import_plan()?;
-            if let Some(parent) = std::path::Path::new(&output).parent() {
-                if !parent.as_os_str().is_empty() {
-                    fs::create_dir_all(parent)?;
-                }
+            if let Some(parent) = std::path::Path::new(&output).parent()
+                && !parent.as_os_str().is_empty()
+            {
+                fs::create_dir_all(parent)?;
             }
             fs::write(&output, serde_json::to_vec_pretty(&plan)?)?;
             println!("{}", serde_json::to_string_pretty(&plan.verification)?);

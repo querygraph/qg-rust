@@ -119,12 +119,12 @@ members = [
 ]
 
 [workspace.dependencies]
-grust = { package = "grust-graph", version = "0.7", features = ["sail"] }
-typesec = { version = "0.7", features = ["agent", "rbac", "odrl", "integrations"] }
-typesec-core = "0.7"
-typesec-rbac = "0.7"
-typesec-odrl = "0.7"
-typesec-integrations = "0.7"
+grust = { package = "grust-graph", version = "0.11", features = ["sail"] }
+typesec = { version = "0.10", features = ["agent", "rbac", "odrl", "integrations"] }
+typesec-core = "0.10"
+typesec-rbac = "0.10"
+typesec-odrl = "0.10"
+typesec-integrations = "0.10"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = { package = "serde_norway", version = "0.9" }

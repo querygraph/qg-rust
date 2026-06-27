@@ -24,6 +24,12 @@ envelopes, and emit OpenLineage events back into Sail. The point of this book
 is to make that architecture legible as a textbook: first the motivation, then
 the pieces, then the full working system.
 
+The system rests on three coordinated, named open-source releases that this
+book tracks throughout: Grust 0.11.0 "Crab" for the graph and query substrate,
+TypeSec 0.10.0 "Murano" for the typed security fabric, and LakeCat 0.2.0 "Lynx"
+for the catalog boundary. Where a chapter leans on a specific capability, it
+names the release that brought it.
+
 # The Vision from QueryGraph.ai
 
 The public QueryGraph.ai posts describe a larger ambition than a metadata
@@ -676,6 +682,12 @@ Querygraph preserve compartmentalization through an agent hierarchy. A
 synthesis agent can receive signed summaries from specialists without
 automatically receiving the raw permissions that produced those summaries.
 
+Querygraph tracks TypeSec 0.10.0, "Murano," which itself follows Grust 0.11
+"Crab." Murano is what makes the cross-agent envelopes in the Ollama path
+trustworthy as evidence: each authorized interaction carries an audit-safe
+TypeDID attestation recording who did what to which resource, at which privacy
+level, without ever exposing the payload or the signing material.
+
 Textbook rule: DIDs say who is acting; ODRL says what action is allowed;
 TypeSec turns that decision into a typed, signed capability that software can
 carry safely.
@@ -731,6 +743,15 @@ Rust matters here because graph navigation becomes systems programming when it
 is part of a security boundary. Querygraph benefits from explicit types,
 predictable serialization, careful error handling, and the ability to keep
 graph, policy, metadata, and CLI code in one compiled implementation.
+
+Querygraph tracks Grust 0.11.0, the "Crab" release. Crab is the moment the
+graph gains a language: a standards-conformant GQL/Cypher layer — lexer,
+parser, AST, and semantic analysis — over the same property graph, with backend
+read pushdown into Sail and SQLite. It also gives the navigator first-class
+Decimal, Duration, and temporal values that order and compute correctly, and
+catalog procedures such as `CALL db.labels()` for introspecting the graph the
+lakehouse projects. The graph stops being only a store of facts and becomes a
+queryable substrate.
 
 Textbook rule: use vectors for fuzzy discovery; use graphs for accountable
 navigation. Querygraph needs both, but the graph is what turns retrieval into
@@ -1448,6 +1469,15 @@ evidence. `lakecat-import` then creates the import plan only after that proof
 has survived round-trip JSON parsing. QueryGraph does not invent catalog truth;
 it accepts LakeCat proof, validates the Grust graph shape, and builds the next
 agent context from the smallest verified scope.
+
+QueryGraph tracks LakeCat 0.2.0, the "Lynx" release. Lynx puts the catalog
+spine on Turso MVCC, so commits to different tables run truly concurrently and a
+same-table race converges to exactly one winner through a pointer compare-and-
+swap — no global write lock. That matters to the handoff: the audit event, the
+lineage outbox row, and the idempotency record that this chapter relies on are
+written in the *same* transaction as the table change, which is what lets a
+QueryGraph import accept catalog state as proof rather than as a best-effort
+side effect.
 
 # Rust Examples
 

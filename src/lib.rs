@@ -2,6 +2,7 @@ pub mod agent;
 pub mod cdif;
 pub mod codata;
 pub mod croissant;
+pub mod cypher;
 pub mod dataverse;
 pub mod did;
 pub mod lakecat;

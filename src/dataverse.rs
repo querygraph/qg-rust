@@ -70,10 +70,9 @@ impl DataverseClient {
             if let Some(persistent_id) = item["global_id"]
                 .as_str()
                 .or_else(|| item["persistentUrl"].as_str())
+                && let Ok(dataset) = self.get_dataset_by_persistent_id(persistent_id)
             {
-                if let Ok(dataset) = self.get_dataset_by_persistent_id(persistent_id) {
-                    datasets.push(dataset);
-                }
+                datasets.push(dataset);
             }
         }
         Ok(datasets)

@@ -63,6 +63,21 @@ receipts; Semantic Croissant and CDIF projections; and OpenLineage/DID
 attestation evidence. Use `cargo run -- qglake-story --json` for the full
 machine-readable report.
 
+## Stack versions
+
+QueryGraph builds on three coordinated, named open-source releases. The full
+story is in the stack announcement at
+[`docs/blog/announcing-querygraph-stack.md`](docs/blog/announcing-querygraph-stack.md).
+
+- **Grust 0.11.0 "Crab"** — the backend-neutral property-graph substrate, now
+  with a standards-conformant GQL/Cypher language layer, first-class
+  Decimal/Duration/temporal values, catalog procedures, and Turso MVCC writes.
+- **TypeSec 0.10.0 "Murano"** — the type-safe security fabric: unforgeable
+  capabilities, RBAC/ODRL/graph policy engines, and audit-safe TypeDID agent
+  attestations. Murano tracks Grust 0.11 "Crab".
+- **LakeCat 0.2.0 "Lynx"** — the thin Iceberg REST catalog boundary with
+  governance, lineage, and proof on a Turso MVCC spine.
+
 ## Run
 
 ```bash

@@ -61,14 +61,13 @@ impl RbacPolicy {
         let mut matched_roles = Vec::new();
         if let Some(role_ids) = self.assignments.get(principal) {
             for role_id in role_ids {
-                if let Some(role) = self.roles.get(role_id) {
-                    if role
+                if let Some(role) = self.roles.get(role_id)
+                    && role
                         .permissions
                         .iter()
                         .any(|permission| permission.matches(action, resource))
-                    {
-                        matched_roles.push(role.id.clone());
-                    }
+                {
+                    matched_roles.push(role.id.clone());
                 }
             }
         }
