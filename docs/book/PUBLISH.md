@@ -244,12 +244,11 @@ with its rendered diagram PNGs so it imports cleanly into Ulysses — including 
 iOS, where external image paths and `mermaid` code blocks do not render.
 
 When a post is added or changed, regenerate its textpack from the canonical post
-(`docs/blog/<name>/post.md`): reflow the prose to one line per paragraph, render
-any `mermaid` diagrams to PNG, and bundle per `TEXTPACK.md`. A text-only post
-still ships a `.textpack` (with an empty `assets/` directory). Generate the
-`.textpack` as a deliverable (e.g. under `/tmp`); do not commit the bundle — keep
-only the post source, the `diagrams/*.mmd` sources, and the rendered `*.png` in
-git.
+(`docs/blog/<name>.md`): reflow the prose to one line per paragraph, render any
+`mermaid` diagrams to PNG, and bundle per `TEXTPACK.md`. A text-only post still
+ships a `.textpack` (with an empty `assets/` directory). The built `.textpack`
+is **kept next to the blogs in `docs/blog/dist/`** (mirroring `docs/book/dist/`)
+and committed; commit only the `.textpack`, not the unzipped `.textbundle/`.
 
 ## Git Delivery
 

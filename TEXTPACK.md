@@ -1,7 +1,7 @@
 # Preparing a Ulysses TextPack from a QueryGraph blog post
 
-How to turn a Markdown blog post that uses diagrams (e.g.
-`docs/blog/<name>/post.md`) into a self-contained **`.textpack`** that imports
+How to turn a Markdown blog post (e.g. `docs/blog/<name>.md`) into a
+self-contained **`.textpack`** that imports
 cleanly into Ulysses — including on iOS, where external image paths and
 `mermaid` code blocks do not render.
 
@@ -49,7 +49,7 @@ single line (so multi-line items don't fragment).
 
 ```python
 import re
-src = "docs/blog/announcing-querygraph-stack/post.md"
+src = "docs/blog/announcing-querygraph-stack.md"
 lines = open(src).read().split("\n")
 out, buf, in_code = [], [], False
 list_re   = re.compile(r"^\s*([-*+]|\d+\.)\s+")
@@ -79,7 +79,7 @@ per diagram). Render each at 2× on a **white** background (safe for both light
 and dark editors):
 
 ```sh
-cd docs/blog/announcing-querygraph-stack
+cd docs/blog
 for n in diagrams/*.mmd; do
   mmdc -i "$n" -o "${n%.mmd}.png" -b white -s 2
 done
@@ -98,11 +98,13 @@ In the canonical post, each diagram is an image reference
 
 ```python
 import re, os, json, zipfile, shutil
-base = "docs/blog/announcing-querygraph-stack"
-post = open(f"{base}/post.md").read()
-ddir = f"{base}/diagrams"
-out  = "/tmp"                                  # deliverable location (not committed)
-tb   = f"{out}/announcing-querygraph-stack.textbundle"
+name = "announcing-querygraph-stack"
+src  = f"docs/blog/{name}.md"
+ddir = "docs/blog/diagrams"                    # mermaid PNGs, if the post has any
+out  = "docs/blog/dist"                        # committed, next to the blogs
+os.makedirs(out, exist_ok=True)
+post = open(src).read()
+tb   = f"{out}/{name}.textbundle"
 shutil.rmtree(tb, ignore_errors=True); os.makedirs(f"{tb}/assets", exist_ok=True)
 imgs = set(re.findall(r"!\[[^\]]*\]\(diagrams/([a-z0-9-]+\.png)\)", post))
 text = re.sub(r"\(diagrams/([a-z0-9-]+\.png)\)", r"(assets/\1)", post)  # diagrams/ -> assets/
@@ -110,12 +112,13 @@ open(f"{tb}/text.markdown", "w").write(text)
 json.dump({"version": 2, "type": "net.daringfireball.markdown", "transient": False},
           open(f"{tb}/info.json", "w"))
 for n in imgs: shutil.copy(f"{ddir}/{n}", f"{tb}/assets/{n}")
-pack = f"{out}/announcing-querygraph-stack.textpack"
+pack = f"{out}/{name}.textpack"
 if os.path.exists(pack): os.remove(pack)
 with zipfile.ZipFile(pack, "w", zipfile.ZIP_DEFLATED) as z:
     for root, _, files in os.walk(tb):
         for fn in files:
             p = os.path.join(root, fn); z.write(p, os.path.relpath(p, out))
+shutil.rmtree(tb)   # keep only the .textpack in dist/, not the unzipped bundle
 ```
 
 The zip's top entry must be `<name>.textbundle/` (verify with
@@ -139,13 +142,16 @@ the more reliable bundle for Ulysses.
 - **White background, 2× scale** for crisp, paste-anywhere images.
 - **iOS:** relative image paths in pasted Markdown do not resolve — only the
   bundled `.textpack` (or base64) shows images inline.
-- **Don't commit the bundles.** `.textpack` / base64 `.md` duplicate the PNGs and
-  bloat git; generate them as deliverables (e.g. under `/tmp`) and keep the repo
-  source clean (`post.md` + `diagrams/*.mmd` + `*.png`).
+- **Commit the `.textpack` in `docs/blog/dist/`.** Keep the built `.textpack`
+  next to the blogs under `docs/blog/dist/` (mirroring `docs/book/dist/`), so each
+  release's ready-to-import bundle is versioned with the post. Commit only the
+  `.textpack`, not the unzipped `.textbundle/` (the build removes it). It
+  re-bundles the diagram PNGs — an accepted, small duplication. Don't commit a
+  base64 fallback `.md`.
 
 ## Relation to releases
 
-Each release ships a blog post under `docs/blog/` with any diagrams alongside it.
-This guide is the last-mile step to hand that post to a writing/publishing app,
-and `docs/book/PUBLISH.md` makes a `.textpack` a required deliverable for every
-post.
+Each release ships a blog post at `docs/blog/<name>.md` and its ready-to-import
+`.textpack` under `docs/blog/dist/`. This guide is the last-mile step to hand
+that post to a writing/publishing app, and `docs/book/PUBLISH.md` makes a
+committed `.textpack` a required deliverable for every post.
