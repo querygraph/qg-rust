@@ -235,6 +235,22 @@ This produces a regular file at the destination with the versioned filename.
 Do not rely on broad `~/icloud/books` directory listings; exact-path `stat`,
 `cmp`, or `cp` checks are more reliable on this Mac.
 
+## Blog TextPacks
+
+Every blog post under `docs/blog/` ships a Ulysses **`.textpack`** as a required
+delivery artifact, built with [`../../TEXTPACK.md`](../../TEXTPACK.md). We
+*always* create the textpack for each blog post: it bundles the post's Markdown
+with its rendered diagram PNGs so it imports cleanly into Ulysses — including on
+iOS, where external image paths and `mermaid` code blocks do not render.
+
+When a post is added or changed, regenerate its textpack from the canonical post
+(`docs/blog/<name>/post.md`): reflow the prose to one line per paragraph, render
+any `mermaid` diagrams to PNG, and bundle per `TEXTPACK.md`. A text-only post
+still ships a `.textpack` (with an empty `assets/` directory). Generate the
+`.textpack` as a deliverable (e.g. under `/tmp`); do not commit the bundle — keep
+only the post source, the `diagrams/*.mmd` sources, and the rendered `*.png` in
+git.
+
 ## Git Delivery
 
 Before committing a book update, inspect:
