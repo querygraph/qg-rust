@@ -26,7 +26,7 @@ the pieces, then the full working system.
 
 The system rests on three coordinated, named open-source releases that this
 book tracks throughout: Grust 0.11.0 "Crab" for the graph and query substrate,
-TypeSec 0.10.0 "Murano" for the typed security fabric, and LakeCat 0.2.0 "Lynx"
+TypeSec 0.11.0 "Burano" for the typed security fabric, and LakeCat 0.2.1 "Lynx"
 for the catalog boundary. Where a chapter leans on a specific capability, it
 names the release that brought it.
 
@@ -682,9 +682,10 @@ Querygraph preserve compartmentalization through an agent hierarchy. A
 synthesis agent can receive signed summaries from specialists without
 automatically receiving the raw permissions that produced those summaries.
 
-Querygraph tracks TypeSec 0.10.0, "Murano," which itself follows Grust 0.11
-"Crab." Murano is what makes the cross-agent envelopes in the Ollama path
-trustworthy as evidence: each authorized interaction carries an audit-safe
+Querygraph tracks TypeSec 0.11.0, "Burano," which follows Murano in the same
+0.11 "Crab" Grust line. Burano is what makes the cross-agent envelopes in the
+Ollama path trustworthy as evidence: each authorized interaction carries an
+audit-safe
 TypeDID attestation recording who did what to which resource, at which privacy
 level, without ever exposing the payload or the signing material.
 
@@ -1470,7 +1471,7 @@ has survived round-trip JSON parsing. QueryGraph does not invent catalog truth;
 it accepts LakeCat proof, validates the Grust graph shape, and builds the next
 agent context from the smallest verified scope.
 
-QueryGraph tracks LakeCat 0.2.0, the "Lynx" release. Lynx puts the catalog
+QueryGraph tracks LakeCat 0.2.1, the "Lynx" release. Lynx puts the catalog
 spine on Turso MVCC, so commits to different tables run truly concurrently and a
 same-table race converges to exactly one winner through a pointer compare-and-
 swap — no global write lock. That matters to the handoff: the audit event, the
@@ -1478,6 +1479,15 @@ lineage outbox row, and the idempotency record that this chapter relies on are
 written in the *same* transaction as the table change, which is what lets a
 QueryGraph import accept catalog state as proof rather than as a best-effort
 side effect.
+
+The 0.2.1 maintenance release also tightens this boundary in a way the importer
+feels directly. LakeCat extracted the bootstrap-bundle *wire format and its
+verification* into a small shared `qglake-bundle` crate, so QueryGraph no longer
+keeps a hand-written copy of those types: it deserializes the canonical
+`QueryGraphBootstrap` and runs LakeCat's own `verify_manifest`, then layers its
+Crab Cypher import plan on top. The producer and the consumer now validate the
+handoff with one set of types — the bundle can no longer mean two slightly
+different things on the two sides of the boundary.
 
 # Rust Examples
 

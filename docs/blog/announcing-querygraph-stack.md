@@ -13,12 +13,14 @@ that ship from the [QueryGraph org](https://github.com/querygraph) and were cut
 to work together:
 
 - **Grust 0.11.0 "Crab"** — the graph and query substrate.
-- **TypeSec 0.10.0 "Murano"** — the typed security and governance fabric.
-- **LakeCat 0.2.0 "Lynx"** — the Iceberg REST catalog boundary.
+- **TypeSec 0.11.0 "Burano"** — the typed security and governance fabric.
+- **LakeCat 0.2.1 "Lynx"** — the Iceberg REST catalog boundary.
 
-They are not three independent libraries that happen to coexist. Murano tracks
-Crab; Lynx consumes both as published crates. The versions are coordinated on
-purpose, so the seams between graph, policy, and catalog are typed, not hopeful.
+They are not three independent libraries that happen to coexist. Burano (and
+the Murano release before it) tracks Crab; Lynx consumes both as published
+crates and shares its bundle wire format with QueryGraph through the
+`qglake-bundle` crate. The versions are coordinated on purpose, so the seams
+between graph, policy, and catalog are typed, not hopeful.
 
 ## Grust 0.11 "Crab": the graph + query substrate
 
@@ -40,7 +42,7 @@ Turso MVCC concurrent writes. The graph stops being only a store of facts and
 becomes a queryable substrate. Full post:
 [github.com/querygraph/grust/blob/main/docs/blog/grust-crab.md](https://github.com/querygraph/grust/blob/main/docs/blog/grust-crab.md).
 
-## TypeSec 0.10 "Murano": the typed security/governance fabric
+## TypeSec 0.11 "Burano": the typed security/governance fabric
 
 Most authorization systems answer *is this allowed?* and then trust every line
 of code after the check to remember the answer. TypeSec closes that gap by
@@ -49,18 +51,19 @@ unforgeable proof that permission `P` was granted over resource `R`, it has no
 public constructor, and the only way to mint one in production runs a policy
 engine and emits an audit event. Forgetting the guard becomes a type error.
 
-Murano carries one policy contract behind many engines — RBAC, ODRL, and a graph
+Burano carries one policy contract behind many engines — RBAC, ODRL, and a graph
 engine that compiles policy into a typed Grust graph with deny-overrides
 semantics — plus typestate agents, typed privacy labels, and **DID/TypeDID agent
 messaging** with real cryptography. The payoff for QueryGraph is the
 **audit-safe attestation**: when agents collaborate over governed data, a
 TypeDID envelope records who did what to which resource, at which privacy level,
-without ever exposing the payload or the signing material. Murano tracks Grust
-0.11 "Crab," and it is API-compatible for consumers across the 0.8→0.10 line.
-Full post:
+without ever exposing the payload or the signing material. Burano continues the
+Murano line on Grust 0.11 "Crab," unifying glob matching (a single `*` no longer
+crosses `/` — the safer authorization default) and adopting Crab's graph-type
+validation, while staying API-compatible for consumers. Full post:
 [github.com/querygraph/typesec/blob/main/docs/blog/announcing-typesec.md](https://github.com/querygraph/typesec/blob/main/docs/blog/announcing-typesec.md).
 
-## LakeCat 0.2 "Lynx": the Iceberg REST catalog boundary
+## LakeCat 0.2.1 "Lynx": the Iceberg REST catalog boundary
 
 LakeCat is a Rust-native, Iceberg-compatible REST catalog. It speaks the
 standard protocol — pyiceberg, Spark, and Trino talk to it unchanged — but keeps
@@ -76,7 +79,10 @@ CONCURRENT`): commits to different tables run truly concurrently, while a
 same-table race converges to exactly one winner — no global write lock, no
 `database is locked`. Lineage drains from the outbox as OpenLineage events only
 after the catalog transaction commits, so it reflects committed state rather than
-a handler's best effort. Full post:
+a handler's best effort. The 0.2.1 maintenance release also extracts the
+bootstrap-bundle wire format and verification into a shared `qglake-bundle`
+crate, so the QueryGraph importer verifies catalog handoffs with LakeCat's own
+types instead of a hand-maintained copy — one contract, two sides. Full post:
 [github.com/querygraph/lakecat/blob/main/docs/blog/announcing-lakecat.md](https://github.com/querygraph/lakecat/blob/main/docs/blog/announcing-lakecat.md).
 
 ## How they compose in QueryGraph
@@ -85,7 +91,7 @@ QueryGraph wires these into a single Rust navigator. **Sail** is the warehouse
 that executes the lakehouse and keeps audit data queryable. **Grust "Crab"**
 gives the navigator a graph of meaning — dataset contains file, field maps to
 concept, policy targets asset, run consumed input — and now a Cypher/GQL way to
-ask. **TypeSec "Murano"** turns DIDs and ODRL policy into typed capabilities and
+ask. **TypeSec "Burano"** turns DIDs and ODRL policy into typed capabilities and
 signs every agent interaction, so a compartmentalized agent hierarchy can share
 summaries without sharing raw permissions. **LakeCat "Lynx"** is the catalog
 boundary: QueryGraph accepts its bootstrap bundles and import plans as *proof* —
@@ -96,5 +102,5 @@ leaves **OpenLineage** events in Sail and a compact **DID** attestation root.
 The result is the architecture QueryGraph has argued for all along: not a single
 unrestricted prompt over a warehouse, but a typed, permissioned, lineage-aware
 navigator over a semantic lakehouse — now standing on Grust 0.11 "Crab," TypeSec
-0.10 "Murano," and LakeCat 0.2 "Lynx." It is built in the open. Kick the tires
+0.11 "Burano," and LakeCat 0.2.1 "Lynx." It is built in the open. Kick the tires
 and tell us what's missing.

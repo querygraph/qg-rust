@@ -1,95 +1,147 @@
 use super::*;
-use super::verify::content_hash_json;
+
+use chrono::DateTime;
+use lakecat_core::{Namespace, TableIdent, TableName, WarehouseName};
+use qglake_bundle::{
+    QueryGraphBootstrap, QueryGraphBundleManifest, QueryGraphCatalogGraph, QueryGraphEdge,
+    QueryGraphImportCompatibility, QueryGraphNode, QueryGraphTableArtifactHashes,
+    QueryGraphTableProjection, QueryGraphViewArtifactHashes, QueryGraphViewProjection,
+    QueryGraphViewReceiptEvidence, graph_hash,
+};
 use serde_json::json;
 
-#[test]
-fn verifies_lakecat_bootstrap_manifest_hashes() {
-    let croissant = json!({"@type":"cr:Dataset","name":"events"});
-    let cdif = json!({"@type":"dcat:Dataset","dct:title":"events"});
-    let osi = json!({"semantic_model":{"name":"events"}});
-    let odrl = json!({"@type":"odrl:Policy","@id":"events#odrl"});
-    let open_lineage = json!({"eventType":"COMPLETE"});
-    let table = LakeCatTableProjection {
-        ident: json!({
-            "warehouse": "local",
-            "namespace": ["default"],
-            "name": "events"
-        }),
-        stable_id: "lakecat:table:local:default:events".to_string(),
-        location: "file:///tmp/events".to_string(),
-        metadata_location: Some("file:///tmp/events/metadata/00000.json".to_string()),
-        version: 0,
-        format_version: Some(3),
-        croissant: croissant.clone(),
-        cdif: cdif.clone(),
-        osi: osi.clone(),
-        odrl: odrl.clone(),
-        policy_bindings: Vec::new(),
-    };
-    let bundle = LakeCatBootstrapBundle {
+const TABLE_ID: &str = "lakecat:table:local:default:events";
+
+fn warehouse() -> WarehouseName {
+    WarehouseName::new("local").unwrap()
+}
+
+fn table_projection(stable_id: &str) -> QueryGraphTableProjection {
+    QueryGraphTableProjection {
+        ident: TableIdent::new(
+            warehouse(),
+            Namespace::new(vec!["default".to_string()]).unwrap(),
+            TableName::new("events").unwrap(),
+        ),
+        stable_id: stable_id.to_string(),
+        location: "s3://warehouse/events".to_string(),
+        metadata_location: Some("s3://warehouse/events/metadata/0.json".to_string()),
+        version: 1,
+        format_version: Some(2),
+        croissant: json!({"@type": "cr:Dataset", "name": "events"}),
+        cdif: json!({"@type": "dcat:Dataset", "dct:title": "events"}),
+        osi: json!({"semantic_model": {"name": "events"}}),
+        odrl: json!({"@type": "odrl:Policy", "@id": "events#odrl"}),
+        policy_bindings: vec![],
+    }
+}
+
+fn view_projection(stable_id: &str) -> QueryGraphViewProjection {
+    QueryGraphViewProjection {
+        stable_id: stable_id.to_string(),
         warehouse: "local".to_string(),
-        bundle_hash: "pending".to_string(),
-        manifest: LakeCatBootstrapManifest {
-            schema_version: "lakecat.querygraph.bootstrap.v1".to_string(),
-            producer: "https://querygraph.ai/lakecat".to_string(),
-            standards: vec![
-                "Croissant".to_string(),
-                "CDIF".to_string(),
-                "OSI".to_string(),
-                "ODRL".to_string(),
-                "OpenLineage".to_string(),
-            ],
-            table_artifacts: vec![LakeCatTableArtifactHashes {
-                stable_id: table.stable_id.clone(),
-                croissant_hash: content_hash_json(&croissant).unwrap(),
-                cdif_hash: content_hash_json(&cdif).unwrap(),
-                osi_hash: content_hash_json(&osi).unwrap(),
-                odrl_hash: content_hash_json(&odrl).unwrap(),
-                policy_bindings_hash: None,
-            }],
-            view_artifacts: Vec::new(),
-            graph_hash: None,
-            open_lineage_hash: content_hash_json(&open_lineage).unwrap(),
-            querygraph_import: None,
-        },
-        tables: vec![table],
-        views: Vec::new(),
-        graph: json!({
-            "nodes": [
-                {
-                    "id": "lakecat:catalog:local",
-                    "label": "Catalog",
-                    "properties": {"warehouse": "local"}
-                },
-                {
-                    "id": "lakecat:table:local:default:events",
-                    "label": "Table",
-                    "properties": {"stableId": "lakecat:table:local:default:events"}
-                }
-            ],
-            "edges": [
-                {
-                    "from": "lakecat:catalog:local",
-                    "to": "lakecat:table:local:default:events",
-                    "label": "HAS_TABLE"
-                }
-            ]
-        }),
+        namespace: vec!["default".to_string()],
+        name: "events_recent".to_string(),
+        view_version: 1,
+        sql: "SELECT * FROM events".to_string(),
+        dialect: "spark".to_string(),
+        schema_version: Some(1),
+        columns: json!([]),
+        properties: json!({}),
+        osi: json!({"view": {"name": "events_recent"}}),
+    }
+}
+
+fn catalog_graph() -> QueryGraphCatalogGraph {
+    QueryGraphCatalogGraph {
+        nodes: vec![
+            QueryGraphNode {
+                id: "lakecat:catalog:local".to_string(),
+                label: "Catalog".to_string(),
+                properties: json!({"warehouse": "local"}),
+            },
+            QueryGraphNode {
+                id: TABLE_ID.to_string(),
+                label: "Table".to_string(),
+                properties: json!({"version": 3}),
+            },
+        ],
+        edges: vec![QueryGraphEdge {
+            from: "lakecat:catalog:local".to_string(),
+            to: TABLE_ID.to_string(),
+            label: "HAS_TABLE".to_string(),
+        }],
+    }
+}
+
+/// Assemble a hash-valid bootstrap. The bundle hash is recomputed by
+/// `with_view_receipt_evidence`, so callers never hand-compute hashes.
+fn build_bundle(
+    tables: Vec<QueryGraphTableProjection>,
+    views: Vec<QueryGraphViewProjection>,
+    graph: QueryGraphCatalogGraph,
+    evidence: Vec<QueryGraphViewReceiptEvidence>,
+) -> QueryGraphBootstrap {
+    let wh = warehouse();
+    let open_lineage = json!({"eventType": "COMPLETE"});
+    let table_artifacts = tables
+        .iter()
+        .map(|table| QueryGraphTableArtifactHashes::from_table(table).unwrap())
+        .collect::<Vec<_>>();
+    let view_artifacts = views
+        .iter()
+        .map(|view| QueryGraphViewArtifactHashes::from_view(view).unwrap())
+        .collect::<Vec<_>>();
+    let graph_hash = graph_hash(&graph).unwrap();
+    let mut manifest =
+        QueryGraphBundleManifest::from_hashes(table_artifacts, view_artifacts, graph_hash, &open_lineage)
+            .unwrap();
+    manifest.querygraph_import = Some(
+        QueryGraphImportCompatibility::from_table_only_bundle(
+            &wh,
+            &manifest,
+            &tables,
+            &graph,
+            &open_lineage,
+            views.len(),
+        )
+        .unwrap(),
+    );
+    let bootstrap = QueryGraphBootstrap {
+        warehouse: wh,
+        generated_at: DateTime::from_timestamp(1_700_000_000, 0).unwrap(),
+        bundle_hash: String::new(),
+        manifest,
+        tables,
+        views,
+        graph,
         open_lineage,
     };
-    let bundle = LakeCatBootstrapBundle {
-        bundle_hash: bundle.computed_bundle_hash().unwrap(),
-        ..bundle
-    };
+    bootstrap.with_view_receipt_evidence(evidence).unwrap()
+}
+
+fn view_evidence(stable_id: &str) -> QueryGraphViewReceiptEvidence {
+    QueryGraphViewReceiptEvidence {
+        stable_id: stable_id.to_string(),
+        view_version: 1,
+        receipt_hash: "sha256:receipt".to_string(),
+        receipt_chain_hash: "sha256:receipt-chain".to_string(),
+    }
+}
+
+#[test]
+fn verifies_qglake_bootstrap_and_builds_cypher_import_plan() {
+    let bundle = LakeCatBootstrapBundle(build_bundle(
+        vec![table_projection(TABLE_ID)],
+        vec![],
+        catalog_graph(),
+        vec![],
+    ));
 
     let verification = bundle.verify_manifest().unwrap();
     assert_eq!(verification.warehouse, "local");
     assert_eq!(verification.table_count, 1);
-    assert_eq!(
-        verification.verified_tables,
-        vec!["lakecat:table:local:default:events"]
-    );
-    assert_eq!(verification.bundle_hash, bundle.bundle_hash);
+    assert_eq!(verification.verified_tables, vec![TABLE_ID.to_string()]);
 
     let plan = bundle.import_plan().unwrap();
     assert_eq!(plan.graph_nodes, 2);
@@ -100,349 +152,106 @@ fn verifies_lakecat_bootstrap_manifest_hashes() {
         vec!["Catalog".to_string(), "Table".to_string()]
     );
     assert_eq!(plan.table_count, 1);
-    assert_eq!(
-        plan.tables[0].stable_id,
-        "lakecat:table:local:default:events"
-    );
+    assert_eq!(plan.tables[0].stable_id, TABLE_ID);
     assert_eq!(plan.tables[0].croissant_name.as_deref(), Some("events"));
 }
 
 #[test]
-fn rejects_lakecat_bootstrap_manifest_hash_mismatch() {
-    let mut bundle = LakeCatBootstrapBundle {
-        warehouse: "local".to_string(),
-        bundle_hash: "sha256:not-real".to_string(),
-        manifest: LakeCatBootstrapManifest {
-            schema_version: "lakecat.querygraph.bootstrap.v1".to_string(),
-            producer: "https://querygraph.ai/lakecat".to_string(),
-            standards: vec!["Croissant".to_string()],
-            table_artifacts: vec![LakeCatTableArtifactHashes {
-                stable_id: "lakecat:table:local:default:events".to_string(),
-                croissant_hash: "sha256:not-real".to_string(),
-                cdif_hash: content_hash_json(&json!({})).unwrap(),
-                osi_hash: content_hash_json(&json!({})).unwrap(),
-                odrl_hash: content_hash_json(&json!({})).unwrap(),
-                policy_bindings_hash: None,
-            }],
-            view_artifacts: Vec::new(),
-            graph_hash: None,
-            open_lineage_hash: content_hash_json(&json!({})).unwrap(),
-            querygraph_import: None,
-        },
-        tables: vec![LakeCatTableProjection {
-            ident: json!({}),
-            stable_id: "lakecat:table:local:default:events".to_string(),
-            location: "file:///tmp/events".to_string(),
-            metadata_location: None,
-            version: 0,
-            format_version: None,
-            croissant: json!({"name":"events"}),
-            cdif: json!({}),
-            osi: json!({}),
-            odrl: json!({}),
-            policy_bindings: Vec::new(),
+fn rejects_manifest_hash_mismatch() {
+    let mut bootstrap = build_bundle(
+        vec![table_projection(TABLE_ID)],
+        vec![],
+        catalog_graph(),
+        vec![],
+    );
+    bootstrap.manifest.open_lineage_hash = "sha256:tampered".to_string();
+
+    let err = LakeCatBootstrapBundle(bootstrap)
+        .verify_manifest()
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("OpenLineage hash mismatch"), "{err}");
+}
+
+#[test]
+fn rejects_bundle_hash_mismatch() {
+    let mut bootstrap = build_bundle(
+        vec![table_projection(TABLE_ID)],
+        vec![],
+        catalog_graph(),
+        vec![],
+    );
+    bootstrap.bundle_hash = "sha256:wrong".to_string();
+
+    let err = LakeCatBootstrapBundle(bootstrap)
+        .verify_manifest()
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("bundle hash mismatch"), "{err}");
+}
+
+#[test]
+fn rejects_duplicate_table_stable_ids() {
+    let bootstrap = build_bundle(
+        vec![table_projection(TABLE_ID), table_projection(TABLE_ID)],
+        vec![],
+        catalog_graph(),
+        vec![],
+    );
+
+    let err = LakeCatBootstrapBundle(bootstrap)
+        .verify_manifest()
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("duplicate-free by stable id"), "{err}");
+}
+
+#[test]
+fn rejects_catalog_graph_with_invalid_edges() {
+    // A graph whose edge points at a node not present in the vertex set. The
+    // bundle still hashes/verifies (the graph hash covers exactly these bytes);
+    // the dangling edge is caught when the importer loads it through Grust.
+    let graph = QueryGraphCatalogGraph {
+        nodes: vec![QueryGraphNode {
+            id: "lakecat:catalog:local".to_string(),
+            label: "Catalog".to_string(),
+            properties: json!({}),
         }],
-        views: Vec::new(),
-        graph: json!({}),
-        open_lineage: json!({}),
+        edges: vec![QueryGraphEdge {
+            from: "lakecat:catalog:local".to_string(),
+            to: "lakecat:table:missing".to_string(),
+            label: "HAS_TABLE".to_string(),
+        }],
     };
-
-    let err = bundle.verify_manifest().unwrap_err().to_string();
-    assert!(err.contains("Croissant hash mismatch"));
-
-    bundle.manifest.table_artifacts.clear();
-    let err = bundle.verify_manifest().unwrap_err().to_string();
-    assert!(err.contains("table artifact count"));
-}
-
-#[test]
-fn rejects_duplicate_lakecat_table_stable_ids() {
-    let table = LakeCatTableProjection {
-        ident: json!({}),
-        stable_id: "lakecat:table:local:default:events".to_string(),
-        location: "file:///tmp/events".to_string(),
-        metadata_location: None,
-        version: 0,
-        format_version: None,
-        croissant: json!({}),
-        cdif: json!({}),
-        osi: json!({}),
-        odrl: json!({}),
-        policy_bindings: Vec::new(),
-    };
-    let bundle = LakeCatBootstrapBundle {
-        warehouse: "local".to_string(),
-        bundle_hash: "sha256:not-checked-before-identity-validation".to_string(),
-        manifest: LakeCatBootstrapManifest {
-            schema_version: "lakecat.querygraph.bootstrap.v1".to_string(),
-            producer: "https://querygraph.ai/lakecat".to_string(),
-            standards: Vec::new(),
-            table_artifacts: vec![
-                LakeCatTableArtifactHashes {
-                    stable_id: table.stable_id.clone(),
-                    croissant_hash: "sha256:not-checked".to_string(),
-                    cdif_hash: "sha256:not-checked".to_string(),
-                    osi_hash: "sha256:not-checked".to_string(),
-                    odrl_hash: "sha256:not-checked".to_string(),
-                    policy_bindings_hash: None,
-                },
-                LakeCatTableArtifactHashes {
-                    stable_id: table.stable_id.clone(),
-                    croissant_hash: "sha256:not-checked".to_string(),
-                    cdif_hash: "sha256:not-checked".to_string(),
-                    osi_hash: "sha256:not-checked".to_string(),
-                    odrl_hash: "sha256:not-checked".to_string(),
-                    policy_bindings_hash: None,
-                },
-            ],
-            view_artifacts: Vec::new(),
-            graph_hash: None,
-            open_lineage_hash: "sha256:not-checked".to_string(),
-            querygraph_import: None,
-        },
-        tables: vec![table.clone(), table],
-        views: Vec::new(),
-        graph: json!({}),
-        open_lineage: json!({}),
-    };
-
-    let err = bundle.verify_manifest().unwrap_err().to_string();
-    assert!(err.contains("LakeCat bootstrap table projections must be duplicate-free"));
-}
-
-#[test]
-fn rejects_lakecat_bootstrap_bundle_hash_mismatch() {
-    let croissant = json!({"name":"events"});
-    let table = LakeCatTableProjection {
-        ident: json!({}),
-        stable_id: "lakecat:table:local:default:events".to_string(),
-        location: "file:///tmp/events".to_string(),
-        metadata_location: None,
-        version: 0,
-        format_version: None,
-        croissant: croissant.clone(),
-        cdif: json!({}),
-        osi: json!({}),
-        odrl: json!({}),
-        policy_bindings: Vec::new(),
-    };
-    let bundle = LakeCatBootstrapBundle {
-        warehouse: "local".to_string(),
-        bundle_hash: "sha256:bad".to_string(),
-        manifest: LakeCatBootstrapManifest {
-            schema_version: "lakecat.querygraph.bootstrap.v1".to_string(),
-            producer: "https://querygraph.ai/lakecat".to_string(),
-            standards: vec!["Croissant".to_string()],
-            table_artifacts: vec![LakeCatTableArtifactHashes {
-                stable_id: table.stable_id.clone(),
-                croissant_hash: content_hash_json(&croissant).unwrap(),
-                cdif_hash: content_hash_json(&json!({})).unwrap(),
-                osi_hash: content_hash_json(&json!({})).unwrap(),
-                odrl_hash: content_hash_json(&json!({})).unwrap(),
-                policy_bindings_hash: None,
-            }],
-            view_artifacts: Vec::new(),
-            graph_hash: None,
-            open_lineage_hash: content_hash_json(&json!({})).unwrap(),
-            querygraph_import: None,
-        },
-        tables: vec![table],
-        views: Vec::new(),
-        graph: json!({"nodes":[],"edges":[]}),
-        open_lineage: json!({}),
-    };
-
-    let err = bundle.verify_manifest().unwrap_err().to_string();
-    assert!(err.contains("bundle hash mismatch"));
-}
-
-#[test]
-fn rejects_lakecat_bootstrap_graph_with_invalid_edges() {
-    let croissant = json!({"name":"events"});
-    let table = LakeCatTableProjection {
-        ident: json!({}),
-        stable_id: "lakecat:table:local:default:events".to_string(),
-        location: "file:///tmp/events".to_string(),
-        metadata_location: None,
-        version: 0,
-        format_version: None,
-        croissant: croissant.clone(),
-        cdif: json!({}),
-        osi: json!({}),
-        odrl: json!({}),
-        policy_bindings: Vec::new(),
-    };
-    let bundle = LakeCatBootstrapBundle {
-        warehouse: "local".to_string(),
-        bundle_hash: "pending".to_string(),
-        manifest: LakeCatBootstrapManifest {
-            schema_version: "lakecat.querygraph.bootstrap.v1".to_string(),
-            producer: "https://querygraph.ai/lakecat".to_string(),
-            standards: vec!["Croissant".to_string()],
-            table_artifacts: vec![LakeCatTableArtifactHashes {
-                stable_id: table.stable_id.clone(),
-                croissant_hash: content_hash_json(&croissant).unwrap(),
-                cdif_hash: content_hash_json(&json!({})).unwrap(),
-                osi_hash: content_hash_json(&json!({})).unwrap(),
-                odrl_hash: content_hash_json(&json!({})).unwrap(),
-                policy_bindings_hash: None,
-            }],
-            view_artifacts: Vec::new(),
-            graph_hash: None,
-            open_lineage_hash: content_hash_json(&json!({})).unwrap(),
-            querygraph_import: None,
-        },
-        tables: vec![table],
-        views: Vec::new(),
-        graph: json!({
-            "nodes": [
-                {"id": "lakecat:catalog:local", "label": "Catalog"}
-            ],
-            "edges": [
-                {
-                    "from": "lakecat:catalog:local",
-                    "to": "lakecat:table:missing",
-                    "label": "HAS_TABLE"
-                }
-            ]
-        }),
-        open_lineage: json!({}),
-    };
-    let bundle = LakeCatBootstrapBundle {
-        bundle_hash: bundle.computed_bundle_hash().unwrap(),
-        ..bundle
-    };
-
-    let err = bundle.import_plan().unwrap_err().to_string();
-    assert!(err.contains("LakeCat bootstrap graph validation failed"));
-    assert!(err.contains("edge destination"));
-}
-
-#[test]
-fn verifies_view_bearing_lakecat_import_contract() {
-    let croissant = json!({"name":"events"});
-    let cdif = json!({"title":"events"});
-    let table_osi = json!({"table":{"name":"events"}});
-    let odrl = json!({"@id":"lakecat:policy:events"});
-    let view_osi = json!({"view":{"name":"active_customers"}});
-    let open_lineage = json!({"eventType":"COMPLETE"});
-    let table = LakeCatTableProjection {
-        ident: json!({
-            "warehouse": "local",
-            "namespace": ["default"],
-            "name": "events"
-        }),
-        stable_id: "lakecat:table:local:default:events".to_string(),
-        location: "file:///tmp/events".to_string(),
-        metadata_location: Some("file:///tmp/events/metadata/00000.json".to_string()),
-        version: 1,
-        format_version: Some(3),
-        croissant: croissant.clone(),
-        cdif: cdif.clone(),
-        osi: table_osi.clone(),
-        odrl: odrl.clone(),
-        policy_bindings: vec![json!({"policy-id":"agent-read"})],
-    };
-    let view = LakeCatViewProjection {
-        stable_id: "lakecat:view:local:default:active_customers".to_string(),
-        warehouse: "local".to_string(),
-        namespace: vec!["default".to_string()],
-        name: "active_customers".to_string(),
-        view_version: 1,
-        sql: "select id from customers where active".to_string(),
-        dialect: "sql".to_string(),
-        schema_version: 1,
-        columns: json!([{"name":"id","data-type":"int"}]),
-        properties: json!({}),
-        osi: view_osi.clone(),
-    };
-    let graph = json!({
-        "nodes": [
-            {"id": "lakecat:catalog", "label": "Catalog"},
-            {"id": "lakecat:namespace:local:default", "label": "Namespace"},
-            {"id": table.stable_id, "label": "IcebergTable"},
-            {"id": view.stable_id, "label": "View"}
-        ],
-        "edges": [
-            {
-                "from": "lakecat:catalog",
-                "to": "lakecat:namespace:local:default",
-                "label": "HAS_NAMESPACE"
-            },
-            {
-                "from": "lakecat:namespace:local:default",
-                "to": "lakecat:table:local:default:events",
-                "label": "CONTAINS_TABLE"
-            },
-            {
-                "from": "lakecat:namespace:local:default",
-                "to": "lakecat:view:local:default:active_customers",
-                "label": "CONTAINS_VIEW"
-            }
-        ]
-    });
-    let receipt_evidence = vec![LakeCatViewReceiptEvidence {
-        stable_id: "lakecat:view:local:default:active_customers".to_string(),
-        view_version: 1,
-        receipt_hash: "sha256:view-version-receipt".to_string(),
-        receipt_chain_hash: "sha256:view-receipt-chain".to_string(),
-    }];
-    let mut bundle = LakeCatBootstrapBundle {
-        warehouse: "local".to_string(),
-        bundle_hash: "pending".to_string(),
-        manifest: LakeCatBootstrapManifest {
-            schema_version: "lakecat.querygraph.bootstrap.v1".to_string(),
-            producer: "https://querygraph.ai/lakecat".to_string(),
-            standards: vec!["Iceberg REST".to_string(), "OpenLineage".to_string()],
-            table_artifacts: vec![LakeCatTableArtifactHashes {
-                stable_id: table.stable_id.clone(),
-                croissant_hash: content_hash_json(&croissant).unwrap(),
-                cdif_hash: content_hash_json(&cdif).unwrap(),
-                osi_hash: content_hash_json(&table_osi).unwrap(),
-                odrl_hash: content_hash_json(&odrl).unwrap(),
-                policy_bindings_hash: Some(
-                    content_hash_json(&json!(table.policy_bindings)).unwrap(),
-                ),
-            }],
-            view_artifacts: vec![LakeCatViewArtifactHashes {
-                stable_id: view.stable_id.clone(),
-                osi_hash: content_hash_json(&view_osi).unwrap(),
-            }],
-            graph_hash: Some(content_hash_json(&graph).unwrap()),
-            open_lineage_hash: content_hash_json(&open_lineage).unwrap(),
-            querygraph_import: None,
-        },
-        tables: vec![table],
-        views: vec![view],
+    let bundle = LakeCatBootstrapBundle(build_bundle(
+        vec![table_projection(TABLE_ID)],
+        vec![],
         graph,
-        open_lineage,
-    };
-    let receipt_evidence_hash =
-        content_hash_json(&serde_json::to_value(&receipt_evidence).unwrap()).unwrap();
-    let import = LakeCatQueryGraphImportCompatibility {
-        schema_version: "lakecat.querygraph.import-compat.v1".to_string(),
-        table_only_bundle_hash: bundle.computed_table_only_bundle_hash().unwrap(),
-        view_count: 1,
-        graph_hash: bundle.manifest.graph_hash.clone().unwrap(),
-        view_receipt_evidence: receipt_evidence,
-        view_receipt_evidence_hash: Some(receipt_evidence_hash),
-    };
-    bundle.manifest.querygraph_import = Some(import);
-    bundle.bundle_hash = bundle.computed_bundle_hash().unwrap();
+        vec![],
+    ));
+
+    bundle.verify_manifest().expect("bundle itself is hash-valid");
+    let err = bundle.import_plan().unwrap_err().to_string();
+    assert!(err.contains("is not present in vertices"), "{err}");
+}
+
+#[test]
+fn verifies_view_bearing_import_contract() {
+    let view_id = "lakecat:view:local:default:events_recent";
+    let bundle = LakeCatBootstrapBundle(build_bundle(
+        vec![table_projection(TABLE_ID)],
+        vec![view_projection(view_id)],
+        catalog_graph(),
+        vec![view_evidence(view_id)],
+    ));
+
+    let verification = bundle.verify_manifest().unwrap();
+    assert_eq!(verification.view_count, 1);
+    assert_eq!(verification.verified_views, vec![view_id.to_string()]);
+    assert!(!verification.querygraph_import_hash.is_empty());
 
     let plan = bundle.import_plan().unwrap();
-    assert_eq!(plan.verification.view_count, 1);
-    assert_eq!(plan.views[0].stable_id, bundle.views[0].stable_id);
-    assert_eq!(
-        plan.verification.querygraph_import_hash.as_deref(),
-        Some(
-            bundle
-                .manifest
-                .querygraph_import
-                .as_ref()
-                .unwrap()
-                .table_only_bundle_hash
-                .as_str()
-        )
-    );
+    assert_eq!(plan.views.len(), 1);
+    assert_eq!(plan.views[0].stable_id, view_id);
+    assert_eq!(plan.views[0].osi_model.as_deref(), Some("events_recent"));
 }

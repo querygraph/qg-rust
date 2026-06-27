@@ -65,18 +65,22 @@ machine-readable report.
 
 ## Stack versions
 
-QueryGraph builds on three coordinated, named open-source releases. The full
-story is in the stack announcement at
+This is **QueryGraph 0.2.0 "Peregrine"** (release codenames are birds of prey;
+see [`RELEASES.md`](RELEASES.md)). It builds on three coordinated, named
+open-source releases. The full story is in the stack announcement at
 [`docs/blog/announcing-querygraph-stack.md`](docs/blog/announcing-querygraph-stack.md).
 
 - **Grust 0.11.0 "Crab"** — the backend-neutral property-graph substrate, now
   with a standards-conformant GQL/Cypher language layer, first-class
   Decimal/Duration/temporal values, catalog procedures, and Turso MVCC writes.
-- **TypeSec 0.10.0 "Murano"** — the type-safe security fabric: unforgeable
+- **TypeSec 0.11.0 "Burano"** — the type-safe security fabric: unforgeable
   capabilities, RBAC/ODRL/graph policy engines, and audit-safe TypeDID agent
-  attestations. Murano tracks Grust 0.11 "Crab".
-- **LakeCat 0.2.0 "Lynx"** — the thin Iceberg REST catalog boundary with
-  governance, lineage, and proof on a Turso MVCC spine.
+  attestations. Burano unifies glob matching (a single `*` no longer crosses
+  `/`) and adopts Grust 0.11's graph-type validation.
+- **LakeCat 0.2.1 "Lynx"** — the thin Iceberg REST catalog boundary with
+  governance, lineage, and proof on a Turso MVCC spine. QueryGraph verifies its
+  bootstrap bundles through LakeCat's own shared `qglake-bundle` crate rather
+  than a hand-maintained copy of the wire format.
 
 ## Run
 

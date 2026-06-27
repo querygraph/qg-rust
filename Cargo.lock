@@ -1028,6 +1028,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glob"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
+
+[[package]]
 name = "grust-core"
 version = "0.11.0"
 dependencies = [
@@ -1120,6 +1126,12 @@ name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+
+[[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "http"
@@ -1455,6 +1467,20 @@ dependencies = [
  "serde",
  "serde_json",
  "simple_asn1",
+]
+
+[[package]]
+name = "lakecat-core"
+version = "0.2.1"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+ "uuid",
 ]
 
 [[package]]
@@ -1846,8 +1872,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "qglake-bundle"
+version = "0.2.1"
+dependencies = [
+ "chrono",
+ "lakecat-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "querygraph"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "arrow",
@@ -1858,6 +1894,8 @@ dependencies = [
  "csv",
  "grust-cypher",
  "grust-graph",
+ "lakecat-core",
+ "qglake-bundle",
  "reqwest",
  "serde",
  "serde_json",
@@ -2726,11 +2764,12 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
 name = "typesec-core"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e71fb751330c6bf76c0cae2774ebc76a0ef2ee6abdf981591f46c2b28a56fe06"
+checksum = "015ddfd57ca348d4d92d6c52b42b259b0115384b33be1533596616f8a96946a0"
 dependencies = [
  "chrono",
+ "glob",
  "thiserror",
  "tracing",
  "zeroize",
@@ -2738,9 +2777,9 @@ dependencies = [
 
 [[package]]
 name = "typesec-integrations"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38392c4f6b39306d1830e7cf0f12d3fc0deec6cd558011a6d24ae712238cf868"
+checksum = "c2681790ceabb38cabf0383425e7dc9e2cb908bb99947ace85caca88e50789e6"
 dependencies = [
  "chacha20poly1305",
  "chrono",
@@ -2817,6 +2856,7 @@ checksum = "144d6b123cef80b301b8f72a9e2ca4370ddec21950d0a103dd22c437006d2db7"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",
+ "serde_core",
  "wasm-bindgen",
 ]
 
