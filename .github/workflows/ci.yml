@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# qg-rust depends on sibling checkouts (../../grust, ../../lakecat), so the
+# workspace is assembled to mirror the local ~/src layout:
+#   src/querygraph/qg-rust  (this repo)
+#   src/grust               (querygraph/grust)
+#   src/lakecat             (querygraph/lakecat)
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout qg-rust
+        uses: actions/checkout@v4
+        with:
+          path: src/querygraph/qg-rust
+
+      - name: Checkout grust
+        uses: actions/checkout@v4
+        with:
+          repository: querygraph/grust
+          token: ${{ secrets.STACK_CHECKOUT_TOKEN || github.token }}
+          path: src/grust
+
+      - name: Checkout lakecat
+        uses: actions/checkout@v4
+        with:
+          repository: querygraph/lakecat
+          token: ${{ secrets.STACK_CHECKOUT_TOKEN || github.token }}
+          path: src/lakecat
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/querygraph/qg-rust
+
+      - name: Format check
+        working-directory: src/querygraph/qg-rust
+        run: cargo fmt --check
+
+      - name: Clippy
+        working-directory: src/querygraph/qg-rust
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Tests
+        working-directory: src/querygraph/qg-rust
+        run: cargo test
