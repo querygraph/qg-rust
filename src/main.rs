@@ -2,7 +2,7 @@ use std::fs;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use querygraph::agent::{QueryGraphAgent, call_ollama_via_typedid};
+use querygraph::agent::{PyTypeDidEnvelope, QueryGraphAgent, call_ollama_via_typedid};
 use querygraph::codata::CodataOdrlClient;
 use querygraph::dataverse::{DataverseClient, sample_datasets};
 use querygraph::lakecat::LakeCatBootstrapBundle;
@@ -144,6 +144,12 @@ enum Commands {
         /// Print the full machine-readable report instead of the readable briefing.
         #[arg(long)]
         json: bool,
+    },
+    /// Verify a qg-python TypeDID envelope: payload hash and Ed25519 signature.
+    VerifyEnvelope {
+        /// Path to the envelope JSON ("-" reads stdin).
+        #[arg(long)]
+        file: String,
     },
 }
 
@@ -393,6 +399,18 @@ fn main() -> Result<()> {
                 println!("{}", serde_json::to_string_pretty(&report)?);
             } else {
                 print!("{}", render_qglake_story(&report));
+            }
+        }
+        Commands::VerifyEnvelope { file } => {
+            let json = if file == "-" {
+                std::io::read_to_string(std::io::stdin())?
+            } else {
+                fs::read_to_string(&file)?
+            };
+            let report = PyTypeDidEnvelope::from_json(&json)?.verify();
+            println!("{}", serde_json::to_string_pretty(&report)?);
+            if !report.signature_valid {
+                std::process::exit(1);
             }
         }
     }

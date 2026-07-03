@@ -19,7 +19,9 @@ use crate::{
     sail::SailLoadReport,
 };
 
+mod interop;
 mod ollama;
+pub use self::interop::*;
 pub use self::ollama::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

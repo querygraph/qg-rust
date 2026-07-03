@@ -1,0 +1,28 @@
+{
+  "action": "summarize",
+  "content_type": "application/json",
+  "conversation_id": "qg:ea95571be10ad935",
+  "created_at": "2026-07-03T19:22:29.443296Z",
+  "envelope_digest": "sha256:b6cab07821f61e2be9d6cc1ee61dbea892de0b8c5e3d6c0fb37da4a5b0f6ccdd",
+  "payload": {
+    "nested": {
+      "a": [
+        1,
+        2.5,
+        true
+      ],
+      "z": null
+    },
+    "question": "Where is fiscal stress highest?",
+    "unicode": "caf\u00e9 \u2615 \ud834\udd1e"
+  },
+  "payload_sha256": "ea95571be10ad9359e4aa31675f4d7d490ccb95d7f510282689f2614bc5d9ec1",
+  "privacy": "secret",
+  "profile": "ed25519-x25519-chacha20",
+  "protocol": "querygraph.typedid.v1",
+  "recipient": "did:oyd:zQmV9AF7pAHqCCBkifixoC6gxcT24F9LkJ3JK5F1G6Zh48w",
+  "resource": "compartment:finance",
+  "sender": "did:oyd:zQmS4shPP3UCYrd6swvvYaoy3fimvpX6eMmBLJ8syUFYQhB",
+  "signature": "ed25519:6bdbe4ab0615485c342826cc108d0a360d56cc1b57b48f12465c581fbd52d92995ebba4e0f03f88848115ba90a00f8bb05273d235f9f32e803a84e19a66ef70c",
+  "verification_method": "did:key:z6MkrdhpoFnCtEGK3RhXqryfjxVpy7s6sC6KLdrBoL4WqMTW#z6MkrdhpoFnCtEGK3RhXqryfjxVpy7s6sC6KLdrBoL4WqMTW"
+}

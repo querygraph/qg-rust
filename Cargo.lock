@@ -1892,6 +1892,7 @@ dependencies = [
  "chrono",
  "clap",
  "csv",
+ "ed25519-dalek",
  "grust-cypher",
  "grust-graph",
  "lakecat-core",
