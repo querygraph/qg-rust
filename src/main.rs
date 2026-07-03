@@ -156,6 +156,11 @@ enum Commands {
         #[arg(long, default_value_t = 8080)]
         port: u16,
     },
+    /// Print the A2A Agent Card (also served at /.well-known/agent-card.json).
+    AgentCard {
+        #[arg(long, default_value = "http://localhost:8080")]
+        base_url: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -420,6 +425,12 @@ fn main() -> Result<()> {
         }
         Commands::Serve { port } => {
             tokio::runtime::Runtime::new()?.block_on(querygraph::server::serve(port))?;
+        }
+        Commands::AgentCard { base_url } => {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&querygraph::a2a::agent_card(&base_url))?
+            );
         }
     }
 
