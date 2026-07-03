@@ -4,6 +4,15 @@ All notable changes to the QueryGraph Rust reference implementation are
 recorded here. The codename pool and the shared version line live in
 [`RELEASES.md`](RELEASES.md).
 
+## 0.4.0-dev — unreleased
+
+### Added
+- **`POST /v1/answer`, first slice**: semantic search over the model
+  registry, SQL plans for the matches, deterministic synthesis, and a signed
+  TypeDID envelope plus an OpenLineage run with a spec-conformant UUID. The
+  fully governed loop (RBAC+ODRL receipts, pluggable LLMs) is qg-python's
+  `GovernedNavigatorLoop`; Rust parity follows with envelope auth.
+
 ## 0.3.0 "Goshawk" — 2026-07-03
 
 The interoperability release, implementing FABLE-REVIEW-1 alongside qg-python

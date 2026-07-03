@@ -21,7 +21,8 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 use crate::{
-    agent::{PyEnvelopeVerification, PyTypeDidEnvelope},
+    agent::{PyEnvelopeVerification, PyTypeDidEnvelope, TypeDidEnvelope},
+    lineage::run_id_for,
     navigator::{AiNavigator, NavigatorInput},
     osi::{OsiDocument, OsiSemanticModel},
     qglake::run_qglake_story,
@@ -42,6 +43,7 @@ pub fn router() -> Router {
         .route("/v1/models/import/osi", post(import_osi))
         .route("/v1/models/import/croissant", post(import_croissant))
         .route("/v1/search", get(search_models))
+        .route("/v1/answer", post(answer))
         .route("/.well-known/agent-card.json", get(agent_card))
         .with_state(registry)
 }
@@ -156,6 +158,128 @@ fn register_model(registry: &ModelRegistry, document: OsiDocument) -> Value {
         .expect("registry lock")
         .insert(model.name.clone(), document);
     summary
+}
+
+#[derive(Deserialize)]
+struct AnswerRequest {
+    question: String,
+}
+
+/// First slice of the documented `POST /v1/answer`: semantic search over the
+/// registry, SQL plans for the matches, deterministic synthesis, and a signed
+/// TypeDID envelope plus an OpenLineage run with a spec-conformant UUID.
+/// (The fully governed loop with RBAC+ODRL receipts and pluggable LLMs is
+/// qg-python's `GovernedNavigatorLoop`; parity here follows with envelope
+/// auth.)
+async fn answer(
+    State(registry): State<ModelRegistry>,
+    Json(request): Json<AnswerRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let question = request.question;
+    let (matches, plans) = {
+        let models = registry.read().expect("registry lock");
+        let needles: Vec<String> = question
+            .to_lowercase()
+            .split(|ch: char| !ch.is_alphanumeric() && ch != '_')
+            .filter(|term| term.len() > 2)
+            .map(str::to_string)
+            .collect();
+        let mut matches = Vec::new();
+        let mut plans: Vec<Value> = Vec::new();
+        for document in models.values() {
+            let model = &document.semantic_model;
+            let mut hit_datasets = std::collections::BTreeSet::new();
+            for needle in &needles {
+                for hit in search_model(model, needle) {
+                    if hit["kind"] == "dataset" {
+                        hit_datasets.insert(hit["name"].as_str().unwrap_or_default().to_string());
+                    }
+                    if hit["kind"] == "field" {
+                        hit_datasets
+                            .insert(hit["dataset"].as_str().unwrap_or_default().to_string());
+                    }
+                    if !matches.contains(&hit) {
+                        matches.push(hit);
+                    }
+                }
+            }
+            for dataset in &model.datasets {
+                if hit_datasets.contains(&dataset.name) {
+                    let columns: Vec<String> = dataset
+                        .fields
+                        .iter()
+                        .map(|field| format!("`{}`", field.name))
+                        .collect();
+                    let selection = if columns.is_empty() {
+                        "*".to_string()
+                    } else {
+                        columns.join(", ")
+                    };
+                    plans.push(json!({
+                        "dataset": dataset.name,
+                        "source": dataset.source,
+                        "sql": format!("SELECT {selection} FROM {}", dataset.source),
+                    }));
+                }
+            }
+        }
+        (matches, plans)
+    };
+
+    let sources: Vec<String> = plans
+        .iter()
+        .filter_map(|plan| plan["source"].as_str().map(str::to_string))
+        .collect();
+    let answer_text = if plans.is_empty() {
+        format!("No governed sources matched {question:?}; no data may be consulted.")
+    } else {
+        format!(
+            "Answerable from governed sources {} via {} planned quer{}.",
+            sources.join(", "),
+            plans.len(),
+            if plans.len() == 1 { "y" } else { "ies" },
+        )
+    };
+
+    let payload = json!({
+        "question": question.clone(),
+        "answer": answer_text.clone(),
+        "synthesizedBy": "deterministic",
+        "plans": plans.clone(),
+    });
+    let envelope = tokio::task::spawn_blocking(move || {
+        TypeDidEnvelope::from_typesec_between(
+            "querygraph.answer",
+            "qg-answer",
+            "models:registry",
+            b"querygraph-navigator",
+            b"querygraph-supervisor",
+            &payload,
+        )
+    })
+    .await
+    .map_err(internal_error)?
+    .map_err(internal_error)?;
+
+    let openlineage = json!({
+        "eventType": "COMPLETE",
+        "eventTime": chrono::Utc::now(),
+        "run": {"runId": run_id_for(&envelope.signature)},
+        "job": {"namespace": "querygraph", "name": "qg-rust-answer"},
+        "inputs": sources.iter().map(|s| json!({"namespace": "sail", "name": s})).collect::<Vec<_>>(),
+        "outputs": [json!({"namespace": "querygraph", "name": format!("querygraph:answer:{}", &envelope.payload_sha256[..16])})],
+        "producer": "https://querygraph.ai/qg-rust",
+        "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json",
+    });
+    Ok(Json(json!({
+        "question": question,
+        "answer": answer_text,
+        "synthesizedBy": "deterministic",
+        "matches": matches,
+        "plans": plans,
+        "envelope": envelope,
+        "openlineage": openlineage,
+    })))
 }
 
 #[derive(Deserialize)]
@@ -387,6 +511,46 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn answer_plans_over_registry_and_signs_the_result() {
+        let router = router();
+        let croissant = json!({
+            "name": "Energy Burden",
+            "description": "Demo energy fields",
+            "recordSet": [{
+                "name": "observations",
+                "field": [{"name": "monthly_cost", "description": "Monthly energy cost"}],
+            }],
+        });
+        router
+            .clone()
+            .oneshot(post_json("/v1/models/import/croissant", croissant))
+            .await
+            .unwrap();
+
+        let response = router
+            .oneshot(post_json(
+                "/v1/answer",
+                json!({"question": "What drives monthly energy burden?"}),
+            ))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body: Value =
+            serde_json::from_slice(&response.into_body().collect().await.unwrap().to_bytes())
+                .unwrap();
+        assert!(body["answer"].as_str().unwrap().contains("energy_burden"));
+        assert_eq!(
+            body["plans"][0]["sql"],
+            "SELECT `monthly_cost` FROM sail.qg_lakehouse.energy_burden"
+        );
+        assert!(!body["envelope"]["signature"].as_str().unwrap().is_empty());
+        // runId must be a spec-conformant UUID.
+        let run_id = body["openlineage"]["run"]["runId"].as_str().unwrap();
+        assert_eq!(run_id.len(), 36);
+        assert_eq!(run_id.matches('-').count(), 4);
     }
 
     #[tokio::test]
