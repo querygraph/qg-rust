@@ -28,6 +28,7 @@ thiserror = "2.0"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 typesec-integrations = "0.11.0"
 typesec-core = "0.11.0"
+uuid = { version = "1", features = ["v5"] }
 
 [dev-dependencies]
 http-body-util = "0.1"

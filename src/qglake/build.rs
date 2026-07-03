@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 use crate::{
     croissant::{CroissantDataset, Field, FileObject, RecordSet},
     did::DidDocument,
-    lineage::{OpenLineageRunEvent, bundle_hash},
+    lineage::{OpenLineageRunEvent, bundle_hash, run_id_for},
     odrl::{Action, Policy, Rule},
     rbac::RbacDecision,
 };
@@ -217,7 +217,7 @@ pub(crate) fn openlineage_for_story(
         event_type: "COMPLETE".to_string(),
         event_time: Utc::now(),
         run: json!({
-            "runId": format!("qglake-{}", &hash[..12]),
+            "runId": run_id_for(&hash),
             "facets": {
                 "queryGraph_typeDidHierarchy": {
                     "_producer": "https://querygraph.ai/qg-rust",

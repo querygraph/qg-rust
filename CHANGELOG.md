@@ -10,6 +10,17 @@ Interoperability line, implementing FABLE-REVIEW-1 alongside qg-python
 0.3.0-dev (see `../FABLE-REVIEW-1.md` §9).
 
 ### Added
+- **A2A Agent Card** (`a2a` module; served at `/.well-known/agent-card.json`;
+  CLI: `agent-card`). Aligns the existing `typedid/a2a` protocol label with
+  the Linux Foundation Agent2Agent protocol: skills mirror the `/v1` surface
+  and the security scheme documents the TypeDID envelope contract. The skill
+  list is a cross-language contract asserted against qg-python by the
+  equivalence suite.
+- **`/v1` semantic-model registry**: `POST /v1/models/import/{osi,croissant}`
+  (Croissant JSON-LD projects to OSI via the new
+  `OsiDocument::from_croissant_json`, mirroring qg-python), `GET /v1/models`,
+  `GET /v1/models/{name}`, and `GET /v1/search?q=` over names, descriptions,
+  ai_context, semantic types, and ontology terms.
 - **Cross-language envelope verification** (`agent::interop`). Rust now
   verifies qg-python's Ed25519-signed TypeDID envelopes with no shared state:
   `did:key` resolution (multibase/multicodec), reconstruction of the documented
@@ -33,6 +44,15 @@ Interoperability line, implementing FABLE-REVIEW-1 alongside qg-python
 - **GitHub Actions CI**: fmt, clippy `-D warnings`, and tests against
   checkouts of `querygraph/grust` and `querygraph/lakecat` assembled to
   satisfy the `../..` path dependencies.
+
+### Changed
+- **OpenLineage run ids are now spec-conformant UUIDs**: the official 2-0-2
+  JSON Schema requires `run.runId` to be a UUID, so run ids are deterministic
+  UUIDv5 values under the QueryGraph namespace
+  (`uuid5(NAMESPACE_URL, "https://querygraph.ai/openlineage")`), derived from
+  the same seeds as before (envelope signatures, bundle hashes). qg-python
+  derives identical ids; both CLIs' emitted events now validate against the
+  official schema in the equivalence suite.
 
 ## 0.2.0 "Peregrine" — 2026-06-26
 

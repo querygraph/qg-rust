@@ -13,6 +13,18 @@ use typesec_integrations::{Did, DidKeyStore, Ed25519DidKey, Ed25519DidKeyStore};
 
 use crate::{agent::TypeDidEnvelope, dataverse::DataverseDataset, sail::SailLoadReport};
 
+/// Deterministic, OpenLineage-conformant run ids: the spec requires
+/// `run.runId` to be a UUID, so seeds (envelope signatures, bundle hashes)
+/// map through UUIDv5 under the QueryGraph namespace. qg-python derives the
+/// identical namespace and ids (`querygraph.lineage.run_id_for`).
+pub fn run_id_for(seed: &str) -> String {
+    let namespace = uuid::Uuid::new_v5(
+        &uuid::Uuid::NAMESPACE_URL,
+        b"https://querygraph.ai/openlineage",
+    );
+    uuid::Uuid::new_v5(&namespace, seed.as_bytes()).to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OpenLineageRunEvent {
     #[serde(rename = "eventType")]
@@ -68,10 +80,7 @@ impl OpenLineageRunEvent {
         bundle_hash: &str,
     ) -> Self {
         let event_time = Utc::now();
-        let run_id = format!(
-            "querygraph-run-{}",
-            short_hash(request.signature.as_bytes())
-        );
+        let run_id = run_id_for(&request.signature);
         Self {
             event_type: "COMPLETE".to_string(),
             event_time,
@@ -273,10 +282,6 @@ fn signing_payload(
     )
 }
 
-fn short_hash(bytes: &[u8]) -> String {
-    sha256_hex(bytes).chars().take(12).collect()
-}
-
 fn sha256_hex(bytes: &[u8]) -> String {
     let digest = Sha256::digest(bytes);
     let mut out = String::with_capacity(digest.len() * 2);
@@ -290,6 +295,16 @@ fn sha256_hex(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
     use crate::{agent::TypeDidEnvelope, dataverse::sample_datasets, sail::LocalSailLakehouse};
+
+    /// Cross-language fixture: qg-python's `run_id_for("test")` must produce
+    /// the same UUIDv5 (namespace = uuid5(NAMESPACE_URL,
+    /// "https://querygraph.ai/openlineage")).
+    #[test]
+    fn run_ids_are_deterministic_uuids_matching_python() {
+        assert_eq!(run_id_for("test"), "09c4d056-5e38-59fd-b4bb-f97972d8664f");
+        assert_eq!(run_id_for("test"), run_id_for("test"));
+        assert_ne!(run_id_for("test"), run_id_for("other"));
+    }
 
     #[test]
     fn builds_lineage_event_and_attestation() {
