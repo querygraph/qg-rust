@@ -7,6 +7,14 @@ recorded here. The codename pool and the shared version line live in
 ## 0.4.0-dev — unreleased
 
 ### Added
+- **MCP server over stdio** (`mcp` module; CLI: `mcp-serve`). A
+  dependency-free JSON-RPC 2.0 implementation of the MCP handshake
+  (protocol 2024-11-05) exposing the same governed surface as `/v1` and
+  qg-python's FastMCP server: `build_navigator_bundle`, `run_qglake_story`,
+  `verify_envelope`, `import_semantic_model` (OSI or Croissant),
+  `search_semantic_models`, and `answer_question` (shared deterministic
+  answer core with `/v1/answer`). Pointable at Claude Code/Desktop and any
+  MCP client.
 - **TypeDID envelope auth on `/v1`** (`serve --require-auth`). Governed routes
   (`models/import/*`, `answer`) demand a signed envelope in `x-qg-envelope`:
   `action == "invoke"`, `resource` bound to the request path (no cross-route

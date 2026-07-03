@@ -164,6 +164,8 @@ enum Commands {
         #[arg(long, default_value = "http://localhost:8080")]
         base_url: String,
     },
+    /// Serve the governed semantic layer over the Model Context Protocol (stdio).
+    McpServe,
 }
 
 fn main() -> Result<()> {
@@ -435,6 +437,9 @@ fn main() -> Result<()> {
                 "{}",
                 serde_json::to_string_pretty(&querygraph::a2a::agent_card(&base_url))?
             );
+        }
+        Commands::McpServe => {
+            querygraph::mcp::McpServer::new().run_stdio()?;
         }
     }
 

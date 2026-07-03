@@ -262,55 +262,67 @@ async fn answer(
     Json(request): Json<AnswerRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let question = request.question;
-    let (matches, plans) = {
-        let models = registry.read().expect("registry lock");
-        let needles: Vec<String> = question
-            .to_lowercase()
-            .split(|ch: char| !ch.is_alphanumeric() && ch != '_')
-            .filter(|term| term.len() > 2)
-            .map(str::to_string)
-            .collect();
-        let mut matches = Vec::new();
-        let mut plans: Vec<Value> = Vec::new();
-        for document in models.values() {
-            let model = &document.semantic_model;
-            let mut hit_datasets = std::collections::BTreeSet::new();
-            for needle in &needles {
-                for hit in search_model(model, needle) {
-                    if hit["kind"] == "dataset" {
-                        hit_datasets.insert(hit["name"].as_str().unwrap_or_default().to_string());
-                    }
-                    if hit["kind"] == "field" {
-                        hit_datasets
-                            .insert(hit["dataset"].as_str().unwrap_or_default().to_string());
-                    }
-                    if !matches.contains(&hit) {
-                        matches.push(hit);
-                    }
+    let models: Vec<OsiDocument> = registry
+        .read()
+        .expect("registry lock")
+        .values()
+        .cloned()
+        .collect();
+    tokio::task::spawn_blocking(move || answer_over_models(&models, &question))
+        .await
+        .map_err(internal_error)?
+        .map(Json)
+        .map_err(internal_error)
+}
+
+/// The deterministic answer core shared by `POST /v1/answer` and the MCP
+/// `answer_question` tool: search, plan, synthesize, sign, and attach the
+/// OpenLineage run. Blocking (envelope signing); callers off-load as needed.
+pub(crate) fn answer_over_models(models: &[OsiDocument], question: &str) -> Result<Value> {
+    let needles: Vec<String> = question
+        .to_lowercase()
+        .split(|ch: char| !ch.is_alphanumeric() && ch != '_')
+        .filter(|term| term.len() > 2)
+        .map(str::to_string)
+        .collect();
+    let mut matches = Vec::new();
+    let mut plans: Vec<Value> = Vec::new();
+    for document in models {
+        let model = &document.semantic_model;
+        let mut hit_datasets = std::collections::BTreeSet::new();
+        for needle in &needles {
+            for hit in search_model(model, needle) {
+                if hit["kind"] == "dataset" {
+                    hit_datasets.insert(hit["name"].as_str().unwrap_or_default().to_string());
                 }
-            }
-            for dataset in &model.datasets {
-                if hit_datasets.contains(&dataset.name) {
-                    let columns: Vec<String> = dataset
-                        .fields
-                        .iter()
-                        .map(|field| format!("`{}`", field.name))
-                        .collect();
-                    let selection = if columns.is_empty() {
-                        "*".to_string()
-                    } else {
-                        columns.join(", ")
-                    };
-                    plans.push(json!({
-                        "dataset": dataset.name,
-                        "source": dataset.source,
-                        "sql": format!("SELECT {selection} FROM {}", dataset.source),
-                    }));
+                if hit["kind"] == "field" {
+                    hit_datasets.insert(hit["dataset"].as_str().unwrap_or_default().to_string());
+                }
+                if !matches.contains(&hit) {
+                    matches.push(hit);
                 }
             }
         }
-        (matches, plans)
-    };
+        for dataset in &model.datasets {
+            if hit_datasets.contains(&dataset.name) {
+                let columns: Vec<String> = dataset
+                    .fields
+                    .iter()
+                    .map(|field| format!("`{}`", field.name))
+                    .collect();
+                let selection = if columns.is_empty() {
+                    "*".to_string()
+                } else {
+                    columns.join(", ")
+                };
+                plans.push(json!({
+                    "dataset": dataset.name,
+                    "source": dataset.source,
+                    "sql": format!("SELECT {selection} FROM {}", dataset.source),
+                }));
+            }
+        }
+    }
 
     let sources: Vec<String> = plans
         .iter()
@@ -328,24 +340,19 @@ async fn answer(
     };
 
     let payload = json!({
-        "question": question.clone(),
+        "question": question,
         "answer": answer_text.clone(),
         "synthesizedBy": "deterministic",
         "plans": plans.clone(),
     });
-    let envelope = tokio::task::spawn_blocking(move || {
-        TypeDidEnvelope::from_typesec_between(
-            "querygraph.answer",
-            "qg-answer",
-            "models:registry",
-            b"querygraph-navigator",
-            b"querygraph-supervisor",
-            &payload,
-        )
-    })
-    .await
-    .map_err(internal_error)?
-    .map_err(internal_error)?;
+    let envelope = TypeDidEnvelope::from_typesec_between(
+        "querygraph.answer",
+        "qg-answer",
+        "models:registry",
+        b"querygraph-navigator",
+        b"querygraph-supervisor",
+        &payload,
+    )?;
 
     let openlineage = json!({
         "eventType": "COMPLETE",
@@ -357,7 +364,7 @@ async fn answer(
         "producer": "https://querygraph.ai/qg-rust",
         "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json",
     });
-    Ok(Json(json!({
+    Ok(json!({
         "question": question,
         "answer": answer_text,
         "synthesizedBy": "deterministic",
@@ -365,7 +372,7 @@ async fn answer(
         "plans": plans,
         "envelope": envelope,
         "openlineage": openlineage,
-    })))
+    }))
 }
 
 #[derive(Deserialize)]
@@ -396,7 +403,7 @@ async fn search_models(
 /// Case-insensitive containment search over names, descriptions, ai_context,
 /// semantic types, and ontology labels — the same surface qg-python's
 /// `find_by_synonym` covers, extended to descriptions.
-fn search_model(model: &OsiSemanticModel, needle: &str) -> Vec<Value> {
+pub(crate) fn search_model(model: &OsiSemanticModel, needle: &str) -> Vec<Value> {
     let hit = |text: &Option<String>| {
         text.as_deref()
             .is_some_and(|value| value.to_lowercase().contains(needle))
