@@ -155,6 +155,9 @@ enum Commands {
     Serve {
         #[arg(long, default_value_t = 8080)]
         port: u16,
+        /// Require a signed TypeDID envelope (x-qg-envelope) on governed routes.
+        #[arg(long)]
+        require_auth: bool,
     },
     /// Print the A2A Agent Card (also served at /.well-known/agent-card.json).
     AgentCard {
@@ -423,8 +426,9 @@ fn main() -> Result<()> {
                 std::process::exit(1);
             }
         }
-        Commands::Serve { port } => {
-            tokio::runtime::Runtime::new()?.block_on(querygraph::server::serve(port))?;
+        Commands::Serve { port, require_auth } => {
+            tokio::runtime::Runtime::new()?
+                .block_on(querygraph::server::serve(port, require_auth))?;
         }
         Commands::AgentCard { base_url } => {
             println!(

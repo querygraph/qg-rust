@@ -13,12 +13,16 @@ use std::sync::{Arc, RwLock};
 use anyhow::Result;
 use axum::{
     Json, Router,
-    extract::{Path, Query, State},
+    body::Body,
+    extract::{Path, Query, Request, State},
     http::StatusCode,
+    middleware::{self, Next},
+    response::Response,
     routing::{get, post},
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 
 use crate::{
     agent::{PyEnvelopeVerification, PyTypeDidEnvelope, TypeDidEnvelope},
@@ -32,7 +36,23 @@ use crate::{
 type ModelRegistry = Arc<RwLock<BTreeMap<String, OsiDocument>>>;
 
 pub fn router() -> Router {
+    router_with_options(false)
+}
+
+/// With `require_auth`, mutating/answering routes demand a signed TypeDID
+/// envelope in the `x-qg-envelope` header: `action == "invoke"`, `resource`
+/// bound to the request path, `payload.bodySha256` bound to the request
+/// body, and an Ed25519 signature verifiable against the envelope's did:key
+/// verification method. Failures return 401 with a receipt.
+pub fn router_with_options(require_auth: bool) -> Router {
     let registry: ModelRegistry = Arc::default();
+    let mut governed = Router::new()
+        .route("/v1/models/import/osi", post(import_osi))
+        .route("/v1/models/import/croissant", post(import_croissant))
+        .route("/v1/answer", post(answer));
+    if require_auth {
+        governed = governed.route_layer(middleware::from_fn(envelope_auth));
+    }
     Router::new()
         .route("/v1/health", get(health))
         .route("/v1/navigator/bundle", post(navigator_bundle))
@@ -40,12 +60,71 @@ pub fn router() -> Router {
         .route("/v1/audit/verify-envelope", post(verify_envelope))
         .route("/v1/models", get(list_models))
         .route("/v1/models/{name}", get(get_model))
-        .route("/v1/models/import/osi", post(import_osi))
-        .route("/v1/models/import/croissant", post(import_croissant))
         .route("/v1/search", get(search_models))
-        .route("/v1/answer", post(answer))
         .route("/.well-known/agent-card.json", get(agent_card))
+        .merge(governed)
         .with_state(registry)
+}
+
+async fn envelope_auth(
+    request: Request,
+    next: Next,
+) -> Result<Response, (StatusCode, Json<Value>)> {
+    let path = request.uri().path().to_string();
+    let Some(header) = request
+        .headers()
+        .get("x-qg-envelope")
+        .and_then(|value| value.to_str().ok())
+        .map(str::to_string)
+    else {
+        return Err(unauthorized(&path, "missing x-qg-envelope header", None));
+    };
+    let (parts, body) = request.into_parts();
+    let bytes = axum::body::to_bytes(body, 16 * 1024 * 1024)
+        .await
+        .map_err(|error| unauthorized(&path, &format!("unreadable body: {error}"), None))?;
+    let envelope = PyTypeDidEnvelope::from_json(&header)
+        .map_err(|error| unauthorized(&path, &format!("unparseable envelope: {error}"), None))?;
+    let verification = envelope.verify();
+    let body_sha256 = format!("{:x}", Sha256::digest(&bytes));
+    let checks = json!({
+        "signatureValid": verification.signature_valid,
+        "actionIsInvoke": envelope.action == "invoke",
+        "resourceBoundToPath": envelope.resource == path,
+        "bodyBound": envelope.payload["bodySha256"] == json!(body_sha256),
+    });
+    let allowed = checks
+        .as_object()
+        .expect("checks object")
+        .values()
+        .all(|value| value == &json!(true));
+    if !allowed {
+        return Err(unauthorized(&path, "envelope auth failed", Some(checks)));
+    }
+    Ok(next
+        .run(Request::from_parts(parts, Body::from(bytes)))
+        .await)
+}
+
+fn unauthorized(path: &str, reason: &str, checks: Option<Value>) -> (StatusCode, Json<Value>) {
+    (
+        StatusCode::UNAUTHORIZED,
+        Json(json!({
+            "error": reason,
+            "receipt": {
+                "path": path,
+                "allowed": false,
+                "checks": checks,
+                "contract": {
+                    "header": "x-qg-envelope",
+                    "action": "invoke",
+                    "resource": "<request path>",
+                    "payload": {"bodySha256": "<sha256 hex of request body>"},
+                    "signature": "ed25519 over querygraph-typedid-signing-v1",
+                },
+            },
+        })),
+    )
 }
 
 async fn agent_card(headers: axum::http::HeaderMap) -> Json<Value> {
@@ -56,10 +135,17 @@ async fn agent_card(headers: axum::http::HeaderMap) -> Json<Value> {
     Json(crate::a2a::agent_card(&format!("http://{host}")))
 }
 
-pub async fn serve(port: u16) -> Result<()> {
+pub async fn serve(port: u16, require_auth: bool) -> Result<()> {
     let listener = tokio::net::TcpListener::bind(("0.0.0.0", port)).await?;
-    eprintln!("qg-server listening on http://0.0.0.0:{port}/v1");
-    axum::serve(listener, router()).await?;
+    eprintln!(
+        "qg-server listening on http://0.0.0.0:{port}/v1{}",
+        if require_auth {
+            " (TypeDID envelope auth required)"
+        } else {
+            ""
+        }
+    );
+    axum::serve(listener, router_with_options(require_auth)).await?;
     Ok(())
 }
 
@@ -511,6 +597,54 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn envelope_auth_gates_governed_routes() {
+        let router = router_with_options(true);
+        let body = json!({"question": "what is fiscal capacity?"});
+        let body_text = body.to_string();
+
+        // No header → 401 with a contract receipt.
+        let response = router
+            .clone()
+            .oneshot(post_json("/v1/answer", body.clone()))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+
+        // A properly bound, signed envelope → 200.
+        let body_sha256 = format!("{:x}", sha2::Sha256::digest(body_text.as_bytes()));
+        let envelope = PyTypeDidEnvelope::signed(
+            "querygraph-agent:ApiClient",
+            "did:web:qg-server",
+            "invoke",
+            "/v1/answer",
+            json!({"bodySha256": body_sha256}),
+        );
+        let authed = Request::post("/v1/answer")
+            .header(header::CONTENT_TYPE, "application/json")
+            .header("x-qg-envelope", serde_json::to_string(&envelope).unwrap())
+            .body(Body::from(body_text.clone()))
+            .unwrap();
+        let response = router.clone().oneshot(authed).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+
+        // The same envelope replayed against a different path → 401.
+        let wrong_path = Request::post("/v1/models/import/osi")
+            .header(header::CONTENT_TYPE, "application/json")
+            .header("x-qg-envelope", serde_json::to_string(&envelope).unwrap())
+            .body(Body::from(body_text))
+            .unwrap();
+        let response = router.clone().oneshot(wrong_path).await.unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+
+        // Open routes stay open.
+        let response = router
+            .oneshot(Request::get("/v1/health").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
     }
 
     #[tokio::test]

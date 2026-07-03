@@ -7,6 +7,16 @@ recorded here. The codename pool and the shared version line live in
 ## 0.4.0-dev — unreleased
 
 ### Added
+- **TypeDID envelope auth on `/v1`** (`serve --require-auth`). Governed routes
+  (`models/import/*`, `answer`) demand a signed envelope in `x-qg-envelope`:
+  `action == "invoke"`, `resource` bound to the request path (no cross-route
+  replay), `payload.bodySha256` bound to the body, Ed25519 signature checked
+  against the envelope's did:key. Failures are 401s carrying a receipt and
+  the auth contract. Open routes (health, GETs, agent card, verify) stay open.
+- **Rust now mints qg-python-compatible envelopes**
+  (`PyTypeDidEnvelope::signed`): identical seed → did:key derivation as
+  Python's `Ed25519Signer.from_seed`, closing the reverse crypto direction
+  (Rust signs → Python verifies).
 - **`POST /v1/answer`, first slice**: semantic search over the model
   registry, SQL plans for the matches, deterministic synthesis, and a signed
   TypeDID envelope plus an OpenLineage run with a spec-conformant UUID. The

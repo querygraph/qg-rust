@@ -8,7 +8,7 @@
 //! signing payload from the envelope fields, and check the signature.
 
 use anyhow::{Context, Result, bail};
-use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -45,6 +45,36 @@ pub struct PyEnvelopeVerification {
 impl PyTypeDidEnvelope {
     pub fn from_json(json: &str) -> Result<Self> {
         serde_json::from_str(json).context("parsing qg-python TypeDID envelope JSON")
+    }
+
+    /// Mint a signed envelope in the qg-python interop format: the Ed25519
+    /// key derives from `sender_seed` exactly as qg-python's
+    /// `Ed25519Signer.from_seed` (SHA-256 of the seed as private key), so
+    /// either side can verify what the other signs.
+    pub fn signed(
+        sender_seed: &str,
+        recipient: &str,
+        action: &str,
+        resource: &str,
+        payload: Value,
+    ) -> Self {
+        let signing_key = SigningKey::from_bytes(&Sha256::digest(sender_seed.as_bytes()).into());
+        let multibase = ed25519_multibase(&signing_key.verifying_key());
+        let verification_method = format!("did:key:{multibase}#{multibase}");
+        let payload_sha256 = canonical_json_sha256(&payload);
+        let mut envelope = Self {
+            sender: format!("did:key:{multibase}"),
+            recipient: recipient.to_string(),
+            action: action.to_string(),
+            resource: resource.to_string(),
+            payload,
+            payload_sha256,
+            signature: String::new(),
+            verification_method: Some(verification_method),
+        };
+        let signature = signing_key.sign(envelope.signing_payload().as_bytes());
+        envelope.signature = format!("{SIGNATURE_PREFIX}{}", hex_encode(&signature.to_bytes()));
+        envelope
     }
 
     /// Reconstruct the canonical signing payload the Python side signed.
@@ -196,6 +226,22 @@ fn write_python_string(text: &str, out: &mut String) {
     out.push('"');
 }
 
+/// Multibase (base58btc) encoding of an Ed25519 public key with its
+/// multicodec prefix — the `z6Mk…` form used in did:key.
+pub fn ed25519_multibase(key: &VerifyingKey) -> String {
+    let mut raw = ED25519_MULTICODEC.to_vec();
+    raw.extend_from_slice(key.as_bytes());
+    format!("z{}", bs58::encode(raw).into_string())
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        out.push_str(&format!("{byte:02x}"));
+    }
+    out
+}
+
 fn hex_decode(text: &str) -> Result<Vec<u8>> {
     if !text.len().is_multiple_of(2) {
         bail!("odd-length hex string");
@@ -253,6 +299,24 @@ mod tests {
         let mut tampered = envelope.clone();
         tampered.resource = "compartment:other".to_string();
         assert!(!tampered.verify().signature_valid);
+    }
+
+    #[test]
+    fn rust_minted_envelope_matches_python_key_derivation_and_verifies() {
+        let envelope = PyTypeDidEnvelope::signed(
+            "querygraph-agent:SupervisorAgent",
+            "did:example:recipient",
+            "invoke",
+            "/v1/answer",
+            serde_json::json!({"bodySha256": "00"}),
+        );
+        // Same seed as the Python fixture → same did:key identity.
+        let fixture = PyTypeDidEnvelope::from_json(PY_FIXTURE).unwrap();
+        assert_eq!(
+            envelope.verification_method, fixture.verification_method,
+            "seed-derived did:key must match qg-python's"
+        );
+        assert!(envelope.verify().signature_valid);
     }
 
     const PY_FIXTURE: &str = include_str!("../../tests/fixtures/py_envelope.json");
