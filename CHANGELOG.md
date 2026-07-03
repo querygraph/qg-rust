@@ -4,10 +4,10 @@ All notable changes to the QueryGraph Rust reference implementation are
 recorded here. The codename pool and the shared version line live in
 [`RELEASES.md`](RELEASES.md).
 
-## 0.3.0-dev — unreleased
+## 0.3.0 "Goshawk" — 2026-07-03
 
-Interoperability line, implementing FABLE-REVIEW-1 alongside qg-python
-0.3.0-dev (see `../FABLE-REVIEW-1.md` §9).
+The interoperability release, implementing FABLE-REVIEW-1 alongside qg-python
+0.3.0 "Goshawk" (see the workspace `FABLE-REVIEW-1.md` §9).
 
 ### Added
 - **A2A Agent Card** (`a2a` module; served at `/.well-known/agent-card.json`;
