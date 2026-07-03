@@ -15,7 +15,9 @@ mod types;
 pub use self::types::*;
 
 use self::load::{load_one_dataset, materialize_catalog_tables};
-use self::project::{collect_string_column, count_qualified_rows, execute_sql, query_sql, quote_ident};
+use self::project::{
+    collect_string_column, count_qualified_rows, execute_sql, query_sql, quote_ident,
+};
 
 pub const DEFAULT_SCHEMA: &str = "qg_lakehouse";
 

@@ -14,6 +14,7 @@ pub mod osi;
 pub mod qglake;
 pub mod rbac;
 pub mod sail;
+pub mod server;
 pub mod validation;
 
 pub use navigator::{AiNavigator, NavigatorInput, NavigatorOutput};

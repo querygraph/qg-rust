@@ -9,9 +9,7 @@ use crate::{
     rbac::RbacDecision,
 };
 
-use super::model::{
-    QgLakeAgent, QgLakeSpecialistRun, QgLakeSynthesis, SpecialistSpec,
-};
+use super::model::{QgLakeAgent, QgLakeSpecialistRun, QgLakeSynthesis, SpecialistSpec};
 
 pub(crate) fn qglake_agent(name: &str, role: &str) -> QgLakeAgent {
     let seed = format!("querygraph-qglake-{name}");

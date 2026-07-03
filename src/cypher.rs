@@ -61,7 +61,10 @@ pub fn labels(graph: &Graph) -> Result<Vec<String>> {
 /// Count of nodes carrying a given label. `label` must be a Cypher label
 /// identifier (caller supplies a known/derived label, never raw user input).
 pub fn label_count(graph: &Graph, label: &str) -> Result<i64> {
-    let table = query_graph(graph, &format!("MATCH (n:{label}) RETURN count(n) AS count"))?;
+    let table = query_graph(
+        graph,
+        &format!("MATCH (n:{label}) RETURN count(n) AS count"),
+    )?;
     Ok(scalar_i64(&table).unwrap_or(0))
 }
 
@@ -87,9 +90,11 @@ mod tests {
     #[test]
     fn runs_match_return_over_memory_reference() {
         let graph = sample_graph();
-        let table =
-            query_graph(&graph, "MATCH (d:Dataset) RETURN d.title AS title ORDER BY title")
-                .expect("cypher read should run");
+        let table = query_graph(
+            &graph,
+            "MATCH (d:Dataset) RETURN d.title AS title ORDER BY title",
+        )
+        .expect("cypher read should run");
         assert_eq!(table.columns, vec!["title".to_string()]);
         assert_eq!(table.rows.len(), 2);
         let json = result_to_json(&table);

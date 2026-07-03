@@ -22,6 +22,14 @@ Interoperability line, implementing FABLE-REVIEW-1 alongside qg-python
 - **`verify-envelope` CLI command**: reads an envelope JSON from a file or
   stdin, prints the verification report, exits non-zero unless the signature
   verifies.
+- **`/v1` HTTP API, first slice** (`server` module, axum; CLI: `serve --port`).
+  The platform is reachable over a network for the first time
+  (FABLE-REVIEW-1 §4.1): `GET /v1/health`, `POST /v1/navigator/bundle`
+  (four-layer Croissant/CDIF/DID/ODRL bundle), `GET /v1/qglake/story` (the
+  governed multi-agent evidence chain), and `POST /v1/audit/verify-envelope`
+  (verifies qg-python Ed25519 envelopes; an invalid signature is a 200 with a
+  receipt, not a server error). Router-level tests cover all endpoints,
+  including tamper rejection.
 - **GitHub Actions CI**: fmt, clippy `-D warnings`, and tests against
   checkouts of `querygraph/grust` and `querygraph/lakecat` assembled to
   satisfy the `../..` path dependencies.

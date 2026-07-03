@@ -93,9 +93,13 @@ fn build_bundle(
         .map(|view| QueryGraphViewArtifactHashes::from_view(view).unwrap())
         .collect::<Vec<_>>();
     let graph_hash = graph_hash(&graph).unwrap();
-    let mut manifest =
-        QueryGraphBundleManifest::from_hashes(table_artifacts, view_artifacts, graph_hash, &open_lineage)
-            .unwrap();
+    let mut manifest = QueryGraphBundleManifest::from_hashes(
+        table_artifacts,
+        view_artifacts,
+        graph_hash,
+        &open_lineage,
+    )
+    .unwrap();
     manifest.querygraph_import = Some(
         QueryGraphImportCompatibility::from_table_only_bundle(
             &wh,
@@ -230,7 +234,9 @@ fn rejects_catalog_graph_with_invalid_edges() {
         vec![],
     ));
 
-    bundle.verify_manifest().expect("bundle itself is hash-valid");
+    bundle
+        .verify_manifest()
+        .expect("bundle itself is hash-valid");
     let err = bundle.import_plan().unwrap_err().to_string();
     assert!(err.contains("is not present in vertices"), "{err}");
 }

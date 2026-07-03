@@ -151,6 +151,11 @@ enum Commands {
         #[arg(long)]
         file: String,
     },
+    /// Serve the /v1 HTTP API (health, navigator bundles, qglake story, audit).
+    Serve {
+        #[arg(long, default_value_t = 8080)]
+        port: u16,
+    },
 }
 
 fn main() -> Result<()> {
@@ -412,6 +417,9 @@ fn main() -> Result<()> {
             if !report.signature_valid {
                 std::process::exit(1);
             }
+        }
+        Commands::Serve { port } => {
+            tokio::runtime::Runtime::new()?.block_on(querygraph::server::serve(port))?;
         }
     }
 

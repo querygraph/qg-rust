@@ -7,8 +7,8 @@ use arrow::array::{Array, Int64Array, RecordBatch, StringArray};
 use arrow::datatypes::{DataType, Field as ArrowField, Schema};
 use arrow::ipc::reader::StreamReader;
 use arrow::ipc::writer::StreamWriter;
-use grust::prelude::*;
 use grust::SailGraphStore;
+use grust::prelude::*;
 use serde_json::{Value, json};
 
 use crate::dataverse::DataverseDataset;
