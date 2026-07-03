@@ -163,6 +163,92 @@ impl OsiDocument {
             },
         }
     }
+
+    /// Project a Semantic Croissant JSON-LD document into an OSI model,
+    /// mirroring qg-python's `OsiDocument.from_croissant`: every recordSet
+    /// field becomes a governed SAIL_SQL column expression, `sameAs` semantic
+    /// types become ontology terms, and a `row_count` metric is attached.
+    pub fn from_croissant_json(croissant: &serde_json::Value, sail_schema: &str) -> Result<Self> {
+        let name = croissant["name"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("croissant document has no name"))?;
+        let description = croissant["description"].as_str().map(str::to_string);
+        let record_sets = croissant["recordSet"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
+        let file_count = croissant["distribution"]
+            .as_array()
+            .map(Vec::len)
+            .unwrap_or_default();
+
+        let mut fields = Vec::new();
+        let mut ontology_terms = Vec::new();
+        for record_set in &record_sets {
+            for field in record_set["field"].as_array().into_iter().flatten() {
+                let Some(field_name) = field["name"].as_str() else {
+                    continue;
+                };
+                let semantic_type = field["sameAs"].as_str();
+                fields.push(OsiField {
+                    name: field_name.to_string(),
+                    description: field["description"].as_str().map(str::to_string),
+                    semantic_type: semantic_type.map(str::to_string),
+                    expression: Some(OsiExpression {
+                        dialects: vec![OsiDialectExpression {
+                            dialect: "SAIL_SQL".to_string(),
+                            expression: format!("`{field_name}`"),
+                        }],
+                    }),
+                });
+                if let Some(term) = semantic_type {
+                    ontology_terms.push(OsiOntologyTerm {
+                        id: term.to_string(),
+                        label: field_name.to_string(),
+                        source: Some("semantic-croissant".to_string()),
+                    });
+                }
+            }
+        }
+
+        let safe_name = crate::sail::safe_sql_name(name);
+        let field_count = fields.len();
+        Ok(Self {
+            version: default_osi_version(),
+            semantic_model: OsiSemanticModel {
+                name: format!("{safe_name}_semantic_model"),
+                description: Some(format!(
+                    "OSI model derived from Semantic Croissant dataset {name}."
+                )),
+                ai_context: Some(
+                    "Resolve user intent to ontology terms, then map those terms \
+                     to Croissant fields and governed Sail columns."
+                        .to_string(),
+                ),
+                datasets: vec![OsiDataset {
+                    name: safe_name.clone(),
+                    source: format!("sail.{sail_schema}.{safe_name}"),
+                    description,
+                    ai_context: Some(format!(
+                        "Dataset {name} has {file_count} file(s) and {field_count} semantic field(s)."
+                    )),
+                    fields,
+                }],
+                metrics: vec![OsiMetric {
+                    name: "row_count".to_string(),
+                    description: Some("Count of governed rows available in Sail.".to_string()),
+                    expression: OsiExpression {
+                        dialects: vec![OsiDialectExpression {
+                            dialect: "SAIL_SQL".to_string(),
+                            expression: "COUNT(*)".to_string(),
+                        }],
+                    },
+                    ai_context: Some("Use this metric to verify loaded table scale.".to_string()),
+                }],
+                ontology_terms,
+            },
+        })
+    }
 }
 
 fn default_osi_version() -> String {
