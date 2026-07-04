@@ -1,6 +1,6 @@
-kindle_name: querygraph-stack (0.4.0-86d0ce0)
+kindle_name: querygraph-stack (0.4.0-cc6c034)
 built_at: 2026-07-04
 epub_file: querygraph-stack.epub
 pdf_file: querygraph-stack.pdf
-kindle_link: querygraph-stack (0.4.0-86d0ce0).epub
-pdf_link: querygraph-stack (0.4.0-86d0ce0).pdf
+kindle_link: querygraph-stack (0.4.0-cc6c034).epub
+pdf_link: querygraph-stack (0.4.0-cc6c034).pdf

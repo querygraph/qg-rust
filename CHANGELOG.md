@@ -7,14 +7,18 @@ recorded here. The codename pool and the shared version line live in
 ## 0.5.0-dev — unreleased
 
 ### Added
-- **Worked examples throughout the stack guide** (`docs/guide`): each
-  component chapter now ends with runnable Rust and/or Python examples with
-  outputs captured from real runs — graph build/store/Cypher, capability
-  minting, one-seed-two-languages envelope signing, the LakeCat bootstrap
-  handoff, Croissant→OSI in both languages, the navigator loop with its
-  denial receipt, sign-in-Python/verify-in-Rust, the guarded `/v1` 401
-  contract and `governed_post`, a hand-driven MCP session, and tool-schema
-  export in both flavors.
+- **The stack guide restructured as a full book** (`docs/guide`): executive
+  summary and overview up front; four Parts — I. The Substrate (Grust, the
+  query language, TypeSec, TypeDID, LakeCat, the bootstrap handoff, Sail),
+  II. The Semantic Layer (a chapter per standard: Croissant, CDIF, DID,
+  ODRL, plus OSI, the dual gate, lineage, the lakehouse path, the QGLake
+  story, qg-python), III. The Interoperability Surfaces (`/v1` + envelope
+  auth, MCP, A2A + tool schemas, the navigator loop, the cross-language
+  contract), IV. Integration in Practice (the ten-step assembly, catalog to
+  governed answer, plugging in agent frameworks, operating and releasing) —
+  closed by Future Work and a glossary/link appendix. 26 chapters; worked
+  Rust/Python examples throughout, with outputs (bundle layers, receipts,
+  verification reports, MCP transcripts) captured from real runs.
 
 ## 0.4.0 "Sentinel" — 2026-07-04
 
