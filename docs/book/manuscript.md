@@ -1846,9 +1846,113 @@ what the agent should never have seen.
 That is why the AI Navigator matters. It makes precision cheaper than
 guesswork.
 
+# The Goshawk Interoperability Release
+
+Everything to this point describes the kernel that shipped as 0.2.0
+"Peregrine": a library and a CLI that could load, project, govern, and audit —
+but that nothing else could reach. Release 0.3.0 "Goshawk" is the
+interoperability release: the same governed semantics, now reachable over a
+network, over the Model Context Protocol, and across languages with real
+cryptography on both sides.
+
+## Real Signatures, Verified Across Languages
+
+The Python port originally carried demonstration digests where signatures
+belonged. Goshawk replaces them with real Ed25519 keys, derived
+deterministically from agent seeds exactly the way TypeSec derives them in
+Rust: the SHA-256 of the seed becomes the private key, and the public key is
+published as a W3C `did:key` verification method on every envelope. An
+envelope now names the key that can verify it.
+
+The two implementations verify each other with no shared state. Rust
+reconstructs Python's documented signing payload
+(`querygraph-typedid-signing-v1`), resolves the `did:key`, and checks the
+signature — including recomputing Python's canonical JSON byte-for-byte,
+`sort_keys`, compact separators, `ensure_ascii` escapes and all. Rust can also
+mint envelopes in the same format from the same seeds, so the equivalence
+suite proves both directions: Python signs and Rust verifies; Rust signs and
+Python verifies; a tampered envelope fails on either side. Where the crypto
+extra is absent, Python labels its digests `unsigned:sha256:` so nothing can
+mistake a hash for a signature.
+
+## A Service Surface: the /v1 API
+
+Goshawk gives the platform its first network surface, the beginning of the
+`querygraphd` shape sketched at the end of this book. `querygraph serve`
+exposes `/v1`: health, four-layer Navigator bundles, the QGLake story with its
+full evidence chain, envelope verification, a semantic-model registry
+(`models/import/osi`, `models/import/croissant`, `models`, `search`), and
+`answer`. A Semantic Croissant document POSTed to the registry projects into
+an OSI model the same way in Rust as in Python, and `search` walks names,
+descriptions, `ai_context`, semantic types, and ontology terms.
+
+Governed routes can demand proof. With `--require-auth`, importing a model or
+asking for an answer requires a signed TypeDID envelope in the `x-qg-envelope`
+header — its action fixed to `invoke`, its resource bound to the exact request
+path, and its payload bound to the SHA-256 of the request body, so an envelope
+can be neither replayed against another endpoint nor attached to a different
+body. A failed check returns a receipt that explains the contract; a denial is
+a document, not a mystery. The Python client mints these headers with two
+lines of `querygraph.api_auth`.
+
+## MCP: One Server, Every Framework
+
+The Model Context Protocol is how agent frameworks discover tools in 2026, and
+Goshawk speaks it from both languages. `querygraph mcp-serve` in Python
+exposes the governed layer through the official SDK; the Rust binary carries a
+dependency-free MCP implementation over stdio. Both offer the same surface:
+search the semantic model, resolve metrics with dialect fallback, check access
+(the RBAC+ODRL dual gate, where a denial returns a receipt rather than an
+error), build Navigator bundles, run the governed story, verify envelopes, and
+answer questions. Any MCP client — Claude, LangChain, PydanticAI, LlamaIndex,
+CrewAI — reaches all of it with zero adapter code.
+
+For frameworks that speak function-calling rather than MCP,
+`TypeDidAgent.to_tool_schema()` exports standard JSON-Schema tool definitions
+in OpenAI and Anthropic flavors, and the LangChain adapter gained async
+variants. Every adapter returns the envelope with the answer; nothing hands
+back a bare string.
+
+## The Agent Card
+
+The agent runs in this book always labeled their protocol `typedid/a2a`.
+Goshawk makes the label honest: both implementations publish a Linux
+Foundation Agent2Agent card — served at `/.well-known/agent-card.json`, printed
+by `agent-card` — declaring the same five skills and a security scheme that
+documents the TypeDID envelope contract. The card is a cross-language
+contract; the equivalence suite asserts the two implementations publish
+identical skills.
+
+## Conformance, Proven Rather than Asserted
+
+Goshawk vendors the official OpenLineage 2-0-2 JSON Schema and validates
+generated events against it, with format checking on. The very first run of
+that validator caught a real nonconformance: the spec requires `run.runId` to
+be a UUID, and both implementations were emitting prefixed hashes. Both now
+derive run ids as deterministic UUIDv5 values under a shared QueryGraph
+namespace — the same seed produces the same UUID in either language, pinned by
+a fixture test — and the equivalence suite schema-validates the events both
+CLIs emit. That is the difference between asserting interoperability and
+proving it.
+
+## The Governed Navigator Loop
+
+The 0.4 development line adds the loop this book has been building toward.
+`GovernedNavigatorLoop` in Python takes a question; searches the semantic
+model by name, synonym, and bigram; gates every matched dataset through
+RBAC+ODRL and collects the receipts; plans SQL only over allowed sources;
+names the denied sources in the prompt as explicitly off-limits; synthesizes
+with any `Callable[[str], str]` — an OpenAI-compatible helper binds Ollama,
+vLLM, llama.cpp, or LM Studio — or deterministically when no model is given;
+and returns the answer inside a signed envelope with a schema-valid
+OpenLineage event and an Ed25519 attestation. The deterministic path is the
+golden baseline: the same governance, with or without a language model in the
+loop.
+
 # Where Querygraph Goes Next
 
-The current codebase is the compact kernel:
+The current codebase is the compact kernel, plus its first interoperable
+shell:
 
 - typed Sail lakehouse loading;
 - Semantic Croissant and CDIF sidecars;
@@ -1856,11 +1960,15 @@ The current codebase is the compact kernel:
 - Grust-backed semantic graph loading;
 - DID and TypeSec TypeDID agent envelopes;
 - ODRL rights, RBAC, approvals, and denials;
-- OpenLineage in Sail with DID attestation.
+- OpenLineage in Sail with DID attestation;
+- the `/v1` service, MCP servers in both languages, the A2A card, and
+  cross-language Ed25519 verification.
 
-The next product shape is a long-running `querygraphd` service with APIs for
-model import, semantic search, access explanation, governed planning, answer
-generation, and audit verification.
+The long-running `querygraphd` service has begun — Goshawk's `/v1` is its
+first slice — and grows toward full model import, semantic search, access
+explanation, governed planning, answer generation, and audit verification,
+with the navigator loop maturing from its deterministic baseline into the
+live, LLM-driven path under the same receipts.
 
 Querygraph’s ambition is not to replace Sail, Grust, TypeSec, OSI, Croissant,
 CDIF, ODRL, OpenLineage, or Dataverse. It is to make them work together as one
