@@ -7,6 +7,17 @@ recorded here. The codename pool and the shared version line live in
 ## 0.4.0-dev — unreleased
 
 ### Added
+- **The QueryGraph Stack guide** (`docs/guide`) — a second book: the
+  definitive stack-wide guide (Grust, TypeSec, LakeCat, Sail, QueryGraph)
+  with an executive summary and link index up front, built to EPUB/PDF/MOBI
+  with versioned delivery links like the dedicated book, which remains in
+  `docs/book` and gains a Goshawk interoperability chapter.
+- **Stack review deck** (`docs/slides`, typst → PDF) and a **one-pager**
+  (`docs/onepager`) in three typesettings: HTML, typst PDF, and troff/ms PDF.
+  The troff build applies the omnighost findings — `groff -Tpdf -P-e -t -ms`
+  (embedded fonts, `tbl` preprocessing, ragged-right) — regenerates the
+  gropdf font map against the installed ghostscript, and asserts every font
+  embeds via `pdffonts`.
 - **MCP server over stdio** (`mcp` module; CLI: `mcp-serve`). A
   dependency-free JSON-RPC 2.0 implementation of the MCP handshake
   (protocol 2024-11-05) exposing the same governed surface as `/v1` and

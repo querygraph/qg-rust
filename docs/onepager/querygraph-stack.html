@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The QueryGraph Stack — One-Pager</title>
+<style>
+  :root { --accent: #1a5fb4; --dim: #5e5c64; --rule: #d0d0d5; }
+  * { box-sizing: border-box; }
+  body {
+    font: 15px/1.45 "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #1b1b1f; max-width: 52rem; margin: 2rem auto; padding: 0 1.25rem;
+  }
+  header h1 { font-size: 1.9rem; margin: 0; }
+  header p.tagline { color: var(--dim); margin: .25rem 0 0; font-size: 1.05rem; }
+  h2 { font-size: 1.05rem; color: var(--accent); text-transform: uppercase;
+       letter-spacing: .06em; margin: 1.4rem 0 .4rem; }
+  p { margin: .4rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid var(--rule); padding: .35rem .5rem; text-align: left; vertical-align: top; }
+  th { background: #f4f4f6; }
+  code { font: .88em/1.3 "SF Mono", Menlo, Consolas, monospace; background: #f4f4f6;
+         padding: .05em .3em; border-radius: 3px; }
+  .chain { background: #f7f9fc; border-left: 3px solid var(--accent);
+           padding: .6rem .8rem; font-size: .95rem; }
+  footer { margin-top: 1.4rem; padding-top: .6rem; border-top: 1px solid var(--rule);
+           color: var(--dim); font-size: .85rem; }
+  footer a { color: var(--accent); text-decoration: none; }
+  @media print { body { margin: 0 auto; font-size: 12.5px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>The QueryGraph Stack</h1>
+  <p class="tagline">A governed semantic lakehouse for agentic AI — five coordinated
+  open-source components that let agents answer over enterprise data while
+  <em>proving</em> what they did.</p>
+</header>
+
+<h2>The thesis</h2>
+<p class="chain">“The answer used OSI metric <b>X</b>, resolved to Sail table
+<b>Y</b>, under capability <b>C</b> and <code>odrl:read</code>, emitting
+OpenLineage run <b>R</b> anchored by attestation <b>A</b> — and source
+<b>Z</b> was denied, with a receipt.” The differentiator for enterprise AI is
+not a longer context window; it is this verifiable chain from question to
+answer. Denials are receipts, never errors.</p>
+
+<h2>The components</h2>
+<table>
+  <tr><th>Component</th><th>Role</th><th>Release</th></tr>
+  <tr><td><b>Grust</b></td><td>Backend-neutral property graph for Rust; GQL/Cypher reads;
+    a dozen stores including Sail DataFrames.</td><td>0.11.0 “Crab”</td></tr>
+  <tr><td><b>TypeSec</b></td><td>Security in the type system: unforgeable
+    <code>Capability&lt;P,&nbsp;R&gt;</code> proofs; TypeDID Ed25519 signed agent envelopes.</td>
+    <td>0.11.0 “Burano”</td></tr>
+  <tr><td><b>LakeCat</b></td><td>Rust-native Iceberg REST catalog; catalog state, Sail planning,
+    receipts, and graph projection bound to one table transition; QueryGraph bootstrap bundles.</td>
+    <td>0.2.1 “Lynx”</td></tr>
+  <tr><td><b>Sail</b> (fork)</td><td>Spark-compatible lakehouse engine with a Cypher
+    graph-query extension compiled into the SQL frontend.</td><td>branch <code>grust</code></td></tr>
+  <tr><td><b>QueryGraph</b></td><td>The semantic layer, Rust + Python: Croissant · CDIF · DID ·
+    ODRL projections, OSI business semantics, RBAC+ODRL dual gate, OpenLineage + attestations.</td>
+    <td>0.3.0 “Goshawk”</td></tr>
+</table>
+
+<h2>Goshawk: the interoperability release</h2>
+<p><b>Real Ed25519 across languages</b> — Python signs, Rust verifies; Rust signs, Python
+verifies; same seed ⇒ same <code>did:key</code>; tampering fails on either side.
+<b>HTTP <code>/v1</code> API</b> with TypeDID envelope auth (path- and body-bound;
+401s carry receipts). <b>MCP servers in both languages</b> — Claude, LangChain,
+PydanticAI, LlamaIndex, CrewAI connect with zero adapters. <b>A2A agent card</b>
+published identically by both implementations. <b>Official OpenLineage conformance</b> —
+events schema-validated, deterministic UUIDv5 run ids shared across languages.
+The 0.4 line adds the <b>governed navigator loop</b>: question → semantic search →
+policy receipts → SQL plans over allowed sources only → any LLM (or the deterministic
+baseline) → signed envelope + lineage + attestation.</p>
+
+<h2>Held equivalent by tests</h2>
+<p>An executable cross-language contract: byte-identical navigator bundles, matching
+governance semantics in the multi-agent story, both crypto directions verified live,
+both CLIs’ lineage events schema-valid, identical agent cards, and a live
+auth round-trip — 49 Python + 40 Rust tests, CI on every push.</p>
+
+<footer>
+  <b>Links:</b>
+  <a href="https://github.com/querygraph/querygraph">querygraph/querygraph</a> (workspace) ·
+  <a href="https://github.com/querygraph/qg-rust">qg-rust</a> ·
+  <a href="https://github.com/querygraph/qg-python">qg-python</a> ·
+  <a href="https://github.com/querygraph/grust">grust</a> ·
+  <a href="https://github.com/querygraph/typesec">typesec</a> ·
+  <a href="https://github.com/querygraph/lakecat">lakecat</a> ·
+  <a href="https://github.com/lakehq/sail">sail</a> ·
+  books: <code>qg-rust/docs/book</code> &amp; <code>docs/guide</code> · querygraph.ai
+</footer>
+</body>
+</html>
