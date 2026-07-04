@@ -16,9 +16,19 @@ recorded here. The codename pool and the shared version line live in
   auth, MCP, A2A + tool schemas, the navigator loop, the cross-language
   contract), IV. Integration in Practice (the ten-step assembly, catalog to
   governed answer, plugging in agent frameworks, operating and releasing) —
-  closed by Future Work and a glossary/link appendix. 26 chapters; worked
+  closed by Future Work and a glossary/link appendix. 27 chapters; worked
   Rust/Python examples throughout, with outputs (bundle layers, receipts,
   verification reports, MCP transcripts) captured from real runs.
+- **Per-chapter API references in the stack guide**: compact reference tables
+  for every surface — Grust builder/stores/Cypher, TypeSec capabilities and
+  TypeDID, LakeCat REST + the bundle crate, the four projection types in both
+  languages, OSI, governance, lineage, the qg-python package map, `/v1` auth,
+  the MCP tools, the navigator loop, and both CLIs.
+- **A second integration walkthrough over live Dataverse data** (guide
+  Chapter 25): `dataverse-e2e` against Harvard Dataverse, with output from a
+  real run — live search staged into Sail, derived semantics, the dual-gate
+  receipt, the `typedid/a2a` envelope, and DOI-level OpenLineage with a
+  UUIDv5 run id and Ed25519 attestation.
 
 ## 0.4.0 "Sentinel" — 2026-07-04
 

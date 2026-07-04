@@ -232,6 +232,17 @@ assert_eq!(datasets.len(), 1);
 The traversal is an IR, not a string: the same `Traversal` runs against
 memory, PostgreSQL, or Sail, each backend lowering it natively.
 
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `GraphBuilder` | `new()`, `.node(label, id).prop(k, v).finish()`, `.edge(label, &from, &to).prop(k, v).finish()`, `.edge_policy(EdgePolicy::AllowDuplicates)`, `.build() -> Graph` |
+| `Graph` / `Node` / `Edge` | plain data: ids, labels, typed property maps; serde-serializable |
+| `Traversal` | `from_node(id).out(label).to(label)` — an IR, lowered natively per backend |
+| `GraphStore` (async trait) | `put_node`, `put_edge`, `put_graph`, `get_node`, `traverse` |
+| Stores | `MemoryGraphStore::new()`; `SailGraphStore` (Spark Connect); `grust-turso`, `grust-postgres{,-pgq}`, `grust-surreal`, `grust-helix`, `grust-falkor`, `grust-ladybug`, `grust-lancedb` |
+| Schema | optional typed property schemas; graphs validate before reaching a store |
+
 ## Chapter 2. The Query Language: GQL/Cypher
 
 Crab (0.11) gave the graph a language: a standards-conformant GQL/Cypher
@@ -275,6 +286,18 @@ let table = run_read_query(
 Through the Sail fork's extension (Chapter 7), the same `MATCH` also runs
 from any Spark Connect session — PySpark included — against the graph the
 lakehouse projects.
+
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `grust_cypher::read::run_read_query(&graph, cypher, &params)` | portable reference executor over any `grust::Graph`; returns `CypherResultTable` |
+| `CypherParameters` | `new()`, typed parameter binding |
+| `cypher_mutation_plan(cypher)` / `sail_cypher_mutation_plan` | strict backend-neutral write plans |
+| `SailGraphStore::run_read_query` / `execute_cypher_mutation*` | backend pushdown; `_returning_with_options` returns generated ids |
+| `CypherTransaction` | accumulates eagerly-planned writes between `BEGIN`/`START TRANSACTION` and commit; atomic execution |
+| `CypherSession` / `SessionCommand` | standalone `USE` and session commands |
+| Catalog procedures | `CALL db.labels()` and friends, over the projected graph |
 
 ## Chapter 3. TypeSec: Capabilities as Types
 
@@ -332,6 +355,16 @@ match decision {
     Err(denied) => return Err(denied.receipt()) // a denial is data, not panic
 };
 ```
+
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `Capability<P, R>` | unforgeable proof; `pub(crate)` constructor; phantom permission/resource types |
+| `Permission` (sealed) | e.g. `CanRead`, `CanWrite`; QueryGraph adds domain permissions (`AiCanInfer`, `CanReadSensitive`, `CanDelegate`, `CanAggregateSummaries`, `CanReadDatasetCompartment`, `CanDeriveRedactedSummary`) |
+| `PolicyEngine::check(subject, action, resource)` | `Ok(Capability)` — audit event emitted — or `Err(Denied)` with a receipt |
+| `Capability::<P, R>::permission_name()` | stable permission strings for evidence reports |
+| Policy engines | RBAC, ODRL, and graph policy backends behind one `check` |
 
 ## Chapter 4. TypeDID: Identity, Envelopes, and the Torcello Platform
 
@@ -397,6 +430,18 @@ assert!(envelope.verify().signature_valid);
 
 A fixture test pins the shared `did:key`, so the derivations can never drift.
 
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `Ed25519DidKey::from_seed(bytes)` | deterministic keypair — sha256(seed) as private key |
+| `Did::key(signing_public)` | `did:key:z6Mk…` identifier |
+| `TypeDidProfile::ed25519_x25519_chacha20()` | the negotiated envelope profile |
+| `A2aTypeDidAdapter::wrap(TypeDidWrapRequest, resolver, key_store)` | sign + encrypt a payload into an envelope |
+| `TypeDidGateway::open_message(&envelope)` | verify + decrypt; yields `VerifiedTypeDidMessage` |
+| `VerifiedTypeDidMessage::attestation()` | audit-safe: action, resource, privacy, profile, envelope digest |
+| Torcello surfaces | interop plane (OpenAI/Anthropic/LangChain/Pydantic-AI guards), `mcp-gate`, signed decision receipts + replay, `#[typesec_tool]`, OTel sink, WASM core, enforcement proxy, PyPI `typesec` |
+
 ## Chapter 5. LakeCat: The Iceberg REST Catalog
 
 LakeCat is a Rust-native Apache Iceberg REST catalog and QueryGraph
@@ -428,6 +473,17 @@ fail-closed commit-requirement validation — over dependencies moved to Grust
 "Lobster" and TypeSec "Torcello". The release rests on a recorded
 release-candidate proof harness (Chapter 6's handoff, verified end to end,
 40/40 QueryGraph tests green).
+
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `GET /catalog/v1/config` | standard Iceberg REST config — stock clients start here |
+| `/catalog/v1/namespaces…` | namespace CRUD, `listTables`, table load/commit — Iceberg-spec error model (403/404/409 with spec `type` strings) |
+| Scan planning | point-in-time and append-only incremental plans as opaque plan-task tokens from stable Sail metadata; filters validated against generated Iceberg expression models |
+| `GET /querygraph/v1/bootstrap` | the bootstrap bundle: Croissant, CDIF, OSI, ODRL, OpenLineage, Grust-ready graph envelope |
+| `lakecat-cli` | `config --catalog URL` and friends |
+| Feature flags | `sail-local`, `typesec-local`, `grust-turso-local`, `turso-local` compose the local integration set |
 
 ## Chapter 6. The Bootstrap Handoff
 
@@ -467,6 +523,15 @@ cargo run -- lakecat-import --bundle bootstrap.json --output import-plan.json
 
 The import command prints the bundle's verification report; QueryGraph
 accepts catalog state as *proof*.
+
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `qglake-bundle` crate | the shared wire format: `QueryGraphBootstrap` and its `verify_manifest` |
+| `LakeCatBootstrapBundle::from_path(path)` (qg-rust) | parse a bundle file |
+| `.import_plan()` | verification report + the Cypher import plan QueryGraph executes |
+| CLI | `querygraph lakecat-verify --bundle …` · `querygraph lakecat-import --bundle … --output plan.json` |
 
 ## Chapter 7. Sail and the Cypher Extension
 
@@ -650,6 +715,16 @@ querygraph navigator \
 #    "layers": {"semanticCroissant": …, "cdif": …, "did": …, "odrl": …}}
 ```
 
+### API reference (the four projections, both languages)
+
+| Layer | Rust | Python |
+|---|---|---|
+| Croissant | `CroissantDataset { files, record_sets, … }`, `Field::new(…).semantic_type(iri)`, `.to_json_ld()` | `croissant.CroissantDataset`, `Field(name, dtype, desc).semantic_type(iri)`, `.to_json_ld()` |
+| CDIF | `CdifResource::from_croissant(dataset, landing, data_url)`, `.with_odrl_policy(id, json)`, `.to_json_ld()` | `cdif.CdifResource` — same constructors |
+| DID | `DidDocument::new_oyd(seed, controller)`, `.with_service_endpoint(url)`, `.to_json()` | `did.DidDocument.new_oyd(seed, controller)` — byte-identical output |
+| ODRL | `Policy { permissions, prohibitions }`, `Rule { action, assignee, constraint }`, `Action::{Use, Read, Derive, Translate, Index}`, `.allows(assignee, action)`, `.to_json_ld()` | `odrl.Policy` / `Rule` / `Action` — same evaluation rule |
+| Bundle | `AiNavigator::build(NavigatorInput) -> NavigatorOutput { croissant, cdif, did, odrl, bundle }` | `AiNavigator().build(NavigatorInput(...))` |
+
 ## Chapter 12. OSI: Business Semantics
 
 The Open Semantic Interchange model is where business language meets governed
@@ -699,6 +774,15 @@ osi.semantic_model.resolve_metric("row_count")     # 'COUNT(*)' via SAIL_SQL
 osi.semantic_model.find_by_synonym("energy")       # datasets/fields/metrics
 ```
 
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `OsiDocument` | `from_mapping` (accepts upstream `semantic_model: []` lists), `from_yaml_file`, `to_json`; Rust adds `from_croissant_json(&value, schema)` and `for_dataverse(&datasets)`; Python adds `from_croissant(dataset)` |
+| `OsiSemanticModel` | `datasets`, `metrics`, `relationships`, `ontology_terms`, `ai_context`; Python: `resolve_metric(name, dialect="SAIL_SQL")` (fallback `ANSI_SQL` → `SAIL_SQL`), `find_by_synonym(term)` |
+| `OsiAiContext` | `instructions`, `synonyms`, `examples`; bare strings coerce to `instructions` |
+| Dialects | `ANSI_SQL`, `SAIL_SQL`, `SNOWFLAKE`, `MDX`, `TABLEAU`, `DATABRICKS`, `MAQL` |
+
 ## Chapter 13. Governance: The Dual Gate
 
 QueryGraph's access decision is deliberately redundant: **RBAC and ODRL must
@@ -736,6 +820,16 @@ A real denial receipt, captured from a navigator-loop run (Chapter 21):
   "policy_id": "urn:querygraph:policy:navigator-demo"
 }
 ```
+
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `RbacPolicy` | `grants: [RoleGrant{principal, role}]`, `permissions: [RolePermission{role, resource, action}]`, `allows`, `roles_for`; Rust adds `decide -> RbacDecision{matched_roles, …}` |
+| `Policy` (ODRL) | `allows(assignee, action)` — permission must match, no prohibition may |
+| `OdrlRightsLayer` | `decide(principal, resource, action) -> OdrlDecision{rbac_allowed, odrl_allowed, allowed, receipt}` |
+| `AccessReceipt` | `principal`, `resource`, `action` (IRI), `allowed`, `reason`, `policy_id`, `issued_at` |
+| MCP | `check_access(principal, resource, action)` returns the full decision; denials are results |
 
 ## Chapter 14. Lineage and Attestations
 
@@ -795,6 +889,16 @@ all. Change one byte anywhere and `signature_valid` flips to `false` with a
 non-zero exit. The same check is served at `POST /v1/audit/verify-envelope`
 and as the `verify_envelope` MCP tool in both languages.
 
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `OpenLineageRunEvent` | `for_agent_run(request=envelope, job_name, inputs, outputs)` (Python) / `for_dataverse_agent_run(…)` (Rust); `event_hash()` — canonical sha256 |
+| `run_id_for(seed)` | deterministic UUIDv5 under `uuid5(NAMESPACE_URL, "https://querygraph.ai/openlineage")` — identical in both languages |
+| `LineageAttestation` | `from_event(issuer, subject, event_hash, signer=…)`, `verify()`, `signing_payload()` (`querygraph-lineage-attestation-v1`) |
+| Validation (Python) | `validation.validate_openlineage_schema(event)` — vendored official 2-0-2 schema, format-checked; `validate_croissant`, `validate_cdif`, `validate_openlineage` shape checks |
+| Sinks | `append_jsonl(path, event)`; Sail `qg_audit` tables; Rust `--openlineage-{file,url,sail}` |
+
 ## Chapter 15. The Lakehouse Path
 
 The data side of the reference implementation:
@@ -848,6 +952,14 @@ Run it: `cargo run -- qglake-story --json` or
 the two implementations agree on the governance semantics: same roster, the
 broker (and only it) denied, attestation schemas field-for-field identical.
 
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| Rust | `run_qglake_story() -> QgLakeStoryReport` (title, question, supervisor, specialists, synthesis, rbac, policies, semantic_catalog, typesec, open_lineage, did_attestation); `render_qglake_story(&report)` for the readable briefing |
+| Python | `qglake.build_python_qglake_story() -> dict` (prompt, agents, responses, synthesis, openlineage, attestation) |
+| CLI | `qglake-story --json` (Rust) · `qglake-story --pretty` (Python); also `GET /v1/qglake/story` and the `run_qglake_story` MCP tool |
+
 ## Chapter 17. qg-python: The Pythonic Mirror
 
 `qg-python` mirrors the same layers Pydantic-v2-first — every model above is
@@ -873,6 +985,22 @@ The division of labor: Rust loads and verifies the warehouse and serves the
 platform; Python gives notebooks, PySpark users, and agent frameworks a typed
 interop layer — and the two are held identical where they overlap
 (Chapter 22).
+
+### API reference (package map)
+
+| Module | Provides |
+|---|---|
+| `querygraph.crypto` | `Ed25519Signer.from_seed/.generate/.sign/.did_key/.verification_method`, `verify(key, msg, sig)`, `public_key_from_did_key`, `unsigned_digest`, `CRYPTO_AVAILABLE` |
+| `querygraph.typedid` | `TypeDidAgent.new(name, seed=…)/.request/.answer/.signer/.did_key/.to_tool_schema`, `TypeDidEnvelope.create/.verify_payload/.verify_signature/.is_signed`, `AccessReceipt`, `GovernedPrompt`, `AgentResponse`, `signing_payload_v1` |
+| `querygraph.navigator_loop` | `GovernedNavigatorLoop(document, rights, llm=…, principal=…)`, `.answer(question) -> NavigatorAnswer`, `.demo()`, `openai_compatible_llm(base_url, model, api_key=…)` |
+| `querygraph.api_auth` | `mint_envelope_header(agent, path=…, body=…)`, `governed_post(base, path, payload, agent)` |
+| `querygraph.mcp_server` | `create_server(osi_path=…, rights_path=…)`, `serve(transport=…)`, `demo_rights_layer`, `load_rights_layer`, `parse_action` |
+| `querygraph.a2a` | `build_agent_card(base_url)`, `SKILLS`, `A2A_PROTOCOL_VERSION` |
+| `querygraph.agents` | `TypeDidLangChainToolAdapter(.invoke/.ainvoke/.as_tool/.as_async_tool)`, `to_tool_schema(agent, flavor=…)`, `deterministic_specialist`, `TypeDidAgentRun.aggregate` |
+| `querygraph.lakehouse` / `lineage` / `osi` / `croissant` / `cdif` / `did` / `odrl` / `odrl_rights` / `rbac` / `validation` | mirrors of the Rust layers (Chapters 8–15) |
+
+Extras: `crypto`, `mcp`, `agents`, `validation`, `lakehouse`, `all`; the
+package ships `py.typed`.
 
 # Part III: The Interoperability Surfaces
 
@@ -947,6 +1075,16 @@ The equivalence suite proves this live: it boots `qg-rust serve
 --require-auth`, posts without the header (asserting the 401 receipt), then
 with a Python-minted header (asserting the governed answer).
 
+### API reference
+
+`querygraph serve --port 8080 [--require-auth]`. The `x-qg-envelope` header
+is a compact-JSON TypeDID envelope; the middleware checks, in order:
+signature validity (against the envelope's `did:key` `verification_method`),
+`action == "invoke"`, `resource == <request path>`, and
+`payload.bodySha256 == sha256(body)`. Failure returns
+`401 {error, receipt: {allowed: false, path, checks, contract}}`. Clients:
+`querygraph.api_auth.mint_envelope_header` / `governed_post`.
+
 ## Chapter 19. MCP: One Server, Every Framework
 
 The Model Context Protocol is how agent frameworks discover tools in 2026,
@@ -985,6 +1123,22 @@ $ printf '%s\n%s\n%s\n' \
   "run_qglake_story", "verify_envelope", "import_semantic_model",
   "search_semantic_models", "answer_question"]}}
 ```
+
+### API reference (tools)
+
+| Tool | Arguments | Returns |
+|---|---|---|
+| `search_semantic_model` (py) / `search_semantic_models` (rs) | `term` | matches: kind/name/dataset |
+| `resolve_metric` (py) | `name`, `dialect="SAIL_SQL"` | expression, with dialect fallback |
+| `check_access` (py) | `principal`, `resource`, `action` | the full dual-gate decision + receipt |
+| `build_navigator_bundle` | dataset name/description/landing/data URL/creator/agent | the four-layer bundle |
+| `run_qglake_story` | — | the Resilience Desk report |
+| `verify_envelope` | `envelope` | verification report |
+| `import_semantic_model` (rs) | `osi` or `croissant` document | import summary |
+| `answer_question` | `question` | answer + plans + envelope (+ receipts in py) |
+
+Python resources: `qg://story/resilience-desk`, `qg://models/current`.
+Transports: stdio (both), SSE and streamable-HTTP (Python).
 
 ## Chapter 20. A2A, Tool Schemas, and Adapters
 
@@ -1077,6 +1231,16 @@ loop = GovernedNavigatorLoop.demo(
     llm_name="ollama:llama3.2",
 )
 ```
+
+### API reference
+
+| Surface | Essentials |
+|---|---|
+| `GovernedNavigatorLoop(document, rights, llm=None, llm_name=…, agent_name=…, principal=…)` | the loop; `llm: Callable[[str], str]` |
+| `.answer(question) -> NavigatorAnswer` | `answer`, `synthesized_by`, `matches`, `plans: [PlannedQuery{dataset, source, sql, metric}]`, `receipts`, `denied_sources`, `envelope`, `openlineage`, `attestation` |
+| `GovernedNavigatorLoop.demo(llm=…, llm_name=…)` | the Resilience Desk demo configuration |
+| `openai_compatible_llm(base_url, model, api_key=None)` | binds `/v1/chat/completions` — Ollama, vLLM, llama.cpp, LM Studio, OpenRouter |
+| Rust | `POST /v1/answer {question}`; `answer_question` MCP tool; shared `answer_over_models` core |
 
 ## Chapter 22. The Cross-Language Contract
 
@@ -1193,7 +1357,73 @@ Every hop leaves evidence: the import is authorized by a path-bound envelope,
 the answer carries its plans and receipts, and the verification endpoint
 lets a third party check the signature.
 
-## Chapter 25. Plugging In Agent Frameworks
+## Chapter 25. Live Dataverse to Governed Answer
+
+The second integration walkthrough runs the whole chain over *live* research
+data: Harvard Dataverse, the largest public Dataverse instance. One command —
+every step of Chapter 23, against data QueryGraph has never seen:
+
+```bash
+cargo run -- dataverse-e2e \
+  --dataverse-url https://dataverse.harvard.edu \
+  --query "municipal finance" --limit 2 \
+  --question "Which governed datasets describe municipal fiscal capacity?" \
+  --openlineage-file lineage.jsonl --did-ledger-file did-ledger.jsonl
+```
+
+What happened, from a real run:
+
+**1. Live search and staging.** The Dataverse Search API returned two real
+datasets — *Graduate School Rankings for Public Administration Programs*
+(`doi:10.7910/DVN/YTAB7V`) and *Data Files for Criminal Municipal Courts*
+(`doi:10.7910/DVN/AXNUVP`) — whose metadata and file listings were staged
+into Sail as typed views (`dataverse_7424459_metadata`,
+`dataverse_7424459_files`, …).
+
+**2. Semantics, derived not hand-written.** Each dataset projected to
+Croissant; an OSI model (`querygraph_dataverse_navigator`) was built over
+both, with ontology terms from their subjects and keywords; the four-layer
+bundle was generated for the first dataset.
+
+**3. The dual gate, with a receipt.** The agent's `answer` action passed
+RBAC (role `navigator` matched) *and* ODRL, and the receipt says so:
+
+```json
+{
+  "action": "answer",
+  "allowed": true,
+  "principal": "did:oyd:zQmX7Cm5eikMzwMavBT4zoTUAsWxK3zGwqSbFHu729gb41r",
+  "rbac": {"allowed": true, "matched_roles": ["navigator"]},
+  "odrl_allowed": true,
+  "reason": "TypeSec capabilities, RBAC role assignment, and ODRL
+             policy allow the answer path"
+}
+```
+
+**4. The signed request.** The governed prompt — question plus the staged
+metadata, nothing else — traveled in a `typedid/a2a` envelope
+(`signature: a16f2cba…`), ready for `--call-ollama` to carry it,
+DID-encrypted and prompt-bound, to a local model.
+
+**5. Lineage over DOIs.** The OpenLineage event lists the *DOIs as inputs*
+(`doi:10.7910/DVN/YTAB7V`, `doi:10.7910/DVN/AXNUVP`), carries the semantic
+bundle hash as a job facet, gets a spec-conformant run id
+(`f0539cd9-853f-589b-a70f-a9371f532c20` — UUIDv5, derived from the envelope
+signature), lands in `lineage.jsonl`, and is anchored by an Ed25519
+attestation whose issuer is a resolvable `did:key`.
+
+Add `--live-sail --sail-endpoint http://127.0.0.1:50051` to execute against
+a running Sail server (views become queryable from PySpark),
+`--call-ollama --ollama-model llama3.2` for live synthesis through the
+TypeDID gateway, `--anchor-codata` to anchor the bundle DID with the CODATA
+ODRL service, and `--openlineage-url http://localhost:5000` to emit straight
+into Marquez.
+
+The point of this walkthrough: nothing above was fixture data. The evidence
+chain — receipts, envelopes, DOI-level lineage, attestation — assembled
+itself around unfamiliar, live research data with one command.
+
+## Chapter 26. Plugging In Agent Frameworks
 
 **Claude Code / Desktop (MCP, stdio).** Point the client at either server:
 
@@ -1229,7 +1459,7 @@ model (`--osi`) and your RBAC+ODRL policy (`--rights governance.json` —
 `{"rbac": {...}, "odrl": {...}}`); the demo policies are defaults, not
 assumptions.
 
-## Chapter 26. Operating and Releasing
+## Chapter 27. Operating and Releasing
 
 **Build and test.**
 
@@ -1256,6 +1486,28 @@ published per release; GitHub releases with attached wheels.
 book (`book/`) and this guide (`guide/`) — plus the review deck (`slides/`)
 and the one-pager in HTML, typst, and troff (`onepager/`), all rebuilt at
 each release hash.
+
+### API reference (the CLIs)
+
+`qg-rust` (`cargo run -- <command>` or the `querygraph` binary):
+
+| Command | What |
+|---|---|
+| `navigator` | build the four-layer bundle |
+| `anchor-url` | CODATA ODRL URL→DID anchoring |
+| `dataverse-e2e` | the live chain (Chapter 25); `--live-sail`, `--call-ollama`, `--anchor-codata`, `--openlineage-{file,url,sail}` |
+| `lakehouse-load` / `lakehouse-verify` / `lakehouse-validate` | stream files into typed Sail Parquet; verify and validate |
+| `lakecat-verify` / `lakecat-import` | bootstrap-bundle verification and import planning |
+| `qglake-story [--json]` | the Resilience Desk |
+| `verify-envelope --file` | envelope verification (exit 1 on failure) |
+| `serve [--port] [--require-auth]` | the `/v1` API + agent card |
+| `agent-card [--base-url]` | print the A2A card |
+| `mcp-serve` | MCP over stdio |
+
+`qg-python` (`querygraph <command>`): `navigator`, `anchor-url`,
+`qglake-story`, `lakehouse-register`, `audit-register`, `pyspark-examples`,
+`answer` (`--osi`, `--rights`, `--llm-base-url`, `--llm-model`),
+`agent-card`, `mcp-serve` (`--osi`, `--rights`, `--transport`).
 
 # Future Work
 
