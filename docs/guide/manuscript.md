@@ -35,14 +35,14 @@ coordinated, codenamed versions:
   attestations, an HTTP `/v1` API, MCP servers in both languages, and an A2A
   agent card.
 
-As of this guide, the current releases are **QueryGraph 0.3.0 "Goshawk"** (the
-interoperability release, in both languages), over **Grust 0.12.0 "Lobster"**,
-**TypeSec 0.12.0 "Torcello"**, and **LakeCat 0.3.0 "Ocelot"** — a coordinated
-substrate wave in which Grust merged its Full39075 GQL goal, TypeSec became an
-agent-interoperability security platform, and LakeCat proved stock-client
-Iceberg REST conformance. QueryGraph's 0.4-line development already carries
-the governed navigator loop, envelope authentication, and a dependency-free
-Rust MCP server, and builds green against the 0.12 line.
+As of this guide, the current releases are **QueryGraph 0.4.0 "Sentinel"**
+(the governed-answer release, in both languages — the navigator loop, envelope
+authentication on `/v1`, and a dependency-free Rust MCP server, following
+0.3.0 "Goshawk", the interoperability release), over **Grust 0.12.0
+"Lobster"**, **TypeSec 0.12.0 "Torcello"**, and **LakeCat 0.3.0 "Ocelot"** — a
+coordinated substrate wave in which Grust merged its Full39075 GQL goal,
+TypeSec became an agent-interoperability security platform, and LakeCat proved
+stock-client Iceberg REST conformance.
 
 ## Links
 
@@ -55,7 +55,7 @@ Rust MCP server, and builds green against the 0.12 line.
 | TypeSec | <https://github.com/querygraph/typesec> |
 | LakeCat | <https://github.com/querygraph/lakecat> |
 | Sail upstream (forked with the Cypher extension) | <https://github.com/lakehq/sail> |
-| Goshawk releases | <https://github.com/querygraph/qg-rust/releases/tag/v0.3.0> · <https://github.com/querygraph/qg-python/releases/tag/v0.3.0> |
+| Sentinel releases | <https://github.com/querygraph/qg-rust/releases/tag/v0.4.0> · <https://github.com/querygraph/qg-python/releases/tag/v0.4.0> |
 | The dedicated QueryGraph book | `qg-rust/docs/book` |
 | Semantic Croissant (MLCommons Croissant) | <https://mlcommons.org/croissant/> |
 | CDIF (CODATA Cross-Domain Interoperability Framework) | <https://cdif.codata.org/> |
@@ -103,7 +103,7 @@ independently:
 
 | Component | Version | Codename | Pool |
 |---|---|---|---|
-| QueryGraph (both languages) | 0.3.0 | Goshawk | birds of prey |
+| QueryGraph (both languages) | 0.4.0 | Sentinel | birds of prey |
 | Grust | 0.12.0 | Lobster | — |
 | TypeSec | 0.12.0 | Torcello | Venetian landmarks |
 | LakeCat | 0.3.0 | Ocelot | wild cats |
@@ -111,8 +111,8 @@ independently:
 The 0.12 substrate wave landed together: Grust merged the Full39075 GQL
 profile, TypeSec shipped its agent-interoperability platform, and LakeCat
 moved to both while proving stock-client Iceberg REST conformance — with
-QueryGraph verified green against all three. QueryGraph itself continues on
-the 0.4-dev line.
+QueryGraph verified green against all three. QueryGraph 0.4.0 "Sentinel"
+ships on top of that wave.
 
 # Grust: The Property-Graph Substrate
 
@@ -379,7 +379,7 @@ artifacts, and GitHub releases with attached wheels.
 
 # Roadmap
 
-The near line (0.4-dev, already in progress):
+The near line (post-Sentinel):
 
 - the navigator loop maturing from deterministic baseline to live LLM runs
   under identical receipts, and its Rust parity;

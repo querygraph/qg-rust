@@ -23,7 +23,7 @@
     #v(2em)
     #text(size: 18pt)[Grust · TypeSec · LakeCat · Sail · QueryGraph]
     #v(0.6em)
-    #text(size: 15pt, fill: dim)[Stack review · QueryGraph 0.3.0 “Goshawk” · querygraph.ai]
+    #text(size: 15pt, fill: dim)[Stack review · QueryGraph 0.4.0 “Sentinel” · querygraph.ai]
   ]
 ]
 
@@ -50,7 +50,7 @@
     [TypeSec], [Capabilities as types; TypeDID signed envelopes], [0.12.0 “Torcello”],
     [LakeCat], [Rust Iceberg REST catalog; QueryGraph bootstrap bundles], [0.3.0 “Ocelot”],
     [Sail (fork)], [Spark-compatible engine + Cypher extension], [branch `grust`],
-    [QueryGraph], [The governed semantic layer, Rust + Python], [0.3.0 “Goshawk”],
+    [QueryGraph], [The governed semantic layer, Rust + Python], [0.4.0 “Sentinel”],
   )
 ]
 
@@ -130,7 +130,7 @@
 ]
 
 // ── Navigator loop ───────────────────────────────────────────────────────
-#slide[The governed navigator loop (0.4-dev)][
+#slide[Sentinel (0.4.0): the governed navigator loop][
   #text(size: 19pt)[
     question → semantic search (synonyms, bigrams) → *RBAC+ODRL receipts* →
     SQL plans over allowed sources → synthesis → *signed envelope +
@@ -185,7 +185,7 @@
   #set text(size: 19pt)
   - Meta-repo: `github.com/querygraph/querygraph`
   - Implementations: `querygraph/qg-rust` · `querygraph/qg-python`
-    (releases v0.3.0 “Goshawk”)
+    (releases v0.4.0 “Sentinel”)
   - Substrate: `querygraph/grust` · `querygraph/typesec` ·
     `querygraph/lakecat` · `lakehq/sail`
   - Books: the dedicated QueryGraph book (`qg-rust/docs/book`) and

@@ -1954,7 +1954,8 @@ proving it.
 
 ## The Governed Navigator Loop
 
-The 0.4 development line adds the loop this book has been building toward.
+Release 0.4.0 "Sentinel" — the governed-answer release that follows Goshawk —
+adds the loop this book has been building toward.
 `GovernedNavigatorLoop` in Python takes a question; searches the semantic
 model by name, synonym, and bigram; gates every matched dataset through
 RBAC+ODRL and collects the receipts; plans SQL only over allowed sources;

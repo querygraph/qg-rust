@@ -47,10 +47,10 @@ while _proving_ what they did.]
     extension compiled into the SQL frontend.], [branch `grust`],
   [QueryGraph], [The semantic layer, Rust + Python: Croissant · CDIF · DID ·
     ODRL projections, OSI business semantics, RBAC+ODRL dual gate,
-    OpenLineage + attestations.], [0.3.0 “Goshawk”],
+    OpenLineage + attestations.], [0.4.0 “Sentinel”],
 )
 
-#section[Goshawk: the interoperability release]
+#section[Goshawk and Sentinel: the interoperability releases]
 *Real Ed25519 across languages* — Python signs, Rust verifies; Rust signs,
 Python verifies; same seed ⇒ same `did:key`; tampering fails on either side.
 *HTTP `/v1` API* with TypeDID envelope auth (path- and body-bound; 401s carry
@@ -58,7 +58,7 @@ receipts). *MCP servers in both languages* — Claude, LangChain, PydanticAI,
 LlamaIndex, CrewAI connect with zero adapters. *A2A agent card* published
 identically by both implementations. *Official OpenLineage conformance* —
 events schema-validated, deterministic UUIDv5 run ids shared across languages.
-The 0.4 line adds the *governed navigator loop*: question → semantic search →
+Sentinel (0.4.0) adds the *governed navigator loop*: question → semantic search →
 policy receipts → SQL plans over allowed sources only → any LLM (or the
 deterministic baseline) → signed envelope + lineage + attestation.
 

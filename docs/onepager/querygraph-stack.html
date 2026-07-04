@@ -63,10 +63,10 @@ answer. Denials are receipts, never errors.</p>
     graph-query extension compiled into the SQL frontend.</td><td>branch <code>grust</code></td></tr>
   <tr><td><b>QueryGraph</b></td><td>The semantic layer, Rust + Python: Croissant · CDIF · DID ·
     ODRL projections, OSI business semantics, RBAC+ODRL dual gate, OpenLineage + attestations.</td>
-    <td>0.3.0 “Goshawk”</td></tr>
+    <td>0.4.0 “Sentinel”</td></tr>
 </table>
 
-<h2>Goshawk: the interoperability release</h2>
+<h2>Goshawk and Sentinel: the interoperability releases</h2>
 <p><b>Real Ed25519 across languages</b> — Python signs, Rust verifies; Rust signs, Python
 verifies; same seed ⇒ same <code>did:key</code>; tampering fails on either side.
 <b>HTTP <code>/v1</code> API</b> with TypeDID envelope auth (path- and body-bound;
@@ -74,7 +74,7 @@ verifies; same seed ⇒ same <code>did:key</code>; tampering fails on either sid
 PydanticAI, LlamaIndex, CrewAI connect with zero adapters. <b>A2A agent card</b>
 published identically by both implementations. <b>Official OpenLineage conformance</b> —
 events schema-validated, deterministic UUIDv5 run ids shared across languages.
-The 0.4 line adds the <b>governed navigator loop</b>: question → semantic search →
+Sentinel (0.4.0) adds the <b>governed navigator loop</b>: question → semantic search →
 policy receipts → SQL plans over allowed sources only → any LLM (or the deterministic
 baseline) → signed envelope + lineage + attestation.</p>
 

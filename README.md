@@ -65,8 +65,8 @@ machine-readable report.
 
 ## Stack versions
 
-This is **QueryGraph 0.3.0 "Goshawk"** (release codenames are birds of prey;
-see [`RELEASES.md`](RELEASES.md)), with 0.4.0-dev in progress. It builds on
+This is **QueryGraph 0.4.0 "Sentinel"** (release codenames are birds of prey;
+see [`RELEASES.md`](RELEASES.md)). It builds on
 three coordinated, named open-source releases. The full story is in the stack
 announcement at
 [`docs/blog/announcing-querygraph-stack.md`](docs/blog/announcing-querygraph-stack.md)

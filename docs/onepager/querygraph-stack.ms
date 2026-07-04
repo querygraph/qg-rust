@@ -68,10 +68,10 @@ T}|branch grust
 QueryGraph|T{
 The semantic layer, Rust + Python: Croissant, CDIF, DID, ODRL projections,
 OSI business semantics, RBAC+ODRL dual gate, OpenLineage + attestations.
-T}|0.3.0 \(lqGoshawk\(rq
+T}|0.4.0 \(lqSentinel\(rq
 .TE
 .SH
-GOSHAWK: THE INTEROPERABILITY RELEASE
+GOSHAWK AND SENTINEL: THE INTEROPERABILITY RELEASES
 .LP
 .B "Real Ed25519 across languages"
 \(em Python signs, Rust verifies; Rust signs, Python verifies; same seed
@@ -87,7 +87,7 @@ adapters.
 published identically by both implementations.
 .B "Official OpenLineage conformance"
 \(em events schema-validated, deterministic UUIDv5 run ids shared across
-languages. The 0.4 line adds the
+languages. Sentinel (0.4.0) adds the
 .B "governed navigator loop" :
 question \(-> semantic search \(-> policy receipts \(-> SQL plans over
 allowed sources only \(-> any LLM (or the deterministic baseline) \(->

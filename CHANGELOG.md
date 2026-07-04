@@ -4,7 +4,14 @@ All notable changes to the QueryGraph Rust reference implementation are
 recorded here. The codename pool and the shared version line live in
 [`RELEASES.md`](RELEASES.md).
 
-## 0.4.0-dev — unreleased
+## 0.4.0 "Sentinel" — 2026-07-04
+
+The governed-answer release: where Goshawk opened the doors (MCP, A2A, `/v1`,
+cross-language crypto), Sentinel stands guard over what comes through them —
+envelope auth on the API, the governed navigator loop with receipts, Rust
+minting the envelopes Python verifies, and the whole stack realigned to the
+0.12 substrate wave (Grust "Lobster", TypeSec "Torcello", LakeCat "Ocelot").
+Ships alongside qg-python 0.4.0 "Sentinel".
 
 ### Changed
 - **Stack alignment to the 0.12 substrate wave**: Grust `0.11.0 "Crab"` →
