@@ -46,9 +46,9 @@
     stroke: 0.5pt + dim,
     inset: 9pt,
     [*Component*], [*Role*], [*Release*],
-    [Grust], [Backend-neutral property graph + GQL/Cypher reads], [0.11.0 “Crab”],
-    [TypeSec], [Capabilities as types; TypeDID signed envelopes], [0.11.0 “Burano”],
-    [LakeCat], [Rust Iceberg REST catalog; QueryGraph bootstrap bundles], [0.2.1 “Lynx”],
+    [Grust], [Backend-neutral property graph + GQL/Cypher reads], [0.12.0 “Lobster”],
+    [TypeSec], [Capabilities as types; TypeDID signed envelopes], [0.12.0 “Torcello”],
+    [LakeCat], [Rust Iceberg REST catalog; QueryGraph bootstrap bundles], [0.3.0 “Ocelot”],
     [Sail (fork)], [Spark-compatible engine + Cypher extension], [branch `grust`],
     [QueryGraph], [The governed semantic layer, Rust + Python], [0.3.0 “Goshawk”],
   )
@@ -62,8 +62,8 @@
   - `grust-cypher`: Cypher/GQL reads over any store.
   - QueryGraph's semantic graph — datasets, fields, ontology terms, agents,
     policies — is a Grust graph.
-  - In flight: the Full39075 GQL profile (CALL subqueries, TVFs,
-    shortestPath, passthrough) + atomic batch transactions.
+  - New in Lobster (0.12): the merged Full39075 GQL profile — CALL
+    subqueries, TVFs, shortestPath, passthrough — + atomic batch transactions.
 ]
 
 // ── TypeSec ──────────────────────────────────────────────────────────────
@@ -74,8 +74,9 @@
     Violations are compile errors.
   - TypeDID: Ed25519 keys from seeds, did:key documents, signed + encrypted
     agent envelopes with audit-safe attestations.
-  - In flight: framework interop plane (OpenAI/Anthropic/LangChain/Pydantic-AI
-    guards), deny-by-default `mcp-gate`, enforcement proxy, signed receipts.
+  - New in Torcello (0.12): framework interop plane (OpenAI/Anthropic/
+    LangChain/Pydantic-AI guards), deny-by-default `mcp-gate`, enforcement
+    proxy, signed decision receipts + replay.
 ]
 
 // ── LakeCat ──────────────────────────────────────────────────────────────
@@ -87,8 +88,9 @@
   - `/querygraph/v1/bootstrap`: live tables projected into Croissant, CDIF,
     OSI, ODRL, OpenLineage, and a Grust-ready envelope — one shared wire
     crate, no copied formats.
-  - In flight: Iceberg REST hardening, fail-closed v4 validation, recorded
-    release-candidate proof.
+  - New in Ocelot (0.3.0): stock-client Iceberg REST conformance (PyIceberg
+    round-trip, spec-correct errors), fail-closed v4 validation, recorded
+    release proof over the 0.12 substrate.
 ]
 
 // ── Sail ─────────────────────────────────────────────────────────────────
@@ -170,7 +172,8 @@
 #slide[Roadmap][
   - Navigator loop: live LLM runs under identical receipts; Rust parity.
   - Remaining `/v1`: lineage queries, audit verification, access explanation.
-  - Adopt TypeSec-next: interop plane, `mcp-gate`, enforcement proxy.
+  - Adopt TypeSec Torcello's surfaces: interop plane, `mcp-gate`,
+    enforcement proxy (deps already on 0.12).
   - Polaris `SemanticModel` + `/navigator-bundle` (LakeCat first);
     `OSIMetricFacet` → OpenLineage; dbt/Cube importers; ADBC path.
   - The benchmark: *how much does a governed semantic layer improve agent

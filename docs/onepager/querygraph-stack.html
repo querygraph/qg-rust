@@ -48,14 +48,17 @@ answer. Denials are receipts, never errors.</p>
 <h2>The components</h2>
 <table>
   <tr><th>Component</th><th>Role</th><th>Release</th></tr>
-  <tr><td><b>Grust</b></td><td>Backend-neutral property graph for Rust; GQL/Cypher reads;
-    a dozen stores including Sail DataFrames.</td><td>0.11.0 “Crab”</td></tr>
+  <tr><td><b>Grust</b></td><td>Backend-neutral property graph for Rust; full GQL/Cypher reads
+    (Full39075: CALL subqueries, TVFs, shortestPath); a dozen stores including Sail DataFrames.</td>
+    <td>0.12.0 “Lobster”</td></tr>
   <tr><td><b>TypeSec</b></td><td>Security in the type system: unforgeable
-    <code>Capability&lt;P,&nbsp;R&gt;</code> proofs; TypeDID Ed25519 signed agent envelopes.</td>
-    <td>0.11.0 “Burano”</td></tr>
-  <tr><td><b>LakeCat</b></td><td>Rust-native Iceberg REST catalog; catalog state, Sail planning,
-    receipts, and graph projection bound to one table transition; QueryGraph bootstrap bundles.</td>
-    <td>0.2.1 “Lynx”</td></tr>
+    <code>Capability&lt;P,&nbsp;R&gt;</code> proofs; TypeDID Ed25519 signed agent envelopes;
+    framework guards, MCP gate, enforcement proxy.</td>
+    <td>0.12.0 “Torcello”</td></tr>
+  <tr><td><b>LakeCat</b></td><td>Rust-native Iceberg REST catalog with stock-client conformance;
+    catalog state, Sail planning, receipts, and graph projection bound to one table transition;
+    QueryGraph bootstrap bundles.</td>
+    <td>0.3.0 “Ocelot”</td></tr>
   <tr><td><b>Sail</b> (fork)</td><td>Spark-compatible lakehouse engine with a Cypher
     graph-query extension compiled into the SQL frontend.</td><td>branch <code>grust</code></td></tr>
   <tr><td><b>QueryGraph</b></td><td>The semantic layer, Rust + Python: Croissant · CDIF · DID ·

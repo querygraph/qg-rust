@@ -48,17 +48,19 @@ lb lb lb
 l lw(3.4i) l.
 Component|Role|Release
 Grust|T{
-Backend-neutral property graph for Rust; GQL/Cypher reads; a dozen stores
-including Sail DataFrames.
-T}|0.11.0 \(lqCrab\(rq
+Backend-neutral property graph for Rust; full GQL/Cypher reads (Full39075:
+CALL subqueries, TVFs, shortestPath); a dozen stores including Sail
+DataFrames.
+T}|0.12.0 \(lqLobster\(rq
 TypeSec|T{
 Security in the type system: unforgeable Capability<P, R> proofs; TypeDID
-Ed25519 signed agent envelopes.
-T}|0.11.0 \(lqBurano\(rq
+Ed25519 signed agent envelopes; framework guards, MCP gate, enforcement proxy.
+T}|0.12.0 \(lqTorcello\(rq
 LakeCat|T{
-Rust-native Iceberg REST catalog; catalog state, Sail planning, receipts, and
-graph projection bound to one table transition; QueryGraph bootstrap bundles.
-T}|0.2.1 \(lqLynx\(rq
+Rust-native Iceberg REST catalog with stock-client conformance; catalog
+state, Sail planning, receipts, and graph projection bound to one table
+transition; QueryGraph bootstrap bundles.
+T}|0.3.0 \(lqOcelot\(rq
 Sail (fork)|T{
 Spark-compatible lakehouse engine with a Cypher graph-query extension
 compiled into the SQL frontend.

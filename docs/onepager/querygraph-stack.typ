@@ -34,13 +34,15 @@ while _proving_ what they did.]
   stroke: 0.4pt + rgb("#d0d0d5"),
   inset: 5pt,
   [*Component*], [*Role*], [*Release*],
-  [Grust], [Backend-neutral property graph for Rust; GQL/Cypher reads; a dozen
-    stores including Sail DataFrames.], [0.11.0 “Crab”],
+  [Grust], [Backend-neutral property graph for Rust; full GQL/Cypher reads
+    (Full39075: CALL subqueries, TVFs, shortestPath); a dozen stores including
+    Sail DataFrames.], [0.12.0 “Lobster”],
   [TypeSec], [Security in the type system: unforgeable `Capability<P, R>`
-    proofs; TypeDID Ed25519 signed agent envelopes.], [0.11.0 “Burano”],
-  [LakeCat], [Rust-native Iceberg REST catalog; catalog state, Sail planning,
-    receipts, and graph projection bound to one table transition; QueryGraph
-    bootstrap bundles.], [0.2.1 “Lynx”],
+    proofs; TypeDID Ed25519 signed agent envelopes; framework guards, MCP
+    gate, enforcement proxy.], [0.12.0 “Torcello”],
+  [LakeCat], [Rust-native Iceberg REST catalog with stock-client conformance;
+    catalog state, Sail planning, receipts, and graph projection bound to one
+    table transition; QueryGraph bootstrap bundles.], [0.3.0 “Ocelot”],
   [Sail (fork)], [Spark-compatible lakehouse engine with a Cypher graph-query
     extension compiled into the SQL frontend.], [branch `grust`],
   [QueryGraph], [The semantic layer, Rust + Python: Croissant · CDIF · DID ·

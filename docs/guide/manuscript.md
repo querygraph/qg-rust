@@ -36,10 +36,13 @@ coordinated, codenamed versions:
   agent card.
 
 As of this guide, the current releases are **QueryGraph 0.3.0 "Goshawk"** (the
-interoperability release, in both languages), over **Grust 0.11.0 "Crab"**,
-**TypeSec 0.11.0 "Burano"**, and **LakeCat 0.2.1 "Lynx"**, with 0.4-line
-development already carrying the governed navigator loop, envelope
-authentication, and a dependency-free Rust MCP server.
+interoperability release, in both languages), over **Grust 0.12.0 "Lobster"**,
+**TypeSec 0.12.0 "Torcello"**, and **LakeCat 0.3.0 "Ocelot"** — a coordinated
+substrate wave in which Grust merged its Full39075 GQL goal, TypeSec became an
+agent-interoperability security platform, and LakeCat proved stock-client
+Iceberg REST conformance. QueryGraph's 0.4-line development already carries
+the governed navigator loop, envelope authentication, and a dependency-free
+Rust MCP server, and builds green against the 0.12 line.
 
 ## Links
 
@@ -101,14 +104,15 @@ independently:
 | Component | Version | Codename | Pool |
 |---|---|---|---|
 | QueryGraph (both languages) | 0.3.0 | Goshawk | birds of prey |
-| Grust | 0.11.0 | Crab | — |
-| TypeSec | 0.11.0 | Burano | Venetian islands |
-| LakeCat | 0.2.1 | Lynx | wild cats |
+| Grust | 0.12.0 | Lobster | — |
+| TypeSec | 0.12.0 | Torcello | Venetian landmarks |
+| LakeCat | 0.3.0 | Ocelot | wild cats |
 
-All four sibling repos carry post-checkpoint development (Grust's Full39075
-GQL profile, TypeSec's agent-framework interop plane and enforcement proxy,
-LakeCat's Iceberg REST hardening, QueryGraph's 0.4-dev line); the checkpoint
-releases above are what the published stack guarantees.
+The 0.12 substrate wave landed together: Grust merged the Full39075 GQL
+profile, TypeSec shipped its agent-interoperability platform, and LakeCat
+moved to both while proving stock-client Iceberg REST conformance — with
+QueryGraph verified green against all three. QueryGraph itself continues on
+the 0.4-dev line.
 
 # Grust: The Property-Graph Substrate
 
@@ -131,11 +135,11 @@ terms, agents, policies as nodes and edges) loads into a Grust store, and the
 Sail fork compiles a Cypher extension *into* the engine so the same graph is
 queryable from Spark Connect sessions.
 
-Since the Crab checkpoint, Grust's development line has been building the
+The Lobster release (0.12.0) completes the query language: the merged
 "Full39075" GQL profile — `CALL { … }` subqueries, table-valued functions,
-`shortestPath()`/`allShortestPaths()`, backend-native passthrough — with an
-executable portable read corpus, and atomic batch execution behind the
-transaction surface.
+`shortestPath()`/`allShortestPaths()`, backend-native passthrough escape
+hatches — with an executable portable read corpus, and atomic Cypher
+transaction batches behind the transaction surface.
 
 # TypeSec: Security in the Type System
 
@@ -155,14 +159,16 @@ revealing the payload. QueryGraph wraps every agent request and response in
 these envelopes; the supervised multi-agent story mints capabilities for
 delegation, sensitive reads, and summary aggregation.
 
-TypeSec's post-Burano development line runs remarkably parallel to
-QueryGraph's own: an agent-framework interop plane that guards OpenAI,
-Anthropic, LangChain, and Pydantic-AI tool calls; an MCP dialect and
-`mcp-gate`, a deny-by-default MCP stdio proxy; signed decision receipts;
-decision logging and replay; a PyPI-ready Python package; and an
+The Torcello release (0.12.0) — TypeSec's own agent-interoperability release —
+runs remarkably parallel to QueryGraph's Goshawk: an agent-framework interop
+plane that guards OpenAI, Anthropic, LangChain, and Pydantic-AI tool calls; an
+MCP dialect and `mcp-gate`, a deny-by-default MCP stdio proxy; signed decision
+receipts with decision logging and replay; JSON-Schema-validated tool
+bindings; a PyPI-ready Python package; a WASM decision core; and an
 OpenAI/Anthropic-compatible **enforcement proxy** — the "governed inference
-proxy" pattern, built at the security layer. QueryGraph plans to consume
-these at the next TypeSec release rather than duplicate them.
+proxy" pattern, built at the security layer. QueryGraph already builds against
+Torcello; adopting these new surfaces rather than duplicating them is the next
+integration step.
 
 # LakeCat: The Catalog Boundary
 
@@ -181,12 +187,16 @@ verifies and imports bundles without copying formats. Scan planning routes
 through the Sail-facing engine, with point-in-time and append-only incremental
 scans producing Iceberg REST plan-task tokens from stable Sail metadata.
 
-Since Lynx, LakeCat's line has hardened the Iceberg REST surface (spec-correct
-error model and namespace semantics), added fail-closed Iceberg v4 requirement
-validation, and recorded a clean release-candidate proof — a full local
-handoff harness that creates a fixture, plans through Sail, writes Turso
-catalog and Grust graph state, verifies replay and OpenLineage evidence, and
-runs QueryGraph's locked verify/import commands.
+The Ocelot release (0.3.0) proves the boundary from the stock client's side:
+Iceberg REST conformance demonstrated by a PyIceberg round-trip — spec-correct
+error types (403 on authorization denial, 409 on a duplicate namespace, 404 on
+a missing one), `listTables`, honest update rejection on the default build,
+and fail-closed commit-requirement validation — over dependencies moved to
+Grust "Lobster" and TypeSec "Torcello". The release rests on a recorded
+release-candidate proof: a full local handoff harness that creates a fixture,
+plans through Sail, writes Turso catalog and Grust graph state, verifies
+replay and OpenLineage evidence, and runs QueryGraph's locked verify/import
+commands, 40/40 green.
 
 # Sail and the Cypher Extension
 
@@ -375,8 +385,9 @@ The near line (0.4-dev, already in progress):
   under identical receipts, and its Rust parity;
 - the remaining `/v1` surface (lineage event queries, audit verification,
   access explanation) behind envelope auth;
-- adopting TypeSec's next release: the interop plane, `mcp-gate`, signed
-  decision receipts, and the enforcement proxy at the security layer.
+- adopting TypeSec Torcello's new surfaces: the interop plane, `mcp-gate`,
+  signed decision receipts, and the enforcement proxy at the security layer —
+  the dependency bump is done; the integration is the work.
 
 The wider arc, from the workspace review (FABLE-REVIEW-1 in the meta-repo):
 Polaris `SemanticModel` entities and `/navigator-bundle` projection (LakeCat

@@ -65,22 +65,28 @@ machine-readable report.
 
 ## Stack versions
 
-This is **QueryGraph 0.2.0 "Peregrine"** (release codenames are birds of prey;
-see [`RELEASES.md`](RELEASES.md)). It builds on three coordinated, named
-open-source releases. The full story is in the stack announcement at
-[`docs/blog/announcing-querygraph-stack.md`](docs/blog/announcing-querygraph-stack.md).
+This is **QueryGraph 0.3.0 "Goshawk"** (release codenames are birds of prey;
+see [`RELEASES.md`](RELEASES.md)), with 0.4.0-dev in progress. It builds on
+three coordinated, named open-source releases. The full story is in the stack
+announcement at
+[`docs/blog/announcing-querygraph-stack.md`](docs/blog/announcing-querygraph-stack.md)
+and the stack guide at [`docs/guide`](docs/guide).
 
-- **Grust 0.11.0 "Crab"** — the backend-neutral property-graph substrate, now
-  with a standards-conformant GQL/Cypher language layer, first-class
-  Decimal/Duration/temporal values, catalog procedures, and Turso MVCC writes.
-- **TypeSec 0.11.0 "Burano"** — the type-safe security fabric: unforgeable
-  capabilities, RBAC/ODRL/graph policy engines, and audit-safe TypeDID agent
-  attestations. Burano unifies glob matching (a single `*` no longer crosses
-  `/`) and adopts Grust 0.11's graph-type validation.
-- **LakeCat 0.2.1 "Lynx"** — the thin Iceberg REST catalog boundary with
-  governance, lineage, and proof on a Turso MVCC spine. QueryGraph verifies its
-  bootstrap bundles through LakeCat's own shared `qglake-bundle` crate rather
-  than a hand-maintained copy of the wire format.
+- **Grust 0.12.0 "Lobster"** — the backend-neutral property-graph substrate
+  with a standards-conformant GQL/Cypher layer, now completed by the merged
+  Full39075 profile: `CALL { … }` subqueries, table-valued functions,
+  `shortestPath()`, passthrough escape hatches, and atomic Cypher transaction
+  batches.
+- **TypeSec 0.12.0 "Torcello"** — the type-safe security fabric grown into an
+  agent-interoperability platform: unforgeable capabilities and audit-safe
+  TypeDID attestations, plus framework guards (OpenAI/Anthropic/LangChain/
+  Pydantic-AI), a deny-by-default MCP gate, signed decision receipts with
+  replay, and an OpenAI/Anthropic-compatible enforcement proxy.
+- **LakeCat 0.3.0 "Ocelot"** — the thin Iceberg REST catalog boundary with
+  governance, lineage, and proof on a Turso MVCC spine, now with stock-client
+  Iceberg REST conformance proven by a PyIceberg round-trip. QueryGraph
+  verifies its bootstrap bundles through LakeCat's own shared `qglake-bundle`
+  crate rather than a hand-maintained copy of the wire format.
 
 ## Run
 

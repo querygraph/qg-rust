@@ -6,6 +6,15 @@ recorded here. The codename pool and the shared version line live in
 
 ## 0.4.0-dev — unreleased
 
+### Changed
+- **Stack alignment to the 0.12 substrate wave**: Grust `0.11.0 "Crab"` →
+  `0.12.0 "Lobster"` (merged Full39075 GQL profile, atomic Cypher transaction
+  batches), TypeSec `0.11.0 "Burano"` → `0.12.0 "Torcello"` (the
+  agent-interoperability platform release), LakeCat `0.2.1 "Lynx"` → `0.3.0
+  "Ocelot"` (stock-client Iceberg REST conformance). All 40 tests green
+  against the new line; both books, the stack guide, the deck, the one-pager,
+  and the READMEs updated accordingly.
+
 ### Added
 - **The QueryGraph Stack guide** (`docs/guide`) — a second book: the
   definitive stack-wide guide (Grust, TypeSec, LakeCat, Sail, QueryGraph)

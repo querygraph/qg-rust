@@ -1,4 +1,4 @@
-kindle_name: querygraph (0.3.0-e934f20)
+kindle_name: querygraph (0.3.0-6024007)
 built_at: 2026-07-04
 epub_file: querygraph.epub
-kindle_link: querygraph (0.3.0-e934f20).epub
+kindle_link: querygraph (0.3.0-6024007).epub

@@ -25,10 +25,12 @@ is to make that architecture legible as a textbook: first the motivation, then
 the pieces, then the full working system.
 
 The system rests on three coordinated, named open-source releases that this
-book tracks throughout: Grust 0.11.0 "Crab" for the graph and query substrate,
-TypeSec 0.11.0 "Burano" for the typed security fabric, and LakeCat 0.2.1 "Lynx"
-for the catalog boundary. Where a chapter leans on a specific capability, it
-names the release that brought it.
+book tracks throughout: Grust 0.12.0 "Lobster" for the graph and query
+substrate, TypeSec 0.12.0 "Torcello" for the typed security fabric, and
+LakeCat 0.3.0 "Ocelot" for the catalog boundary. Where a chapter leans on a
+specific capability, it names the release that brought it — many foundations
+arrived with the previous line (Grust "Crab", TypeSec "Burano", LakeCat
+"Lynx"), and the chapters keep that history.
 
 # The Vision from QueryGraph.ai
 
@@ -682,12 +684,16 @@ Querygraph preserve compartmentalization through an agent hierarchy. A
 synthesis agent can receive signed summaries from specialists without
 automatically receiving the raw permissions that produced those summaries.
 
-Querygraph tracks TypeSec 0.11.0, "Burano," which follows Murano in the same
-0.11 "Crab" Grust line. Burano is what makes the cross-agent envelopes in the
-Ollama path trustworthy as evidence: each authorized interaction carries an
-audit-safe
-TypeDID attestation recording who did what to which resource, at which privacy
-level, without ever exposing the payload or the signing material.
+Querygraph tracks TypeSec 0.12.0, "Torcello," the fourth Venetian-landmark
+release after Murano and Burano. Burano is what made the cross-agent envelopes
+in the Ollama path trustworthy as evidence: each authorized interaction
+carries an audit-safe TypeDID attestation recording who did what to which
+resource, at which privacy level, without ever exposing the payload or the
+signing material. Torcello grows the same fabric into a security platform
+other agent stacks plug into — an interop plane that guards OpenAI, Anthropic,
+LangChain, and Pydantic-AI tool calls; a deny-by-default MCP gate; signed
+decision receipts with logging and replay; schema-validated tool bindings; and
+an OpenAI/Anthropic-compatible enforcement proxy.
 
 Textbook rule: DIDs say who is acting; ODRL says what action is allowed;
 TypeSec turns that decision into a typed, signed capability that software can
@@ -745,14 +751,17 @@ is part of a security boundary. Querygraph benefits from explicit types,
 predictable serialization, careful error handling, and the ability to keep
 graph, policy, metadata, and CLI code in one compiled implementation.
 
-Querygraph tracks Grust 0.11.0, the "Crab" release. Crab is the moment the
-graph gains a language: a standards-conformant GQL/Cypher layer — lexer,
+Querygraph tracks Grust 0.12.0, the "Lobster" release. Crab was the moment the
+graph gained a language: a standards-conformant GQL/Cypher layer — lexer,
 parser, AST, and semantic analysis — over the same property graph, with backend
-read pushdown into Sail and SQLite. It also gives the navigator first-class
+read pushdown into Sail and SQLite. It also gave the navigator first-class
 Decimal, Duration, and temporal values that order and compute correctly, and
 catalog procedures such as `CALL db.labels()` for introspecting the graph the
-lakehouse projects. The graph stops being only a store of facts and becomes a
-queryable substrate.
+lakehouse projects. Lobster completes the language: the merged Full39075 GQL
+profile brings `CALL { … }` subqueries, table-valued functions,
+`shortestPath()`/`allShortestPaths()`, backend-native passthrough escape
+hatches, and atomic Cypher transaction batches. The graph stops being only a
+store of facts and becomes a queryable substrate.
 
 Textbook rule: use vectors for fuzzy discovery; use graphs for accountable
 navigation. Querygraph needs both, but the graph is what turns retrieval into
@@ -1471,7 +1480,7 @@ has survived round-trip JSON parsing. QueryGraph does not invent catalog truth;
 it accepts LakeCat proof, validates the Grust graph shape, and builds the next
 agent context from the smallest verified scope.
 
-QueryGraph tracks LakeCat 0.2.1, the "Lynx" release. Lynx puts the catalog
+QueryGraph tracks LakeCat 0.3.0, the "Ocelot" release. Lynx put the catalog
 spine on Turso MVCC, so commits to different tables run truly concurrently and a
 same-table race converges to exactly one winner through a pointer compare-and-
 swap — no global write lock. That matters to the handoff: the audit event, the
@@ -1480,14 +1489,22 @@ written in the *same* transaction as the table change, which is what lets a
 QueryGraph import accept catalog state as proof rather than as a best-effort
 side effect.
 
-The 0.2.1 maintenance release also tightens this boundary in a way the importer
-feels directly. LakeCat extracted the bootstrap-bundle *wire format and its
-verification* into a small shared `qglake-bundle` crate, so QueryGraph no longer
-keeps a hand-written copy of those types: it deserializes the canonical
+Lynx also tightened this boundary in a way the importer feels directly.
+LakeCat extracted the bootstrap-bundle *wire format and its verification* into
+a small shared `qglake-bundle` crate, so QueryGraph no longer keeps a
+hand-written copy of those types: it deserializes the canonical
 `QueryGraphBootstrap` and runs LakeCat's own `verify_manifest`, then layers its
-Crab Cypher import plan on top. The producer and the consumer now validate the
+Cypher import plan on top. The producer and the consumer now validate the
 handoff with one set of types — the bundle can no longer mean two slightly
 different things on the two sides of the boundary.
+
+Ocelot proves the other side of the same boundary: stock-client Iceberg REST
+conformance, demonstrated by a PyIceberg round-trip against the running
+catalog — spec-correct error types (403 on authorization denial, 409 on a
+duplicate namespace, 404 on a missing one), `listTables`, and fail-closed
+commit-requirement validation — over dependencies moved to the Grust
+"Lobster" and TypeSec "Torcello" line. The catalog QueryGraph accepts proof
+from is the same catalog an ordinary Iceberg client simply uses.
 
 # Rust Examples
 
