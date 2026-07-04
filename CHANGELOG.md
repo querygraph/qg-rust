@@ -4,6 +4,18 @@ All notable changes to the QueryGraph Rust reference implementation are
 recorded here. The codename pool and the shared version line live in
 [`RELEASES.md`](RELEASES.md).
 
+## 0.5.0-dev — unreleased
+
+### Added
+- **Worked examples throughout the stack guide** (`docs/guide`): each
+  component chapter now ends with runnable Rust and/or Python examples with
+  outputs captured from real runs — graph build/store/Cypher, capability
+  minting, one-seed-two-languages envelope signing, the LakeCat bootstrap
+  handoff, Croissant→OSI in both languages, the navigator loop with its
+  denial receipt, sign-in-Python/verify-in-Rust, the guarded `/v1` 401
+  contract and `governed_post`, a hand-driven MCP session, and tool-schema
+  export in both flavors.
+
 ## 0.4.0 "Sentinel" — 2026-07-04
 
 The governed-answer release: where Goshawk opened the doors (MCP, A2A, `/v1`,

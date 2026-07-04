@@ -69,7 +69,9 @@ This guide is the stack-wide companion to the dedicated QueryGraph book (which
 walks the semantic layer itself as a textbook, layer by layer). Read this
 guide to understand how the five components fit together, what each guarantees
 to the others, and how to operate the whole; read the dedicated book for the
-deep treatment of the semantic projections and the governed agent story.
+deep treatment of the semantic projections and the governed agent story. Each
+component chapter ends with worked examples — Rust and Python as applicable,
+with outputs captured from real runs against the released code.
 
 # The Stack at a Glance
 
@@ -141,6 +143,57 @@ The Lobster release (0.12.0) completes the query language: the merged
 hatches — with an executable portable read corpus, and atomic Cypher
 transaction batches behind the transaction surface.
 
+## Worked example: build a graph, store it, query it
+
+Graph construction is backend-neutral — the same `GraphBuilder` code feeds
+memory, SurrealDB, PostgreSQL, or Sail:
+
+```rust
+use grust::prelude::*;
+
+let mut builder = GraphBuilder::new();
+let dataset = builder
+    .node("Dataset", "dataset:county-finance")
+    .prop("source", "sail.qg_lakehouse.government_finance__countydata")
+    .finish();
+let metric = builder
+    .node("Metric", "metric:fiscal-capacity")
+    .prop("expression", "SUM(total_revenue - mandated_spend)")
+    .finish();
+builder.edge("MEASURED_OVER", &metric, &dataset).finish();
+let graph = builder.build();
+
+// Persist and traverse (memory store; SailGraphStore is the same trait).
+let store = MemoryGraphStore::new();
+store.put_graph(&graph).await?;
+let datasets = store
+    .traverse(
+        Traversal::from_node("metric:fiscal-capacity")
+            .out("MEASURED_OVER")
+            .to("Dataset"),
+    )
+    .await?;
+assert_eq!(datasets.len(), 1);
+```
+
+The same graph answers Cypher through `grust-cypher`'s portable read executor
+— exactly how qg-rust queries its semantic graph (`src/cypher.rs`):
+
+```rust
+use grust_cypher::read::run_read_query;
+use grust_cypher::CypherParameters;
+
+let table = run_read_query(
+    &graph,
+    "MATCH (m:Metric)-[:MEASURED_OVER]->(d:Dataset) \
+     RETURN m.expression, d.source",
+    &CypherParameters::new(),
+)?;
+```
+
+Through the Sail fork's Cypher extension, that same `MATCH` also runs from any
+Spark Connect session against the graph the lakehouse projects.
+
 # TypeSec: Security in the Type System
 
 TypeSec encodes permissions as types. A `Capability<CanWrite, Report>` is an
@@ -170,6 +223,65 @@ proxy" pattern, built at the security layer. QueryGraph already builds against
 Torcello; adopting these new surfaces rather than duplicating them is the next
 integration step.
 
+## Worked example: a capability is the proof
+
+There is no `if acl.check(...)` to forget. The guarded function demands the
+capability type, and the only production path to a capability runs the policy
+engine and emits an audit event:
+
+```rust
+use typesec::prelude::*;
+
+// Without a Capability<CanRead, Report> in hand, this function
+// cannot be called — the check is the type system's, not yours.
+fn read_report(cap: Capability<CanRead, Report>, report: &Report) -> Summary {
+    summarize(report) // `cap` in scope == the policy engine said yes
+}
+
+let decision = engine.check(&subject, Action::Read, &report);
+match decision {
+    Ok(cap) => read_report(cap, &report),      // audit event already emitted
+    Err(denied) => return Err(denied.receipt()) // a denial is data, not panic
+};
+```
+
+## Worked example: one seed, one identity, two languages
+
+QueryGraph agents derive Ed25519 keys from seeds the way TypeSec's
+`Ed25519DidKey::from_seed` does — so the same seed yields the same `did:key`
+in Python and Rust, and each side verifies what the other signs.
+
+Python signs:
+
+```python
+from querygraph.typedid import TypeDidAgent
+
+supervisor = TypeDidAgent.new("SupervisorAgent")
+envelope = supervisor.request(
+    TypeDidAgent.new("FinanceAgent"),
+    action="summarize", resource="compartment:finance",
+    payload={"question": "Where is fiscal stress highest?"},
+)
+print(envelope.signature[:24])            # ed25519:8a7a231b6f67f4…
+print(envelope.verification_method[:32])  # did:key:z6Mkrdhpo…
+```
+
+Rust mints the identical identity from the identical seed:
+
+```rust
+use querygraph::agent::PyTypeDidEnvelope;
+
+let envelope = PyTypeDidEnvelope::signed(
+    "querygraph-agent:SupervisorAgent",   // same seed ⇒ same did:key
+    "did:example:recipient",
+    "summarize", "compartment:finance",
+    serde_json::json!({"question": "Where is fiscal stress highest?"}),
+);
+assert!(envelope.verify().signature_valid);
+```
+
+A fixture test pins the shared `did:key` so the derivations can never drift.
+
 # LakeCat: The Catalog Boundary
 
 LakeCat is a Rust-native Apache Iceberg REST catalog and QueryGraph
@@ -197,6 +309,35 @@ release-candidate proof: a full local handoff harness that creates a fixture,
 plans through Sail, writes Turso catalog and Grust graph state, verifies
 replay and OpenLineage evidence, and runs QueryGraph's locked verify/import
 commands, 40/40 green.
+
+## Worked example: from catalog to governed import
+
+Run LakeCat with its local integrations, then hand its bootstrap bundle to
+QueryGraph:
+
+```bash
+# Terminal 1: the catalog, with Sail planning, TypeSec receipts,
+# and Grust projection bound to table transitions.
+LAKECAT_BIND_ADDR=127.0.0.1:8181 \
+LAKECAT_TURSO_PATH=target/local/catalog.turso \
+LAKECAT_GRUST_TURSO_PATH=target/local/catalog-graph.turso \
+cargo run -p lakecat-service \
+  --features sail-local,typesec-local,grust-turso-local,turso-local
+
+# Terminal 2: standard Iceberg clients see an ordinary REST catalog…
+cargo run -p lakecat-cli -- config --catalog http://127.0.0.1:8181
+
+# …and QueryGraph sees live tables projected into Croissant, CDIF,
+# OSI, ODRL, OpenLineage, and a Grust-ready graph envelope.
+curl -s http://127.0.0.1:8181/querygraph/v1/bootstrap > bootstrap.json
+
+# qg-rust verifies the bundle with LakeCat's own shared wire crate
+# (qglake-bundle) and emits its import plan:
+cargo run -- lakecat-import --bundle bootstrap.json --output import-plan.json
+```
+
+The import command prints the bundle's verification report; QueryGraph
+accepts catalog state as *proof*, not as a best-effort side effect.
 
 # Sail and the Cypher Extension
 
@@ -247,6 +388,41 @@ sees only signed summaries, and the whole run emits an OpenLineage event
 anchored by an Ed25519 attestation. It is deterministic by design: the golden
 baseline the live navigator loop is measured against.
 
+## Worked example: Croissant becomes OSI, identically in both languages
+
+A Semantic Croissant document projects into an OSI model — every recordSet
+field becomes a governed `SAIL_SQL` column expression, `sameAs` semantic types
+become ontology terms, and a `row_count` metric is attached. In Rust
+(`OsiDocument::from_croissant_json`, the code behind
+`POST /v1/models/import/croissant`):
+
+```rust
+let croissant = serde_json::json!({
+    "name": "Energy Burden",
+    "description": "Demo energy fields",
+    "recordSet": [{"field": [{
+        "name": "monthly_cost",
+        "description": "Monthly household energy cost",
+        "sameAs": "https://querygraph.ai/ontology/monthlyEnergyCost",
+    }]}],
+});
+let osi = OsiDocument::from_croissant_json(&croissant, "qg_lakehouse")?;
+assert_eq!(osi.semantic_model.name, "energy_burden_semantic_model");
+assert_eq!(osi.semantic_model.datasets[0].source,
+           "sail.qg_lakehouse.energy_burden");
+```
+
+And in Python, where the enriched model adds dialect-fallback metric
+resolution and synonym search:
+
+```python
+from querygraph.osi import OsiDocument
+
+osi = OsiDocument.from_croissant(dataset)          # same projection rules
+osi.semantic_model.resolve_metric("row_count")     # 'COUNT(*)' via SAIL_SQL
+osi.semantic_model.find_by_synonym("energy")       # datasets/fields/metrics
+```
+
 # QueryGraph in Python: The Pythonic Mirror
 
 `qg-python` mirrors the same layers Pydantic-v2-first, and adds the
@@ -271,6 +447,62 @@ ecosystem surfaces Python is for:
   flavors, and `api_auth` for minting `/v1` envelope-auth headers.
 - **Lakehouse helpers**: PySpark against Sail's Spark Connect endpoint,
   registering the loaded tables and audit views.
+
+## Worked example: the navigator loop, receipts and all
+
+```python
+from querygraph.navigator_loop import GovernedNavigatorLoop
+
+loop = GovernedNavigatorLoop.demo()   # or (your_osi_doc, your_rights, llm=…)
+result = loop.answer(
+    "Where do fiscal capacity and energy burden overlap with health risk?"
+)
+```
+
+The result — captured from a real run — plans only over allowed sources and
+carries the denial as a first-class receipt:
+
+```json
+{
+  "answer": "Answerable from governed sources
+     sail.qg_lakehouse.access_2018__access_data,
+     sail.qg_lakehouse.government_finance__countydata via 3 planned
+     queries. Restricted sources were denied with receipts:
+     sail.qg_lakehouse.haalsi_baseline__restricted_raw.",
+  "denied_sources": ["sail.qg_lakehouse.haalsi_baseline__restricted_raw"],
+  "plans": [
+    "SELECT * FROM sail.qg_lakehouse.government_finance__countydata",
+    "SELECT `monthly_cost` FROM sail.qg_lakehouse.access_2018__access_data",
+    "SELECT SUM(total_revenue - mandated_spend)
+       FROM sail.qg_lakehouse.government_finance__countydata"
+  ]
+}
+```
+
+The denied source's receipt names the principal, the action, and the policy
+that refused it:
+
+```json
+{
+  "principal": "did:example:qg-navigator",
+  "resource": "sail.qg_lakehouse.haalsi_baseline__restricted_raw",
+  "action": "odrl:read",
+  "allowed": false,
+  "reason": "RBAC or ODRL denied action",
+  "policy_id": "urn:querygraph:policy:navigator-demo"
+}
+```
+
+Swap in a live model with one callable — the governance is unchanged:
+
+```python
+from querygraph.navigator_loop import openai_compatible_llm
+
+loop = GovernedNavigatorLoop.demo(
+    llm=openai_compatible_llm("http://localhost:11434", "llama3.2"),
+    llm_name="ollama:llama3.2",
+)
+```
 
 # The Evidence Chain, End to End
 
@@ -297,6 +529,39 @@ Sail table Y, under capability C and `odrl:read`, emitting OpenLineage run R
 anchored by attestation A — and source Z was denied, with a receipt.* No
 mainstream agent framework offers that sentence.
 
+## Worked example: sign in Python, verify in Rust
+
+```bash
+# Python signs an envelope and writes it out…
+uv run python - <<'PY'
+import json
+from querygraph.typedid import TypeDidAgent
+env = TypeDidAgent.new("SupervisorAgent").request(
+    TypeDidAgent.new("FinanceAgent"),
+    action="summarize", resource="compartment:finance",
+    payload={"question": "Where is fiscal stress highest?"})
+open("envelope.json", "w").write(env.model_dump_json())
+PY
+
+# …and the Rust CLI verifies it with no shared state:
+cargo run -- verify-envelope --file envelope.json
+```
+
+```json
+{
+  "payload_hash_valid": true,
+  "signed": true,
+  "signature_valid": true,
+  "verification_method": "did:key:z6MkrdhpoFnCtEGK3RhXqryfjxVpy…",
+  "scheme": "ed25519"
+}
+```
+
+Change one byte — the resource, a payload key, a signature hex digit — and
+`signature_valid` flips to `false` and the command exits non-zero. The same
+check is served at `POST /v1/audit/verify-envelope` and as the
+`verify_envelope` MCP tool in both languages.
+
 # Interoperability Surfaces
 
 Goshawk's organizing principle: QueryGraph does not compete with agent
@@ -319,6 +584,79 @@ frameworks — it is the governed data and semantics plane they plug into.
   JSON-Schema tool definitions accepted by most runtimes and local servers.
 - **LLM providers**: the loop binds any OpenAI-compatible endpoint; the Rust
   Ollama path wraps calls in DID-encrypted prompt-bound envelopes.
+
+## Worked example: the guarded `/v1`, from both sides
+
+An unauthenticated request to a governed route gets a 401 whose receipt
+*teaches the contract* (captured from a live server):
+
+```bash
+$ curl -s -X POST http://127.0.0.1:8080/v1/answer \
+    -H 'content-type: application/json' -d '{"question":"?"}'
+```
+
+```json
+{
+  "error": "missing x-qg-envelope header",
+  "receipt": {
+    "allowed": false,
+    "path": "/v1/answer",
+    "contract": {
+      "header": "x-qg-envelope",
+      "action": "invoke",
+      "resource": "<request path>",
+      "payload": {"bodySha256": "<sha256 hex of request body>"},
+      "signature": "ed25519 over querygraph-typedid-signing-v1"
+    }
+  }
+}
+```
+
+The Python client satisfies it in two lines — the envelope is bound to this
+path and this body, so it can be neither replayed elsewhere nor reattached:
+
+```python
+from querygraph.api_auth import governed_post
+from querygraph.typedid import TypeDidAgent
+
+result = governed_post(
+    "http://127.0.0.1:8080", "/v1/answer",
+    {"question": "what is fiscal capacity?"},
+    TypeDidAgent.new("ApiClient"),
+)
+```
+
+## Worked example: an MCP session, by hand
+
+The Rust server speaks MCP over stdio with zero dependencies — here is a full
+session, three lines in, structured answers out:
+
+```bash
+$ printf '%s\n%s\n%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
+  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+  | querygraph mcp-serve
+```
+
+```json
+{"id": 1, "result": {"protocolVersion": "2024-11-05",
+  "serverInfo": {"name": "querygraph", "version": "0.4.0"}, …}}
+{"id": 2, "result": {"tools": ["build_navigator_bundle",
+  "run_qglake_story", "verify_envelope", "import_semantic_model",
+  "search_semantic_models", "answer_question"]}}
+```
+
+For function-calling runtimes instead of MCP, one agent exports both flavors:
+
+```python
+agent = TypeDidAgent.new("FinanceAgent")
+agent.to_tool_schema()                    # {"type": "function", "function":
+                                          #  {"name": "FinanceAgent",
+                                          #   "parameters": {…}}}   ← OpenAI
+agent.to_tool_schema(flavor="anthropic")  # {"name": "FinanceAgent",
+                                          #  "input_schema": {…}}   ← Anthropic
+```
 
 # The Cross-Language Contract
 
