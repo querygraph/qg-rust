@@ -129,6 +129,9 @@ fi
 # Dereference the symlinks so the destination holds regular, versioned files.
 books_dir="$HOME/icloud/books"
 if [[ -d "$books_dir" ]]; then
+  # Prune superseded versioned copies of this book before publishing.
+  find "$books_dir" -maxdepth 1 -name "$title_stem (*" \
+    ! -name "*($version-$commit_suffix)*" -exec rm -f {} +
   cp -L "dist/$kindle_title.epub" "$books_dir/$kindle_title.epub"
   cp -L "dist/$kindle_title.pdf"  "$books_dir/$kindle_title.pdf"
   echo "Published to $books_dir:"

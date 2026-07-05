@@ -29,6 +29,13 @@ recorded here. The codename pool and the shared version line live in
   real run — live search staged into Sail, derived semantics, the dual-gate
   receipt, the `typedid/a2a` envelope, and DOI-level OpenLineage with a
   UUIDv5 run id and Ed25519 attestation.
+- **Dual typesettings for the stack guide**: `-typst` and `-troff` PDF/EPUB
+  editions alongside the canonical build. The troff PDF is set with
+  `groff -Tpdf -P-e -k -t -ms` (embedded fonts, preconv, tbl) over a
+  regenerated gropdf font map, with a `pdffonts` embed assertion; code-fence
+  language tags are stripped for the ms writer (pandoc's highlight token
+  macros are standalone-only and render blank otherwise). Both books' iCloud
+  publishing now prunes superseded versioned copies before delivering.
 
 ## 0.4.0 "Sentinel" — 2026-07-04
 
