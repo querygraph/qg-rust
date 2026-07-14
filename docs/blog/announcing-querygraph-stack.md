@@ -13,6 +13,8 @@ The current stack now has a coordinated substrate wave:
 
 These are not independent libraries that happen to share an organization. The seams are intentional: LakeCat consumes Grust and TypeSec, emits QGLake artifacts, and QueryGraph verifies/imports those artifacts. TypeSec tracks Grust for graph-shaped policy. QueryGraph Rust and Python test against each other so the semantic layer is not a one-language story.
 
+The finished companion book, [*The QueryGraph Stack*](https://firstpair.org/read/querygraph/), is now in the First Pair library: read it as a fixed-layout PDF or reflowable EPUB from its library card, open the complete single-page web edition at that link, or move through it in the [chapter-by-chapter reader](https://firstpair.org/read/querygraph/chapters/). It was built using our innovative First Pair method: Alexy and AI worked together as an authoring pair—Alexy setting the thesis, architecture, evidence bar, and editorial direction while AI investigated the code and standards, drafted and revised the text, built every format, and verified the released artifacts.
+
 ## Grust 0.12 "Lobster": the graph substrate gets precise
 
 Grust is a backend-neutral property-graph library for Rust: labeled nodes and edges, typed properties, graph builders, traversal IR, schema metadata, mutation contracts, backend adapters, and a GQL/Cypher language layer over the same model.
