@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 mkdir -p build dist
+html_emitter="${HTML_BOOK_EMITTER:-$HOME/src/firstpair/publishing/scripts/emit-html-book.sh}"
 
 pubdate="$(date -u +%F)"
 version="$(
@@ -111,6 +112,25 @@ ln -s "$title_stem.epub" "dist/$kindle_title.epub"
 find dist -maxdepth 1 -name "$title_stem (*).pdf" -exec rm -f {} +
 ln -s "$title_stem.pdf" "dist/$kindle_title.pdf"
 
+if [[ ! -x "$html_emitter" ]]; then
+  echo "missing HTML book emitter: $html_emitter" >&2
+  exit 1
+fi
+REPO_ROOT="$(cd ../.. && pwd)" \
+  BOOK_ROOT="docs/book" \
+  BOOK_DIST_DIR="$PWD/dist" \
+  BOOK_BUILD_DIR="$PWD/build" \
+  BOOK_METADATA="$PWD/metadata.yaml" \
+  BOOK_HTML_COVER="$PWD/build/cover.rendered.md" \
+  BOOK_HTML_MANUSCRIPT="$PWD/build/manuscript.rendered.md" \
+  BOOK_HTML_CSS="$PWD/epub.css" \
+  BOOK_STEM="$title_stem" \
+  BOOK_VISIBLE_TITLE="$visible_title" \
+  BOOK_VERSION="$version" \
+  BOOK_VERSION_STAMP="$version-$commit_suffix" \
+  BOOK_HTML_RESOURCE_PATH="$PWD/build:$PWD:$(cd ../.. && pwd)" \
+  "$html_emitter"
+
 EBOOK_CONVERT="${EBOOK_CONVERT:-}"
 if [[ -z "$EBOOK_CONVERT" ]]; then
   if command -v ebook-convert >/dev/null 2>&1; then
@@ -128,15 +148,19 @@ fi
 # Publish both versioned formats to the local iCloud books library, if present.
 # Dereference the symlinks so the destination holds regular, versioned files.
 books_dir="$HOME/icloud/books"
-if [[ -d "$books_dir" ]]; then
-  # Prune superseded versioned copies of this book before publishing.
-  find "$books_dir" -maxdepth 1 -name "$title_stem (*" \
-    ! -name "*($version-$commit_suffix)*" -exec rm -f {} +
-  cp -L "dist/$kindle_title.epub" "$books_dir/$kindle_title.epub"
-  cp -L "dist/$kindle_title.pdf"  "$books_dir/$kindle_title.pdf"
-  echo "Published to $books_dir:"
-  echo "  $kindle_title.epub"
-  echo "  $kindle_title.pdf"
+if [[ -d "$books_dir" && -w "$books_dir" ]]; then
+  if find "$books_dir" -maxdepth 1 -name "$title_stem (*" \
+    ! -name "*($version-$commit_suffix)*" -exec rm -f {} + &&
+    cp -L "dist/$kindle_title.epub" "$books_dir/$kindle_title.epub" &&
+    cp -L "dist/$kindle_title.pdf"  "$books_dir/$kindle_title.pdf"; then
+    echo "Published to $books_dir:"
+    echo "  $kindle_title.epub"
+    echo "  $kindle_title.pdf"
+  else
+    echo "Skipped library publish: copy to $books_dir failed"
+  fi
+else
+  echo "Skipped library publish: $books_dir not present or not writable"
 fi
 
 echo "Built:"
@@ -144,6 +168,7 @@ echo "  docs/book/dist/$title_stem.pdf"
 echo "  docs/book/dist/$title_stem.epub"
 echo "  docs/book/dist/$kindle_title.epub -> $title_stem.epub"
 echo "  docs/book/dist/$kindle_title.pdf -> $title_stem.pdf"
+echo "  docs/book/dist/$title_stem.html"
 echo "  docs/book/dist/$title_stem.mobi"
 echo "  docs/book/dist/VERSION.md"
 echo "  docs/book/diagrams/*.mmd and *.png"

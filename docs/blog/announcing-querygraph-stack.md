@@ -1,35 +1,66 @@
-# Announcing the QueryGraph Stack: three named releases under one AI Navigator
+# Announcing the QueryGraph stack: Lobster, Torcello, Ocelot, Sentinel
 
-QueryGraph is an AI Navigator over governed enterprise data. The thesis has never been "throw the whole warehouse at a model" — it is that serious questions are local, contextual, permissioned, and reproducible, and they deserve an architecture built for that reality. An agent should be able to answer a hard question over enterprise data without turning the enterprise into an unbounded prompt: it should know what the data is, where it came from, who is asking, which action is allowed, and how to replay the run.
+QueryGraph is an AI Navigator over governed enterprise data. The thesis is not "throw the warehouse at a model." Serious questions are local, contextual, permissioned, and reproducible. An agent should be able to answer a hard question over enterprise data while knowing what the data is, where it came from, who is asking, which action is allowed, and how to replay the run.
 
-Today that architecture stands on three coordinated, named open-source releases that ship from the [QueryGraph org](https://github.com/querygraph) and were cut to work together:
+The current stack now has a coordinated substrate wave:
 
-- **Grust 0.11.0 "Crab"** — the graph and query substrate.
-- **TypeSec 0.11.0 "Burano"** — the typed security and governance fabric.
-- **LakeCat 0.2.1 "Lynx"** — the Iceberg REST catalog boundary.
+- **Grust 0.12.0 "Lobster"** — the backend-neutral graph and GQL/Cypher substrate.
+- **TypeSec 0.12.0 "Torcello"** — typed authority and wire-level tool-call governance.
+- **LakeCat 0.3.0 "Ocelot"** — governed Iceberg REST, OpenLineage evidence, and QGLake handoff proof.
+- **QueryGraph 0.4.0 "Sentinel"** — Rust/Python semantic import, verification, and navigator APIs over those substrates.
 
-They are not three independent libraries that happen to coexist. Burano (and the Murano release before it) tracks Crab; Lynx consumes both as published crates and shares its bundle wire format with QueryGraph through the `qglake-bundle` crate. The versions are coordinated on purpose, so the seams between graph, policy, and catalog are typed, not hopeful.
+These are not independent libraries that happen to share an organization. The seams are intentional: LakeCat consumes Grust and TypeSec, emits QGLake artifacts, and QueryGraph verifies/imports those artifacts. TypeSec tracks Grust for graph-shaped policy. QueryGraph Rust and Python test against each other so the semantic layer is not a one-language story.
 
-## Grust 0.11 "Crab": the graph + query substrate
+## Grust 0.12 "Lobster": the graph substrate gets precise
 
-Grust is a backend-neutral property-graph library for Rust — one graph model of labeled nodes and edges, typed properties, and stable IDs, over many storage and execution engines (in-memory, Sail/Spark, PostgreSQL, Turso, and more). Crab is the first *named* Grust release, and it is a big one: it adds a real, standards-conformant **GQL/Cypher language layer** built as an honest pipeline — span-bearing lexer, recursive-descent parser, AST, semantic analysis — on top of the property graph. The bounded read subset lowers into backend SQL (Spark and SQLite dialects) with results that are byte-identical to the reference executor by construction, and a differential SQLite oracle keeps them that way.
+Grust is a backend-neutral property-graph library for Rust: labeled nodes and edges, typed properties, graph builders, traversal IR, schema metadata, mutation contracts, backend adapters, and a GQL/Cypher language layer over the same model.
 
-Crab also brings first-class **Decimal, Duration, and temporal values** with lossless arithmetic and chronological ordering, catalog procedures (`CALL db.labels()`, `db.relationshipTypes()`, `db.propertyKeys()`), a transaction command surface with honest per-backend atomicity reporting, and Turso MVCC concurrent writes. The graph stops being only a store of facts and becomes a queryable substrate. Full post: [github.com/querygraph/grust/blob/main/docs/blog/grust-crab.md](https://github.com/querygraph/grust/blob/main/docs/blog/grust-crab.md).
+Lobster is the release where Grust's GQL/Cypher claim becomes precise enough to be useful. The supported profile is enumerated in a machine-readable manifest and pinned by tests. CALL subqueries, table-valued functions, shortest paths, graph values, session/catalog surfaces, metadata DDL, native-query escape hatches, and atomic transaction batches all land inside an honest profile statement. The remaining strict-write rejections are documented as correctness boundaries, not hand-waved gaps.
 
-## TypeSec 0.11 "Burano": the typed security/governance fabric
+This matters for QueryGraph because the semantic layer is a graph, not a pile of JSON. Datasets, fields, policies, agents, lineage events, catalog objects, and handoff proofs need a queryable substrate that can run locally, in Turso, in PostgreSQL, through Sail/Spark paths, or behind other graph backends.
 
-Most authorization systems answer *is this allowed?* and then trust every line of code after the check to remember the answer. TypeSec closes that gap by turning authority into a value the compiler tracks: a `Capability<P, R>` is unforgeable proof that permission `P` was granted over resource `R`, it has no public constructor, and the only way to mint one in production runs a policy engine and emits an audit event. Forgetting the guard becomes a type error.
+The Grust Lobster post is the first piece of this announcement wave.
 
-Burano carries one policy contract behind many engines — RBAC, ODRL, and a graph engine that compiles policy into a typed Grust graph with deny-overrides semantics — plus typestate agents, typed privacy labels, and **DID/TypeDID agent messaging** with real cryptography. The payoff for QueryGraph is the **audit-safe attestation**: when agents collaborate over governed data, a TypeDID envelope records who did what to which resource, at which privacy level, without ever exposing the payload or the signing material. Burano continues the Murano line on Grust 0.11 "Crab," unifying glob matching (a single `*` no longer crosses `/` — the safer authorization default) and adopting Crab's graph-type validation, while staying API-compatible for consumers. Full post: [github.com/querygraph/typesec/blob/main/docs/blog/announcing-typesec.md](https://github.com/querygraph/typesec/blob/main/docs/blog/announcing-typesec.md).
+## TypeSec 0.12 "Torcello": authority crosses the wire
 
-## LakeCat 0.2.1 "Lynx": the Iceberg REST catalog boundary
+TypeSec turns authority into typed evidence. A privileged function can require a `Capability<P, R>`; that capability has no public constructor; it is minted only by policy. Torcello carries that model into agent tool calls.
 
-LakeCat is a Rust-native, Iceberg-compatible REST catalog. It speaks the standard protocol — pyiceberg, Spark, and Trino talk to it unchanged — but keeps the boundary deliberately thin: identity, tenancy, metadata-pointer state, and policy gates live here, while the reusable engines (Sail for format and scan, Grust for graph, TypeSec for governance) stay shared. Underneath is a durable spine on Turso, where every commit is *one transaction* that moves the metadata pointer via compare-and-swap and writes an audit event, a transactional-outbox lineage row, and an idempotency record atomically with the table change.
+The new interop plane guards OpenAI, Anthropic, LangChain, Pydantic AI, and MCP tool-call shapes with the same deny-by-default `ToolCallGuard`. It adds MCP and OpenAI/Anthropic proxy gateways, policy-aware tool listing, JSON-Schema argument guards, signed decision receipts, OpenTelemetry spans, decision logs and replay, a `#[typesec_tool]` macro, Python adapters, and WASM/JS bindings.
 
-Lynx moves that spine to **Turso MVCC** (`journal_mode = mvcc` + `BEGIN CONCURRENT`): commits to different tables run truly concurrently, while a same-table race converges to exactly one winner — no global write lock, no `database is locked`. Lineage drains from the outbox as OpenLineage events only after the catalog transaction commits, so it reflects committed state rather than a handler's best effort. The 0.2.1 maintenance release also extracts the bootstrap-bundle wire format and verification into a shared `qglake-bundle` crate, so the QueryGraph importer verifies catalog handoffs with LakeCat's own types instead of a hand-maintained copy — one contract, two sides. Full post: [github.com/querygraph/lakecat/blob/main/docs/blog/announcing-lakecat.md](https://github.com/querygraph/lakecat/blob/main/docs/blog/announcing-lakecat.md).
+For QueryGraph, this is the difference between an agent that merely says it followed policy and an agent whose tool calls, receipts, and replay logs are policy-shaped from the start.
 
-## How they compose in QueryGraph
+## LakeCat 0.3 "Ocelot": catalog state becomes proof
 
-QueryGraph wires these into a single Rust navigator. **Sail** is the warehouse that executes the lakehouse and keeps audit data queryable. **Grust "Crab"** gives the navigator a graph of meaning — dataset contains file, field maps to concept, policy targets asset, run consumed input — and now a Cypher/GQL way to ask. **TypeSec "Burano"** turns DIDs and ODRL policy into typed capabilities and signs every agent interaction, so a compartmentalized agent hierarchy can share summaries without sharing raw permissions. **LakeCat "Lynx"** is the catalog boundary: QueryGraph accepts its bootstrap bundles and import plans as *proof* — table, view, graph, lineage, and receipt-chain hashes that must agree — and validates the Grust graph shape before building the next agent context. Each run leaves **OpenLineage** events in Sail and a compact **DID** attestation root.
+LakeCat is a Rust-native Iceberg REST catalog foundation. It keeps the standard Iceberg boundary thin: identity, tenancy, metadata-pointer state, policy gates, and integration events live in LakeCat; Sail owns Iceberg planning, Grust owns graph behavior, TypeSec owns governance, and QueryGraph owns semantic import and navigation.
 
-The result is the architecture QueryGraph has argued for all along: not a single unrestricted prompt over a warehouse, but a typed, permissioned, lineage-aware navigator over a semantic lakehouse — now standing on Grust 0.11 "Crab," TypeSec 0.11 "Burano," and LakeCat 0.2.1 "Lynx." It is built in the open. Kick the tires and tell us what's missing.
+Ocelot is release-candidate proven from a clean tree. Its full local gate verifies standard contracts, Rust feature matrices, book artifacts, Grust/TypeSec/Sail integration rows, all-features tests, and the QGLake handoff. That handoff starts LakeCat locally, plans through Sail, writes Turso catalog state, projects a Grust Turso catalog graph, drains OpenLineage evidence, and runs QueryGraph's locked verify/import commands over the same bundle.
+
+The artifacts are concrete: `lakecat-bootstrap.json`, `lineage-drain.json`, `querygraph-import-plan.json`, and `handoff-summary.json`. The summary is schema-closed and hash-bound. Extra proof claims are rejected. This is the catalog boundary becoming something a downstream navigator can verify.
+
+## QueryGraph 0.4 "Sentinel": the navigator layer
+
+QueryGraph sits above those substrates. The Rust implementation provides the reference semantic projections, governance story, LakeCat loaders, lineage and TypeDID evidence, CLI, and API. The Python implementation mirrors the same layer with Pydantic v2 models, LangChain/MCP hooks, validation, and a cross-language equivalence suite.
+
+The current contract is not aspirational. `qg-rust` is at 0.4.0 and depends on Grust 0.12, LakeCat 0.3, and TypeSec 0.12. `qg-python` is also 0.4.0. The Python tests run the Rust CLIs and assert that the important semantic outputs agree.
+
+The purpose is a governed answer loop:
+
+1. discover relevant semantic graph context,
+2. verify catalog and lineage evidence,
+3. enforce TypeSec policy at tool and data boundaries,
+4. emit TypeDID/OpenLineage evidence,
+5. replay the run rather than trusting the prompt transcript.
+
+## Why this matters outside QueryGraph
+
+Each community gets a different doorway:
+
+- **Apache Ossie:** QueryGraph can be a concrete implementation testbed for vendor-neutral semantic graph artifacts.
+- **Apache Iceberg:** LakeCat proves that table/catalog workflows can carry portable policy, credential, scan, and lineage evidence.
+- **Apache Polaris:** Polaris can remain the Iceberg REST catalog while QueryGraph/LakeCat explore semantic exports and proof adjuncts.
+- **OpenLineage:** LakeCat turns governed catalog activity into replayable, hash-bound lineage evidence.
+- **Apache Spark / Sail:** governed scan context can travel with Spark-compatible planning instead of living only in application code.
+- **Rust:** Grust, TypeSec, and LakeCat are serious Rust infrastructure for graph, catalog, policy, and agent systems.
+- **LangChain and Pydantic:** TypeSec gives agent frameworks typed tool governance, receipts, and memory/data provenance hooks.
+
+QueryGraph is still early, but the shape is now visible: graph substrate, typed authority, governed catalog, and semantic navigator, all release-aligned and tested together. The next step is not one giant platform announcement. It is a series of focused conversations with the communities that already own pieces of the problem.

@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-08" />
+  <title>Querygraph</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/Users/alexy/src/querygraph/qg-rust/docs/book/epub.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Querygraph</h1>
+<p class="subtitle">A Governed Semantic Lakehouse for AI Agents</p>
+<p class="author">Alexy Khrabrov and Slava Tykhonov</p>
+<p class="date">2026-07-08</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#preface" id="toc-preface"><span
+class="toc-section-number">1</span> Preface</a></li>
+<li><a href="#the-vision-from-querygraph.ai"
+id="toc-the-vision-from-querygraph.ai"><span
+class="toc-section-number">2</span> The Vision from QueryGraph.ai</a>
+<ul>
+<li><a href="#compression-not-noise"
+id="toc-compression-not-noise"><span
+class="toc-section-number">2.1</span> Compression, Not Noise</a></li>
+<li><a href="#freezing-time-without-freezing-the-world"
+id="toc-freezing-time-without-freezing-the-world"><span
+class="toc-section-number">2.2</span> Freezing Time Without Freezing the
+World</a></li>
+<li><a href="#the-data-infrastructure-for-agentic-ai"
+id="toc-the-data-infrastructure-for-agentic-ai"><span
+class="toc-section-number">2.3</span> The Data Infrastructure for
+Agentic AI</a></li>
+<li><a href="#graph-and-vector-navigation"
+id="toc-graph-and-vector-navigation"><span
+class="toc-section-number">2.4</span> Graph and Vector
+Navigation</a></li>
+<li><a href="#digital-public-infrastructure"
+id="toc-digital-public-infrastructure"><span
+class="toc-section-number">2.5</span> Digital Public
+Infrastructure</a></li>
+<li><a href="#ontology-driven-precise-ai"
+id="toc-ontology-driven-precise-ai"><span
+class="toc-section-number">2.6</span> Ontology-Driven Precise
+AI</a></li>
+<li><a href="#local-first-oss-ai" id="toc-local-first-oss-ai"><span
+class="toc-section-number">2.7</span> Local-First, OSS AI</a></li>
+<li><a href="#source-posts" id="toc-source-posts"><span
+class="toc-section-number">2.8</span> Source Posts</a></li>
+</ul></li>
+<li><a href="#the-ai-navigator-thesis"
+id="toc-the-ai-navigator-thesis"><span
+class="toc-section-number">3</span> The AI Navigator Thesis</a>
+<ul>
+<li><a href="#the-alternative-to-big-ai"
+id="toc-the-alternative-to-big-ai"><span
+class="toc-section-number">3.1</span> The Alternative to Big AI</a></li>
+<li><a href="#focused-context-as-a-first-class-artifact"
+id="toc-focused-context-as-a-first-class-artifact"><span
+class="toc-section-number">3.2</span> Focused Context as a First-Class
+Artifact</a></li>
+<li><a href="#cpu-bound-before-gpu-bound"
+id="toc-cpu-bound-before-gpu-bound"><span
+class="toc-section-number">3.3</span> CPU-Bound Before
+GPU-Bound</a></li>
+</ul></li>
+<li><a href="#the-querygraph-spine" id="toc-the-querygraph-spine"><span
+class="toc-section-number">4</span> The Querygraph Spine</a></li>
+<li><a href="#semantic-croissant" id="toc-semantic-croissant"><span
+class="toc-section-number">5</span> Semantic Croissant</a></li>
+<li><a href="#cdif" id="toc-cdif"><span
+class="toc-section-number">6</span> CDIF</a></li>
+<li><a href="#did" id="toc-did"><span
+class="toc-section-number">7</span> DID</a></li>
+<li><a href="#odrl" id="toc-odrl"><span
+class="toc-section-number">8</span> ODRL</a></li>
+<li><a href="#typesec" id="toc-typesec"><span
+class="toc-section-number">9</span> TypeSec</a></li>
+<li><a href="#grust" id="toc-grust"><span
+class="toc-section-number">10</span> Grust</a></li>
+<li><a href="#osi" id="toc-osi"><span
+class="toc-section-number">11</span> OSI</a></li>
+<li><a href="#openlineage" id="toc-openlineage"><span
+class="toc-section-number">12</span> OpenLineage</a></li>
+<li><a href="#sail" id="toc-sail"><span
+class="toc-section-number">13</span> Sail</a></li>
+<li><a href="#python-interop" id="toc-python-interop"><span
+class="toc-section-number">14</span> Python Interop</a>
+<ul>
+<li><a href="#pydantic" id="toc-pydantic"><span
+class="toc-section-number">14.1</span> Pydantic</a></li>
+<li><a href="#langchain" id="toc-langchain"><span
+class="toc-section-number">14.2</span> LangChain</a></li>
+<li><a href="#pyspark" id="toc-pyspark"><span
+class="toc-section-number">14.3</span> PySpark</a></li>
+</ul></li>
+<li><a href="#the-demonstration-datasets"
+id="toc-the-demonstration-datasets"><span
+class="toc-section-number">15</span> The Demonstration Datasets</a></li>
+<li><a href="#qg-lakehouse-with-all-components"
+id="toc-qg-lakehouse-with-all-components"><span
+class="toc-section-number">16</span> QG Lakehouse with All
+Components</a>
+<ul>
+<li><a href="#step-1-load-the-lakehouse"
+id="toc-step-1-load-the-lakehouse"><span
+class="toc-section-number">16.1</span> Step 1: Load the
+Lakehouse</a></li>
+<li><a href="#step-2-materialize-semantic-croissant"
+id="toc-step-2-materialize-semantic-croissant"><span
+class="toc-section-number">16.2</span> Step 2: Materialize Semantic
+Croissant</a></li>
+<li><a href="#step-3-project-cdif" id="toc-step-3-project-cdif"><span
+class="toc-section-number">16.3</span> Step 3: Project CDIF</a></li>
+<li><a href="#step-4-build-the-osi-semantic-model"
+id="toc-step-4-build-the-osi-semantic-model"><span
+class="toc-section-number">16.4</span> Step 4: Build the OSI Semantic
+Model</a></li>
+<li><a href="#step-5-load-the-grust-graph"
+id="toc-step-5-load-the-grust-graph"><span
+class="toc-section-number">16.5</span> Step 5: Load the Grust
+Graph</a></li>
+<li><a href="#step-6-identify-agents-with-dids"
+id="toc-step-6-identify-agents-with-dids"><span
+class="toc-section-number">16.6</span> Step 6: Identify Agents with
+DIDs</a></li>
+<li><a href="#step-7-apply-odrl-rights"
+id="toc-step-7-apply-odrl-rights"><span
+class="toc-section-number">16.7</span> Step 7: Apply ODRL
+Rights</a></li>
+<li><a href="#step-8-mint-typesec-capabilities"
+id="toc-step-8-mint-typesec-capabilities"><span
+class="toc-section-number">16.8</span> Step 8: Mint TypeSec
+Capabilities</a></li>
+<li><a href="#step-9-route-to-compartmentalized-agents"
+id="toc-step-9-route-to-compartmentalized-agents"><span
+class="toc-section-number">16.9</span> Step 9: Route to
+Compartmentalized Agents</a></li>
+<li><a href="#step-10-call-ollama-through-typedid"
+id="toc-step-10-call-ollama-through-typedid"><span
+class="toc-section-number">16.10</span> Step 10: Call Ollama Through
+TypeDID</a></li>
+<li><a href="#step-11-synthesize-without-boundary-collapse"
+id="toc-step-11-synthesize-without-boundary-collapse"><span
+class="toc-section-number">16.11</span> Step 11: Synthesize Without
+Boundary Collapse</a></li>
+<li><a href="#step-12-emit-openlineage-to-sail"
+id="toc-step-12-emit-openlineage-to-sail"><span
+class="toc-section-number">16.12</span> Step 12: Emit OpenLineage to
+Sail</a></li>
+<li><a href="#step-13-anchor-the-did-attestation"
+id="toc-step-13-anchor-the-did-attestation"><span
+class="toc-section-number">16.13</span> Step 13: Anchor the DID
+Attestation</a></li>
+</ul></li>
+<li><a href="#lakecat-as-the-querygraph-catalog-boundary"
+id="toc-lakecat-as-the-querygraph-catalog-boundary"><span
+class="toc-section-number">17</span> LakeCat as the QueryGraph Catalog
+Boundary</a></li>
+<li><a href="#rust-examples" id="toc-rust-examples"><span
+class="toc-section-number">18</span> Rust Examples</a>
+<ul>
+<li><a href="#build-a-four-layer-semantic-bundle"
+id="toc-build-a-four-layer-semantic-bundle"><span
+class="toc-section-number">18.1</span> Build a Four-Layer Semantic
+Bundle</a></li>
+<li><a href="#load-and-verify-the-sail-warehouse"
+id="toc-load-and-verify-the-sail-warehouse"><span
+class="toc-section-number">18.2</span> Load and Verify the Sail
+Warehouse</a></li>
+<li><a href="#run-the-supervised-agent-story"
+id="toc-run-the-supervised-agent-story"><span
+class="toc-section-number">18.3</span> Run the Supervised Agent
+Story</a></li>
+<li><a href="#run-the-live-sail-typedid-openlineage-and-ollama-path"
+id="toc-run-the-live-sail-typedid-openlineage-and-ollama-path"><span
+class="toc-section-number">18.4</span> Run the Live Sail, TypeDID,
+OpenLineage, and Ollama Path</a></li>
+<li><a href="#rust-as-the-contract" id="toc-rust-as-the-contract"><span
+class="toc-section-number">18.5</span> Rust as the Contract</a></li>
+</ul></li>
+<li><a href="#python-examples" id="toc-python-examples"><span
+class="toc-section-number">19</span> Python Examples</a>
+<ul>
+<li><a href="#build-osi-from-semantic-croissant"
+id="toc-build-osi-from-semantic-croissant"><span
+class="toc-section-number">19.1</span> Build OSI from Semantic
+Croissant</a></li>
+<li><a href="#query-sail-with-pyspark"
+id="toc-query-sail-with-pyspark"><span
+class="toc-section-number">19.2</span> Query Sail with PySpark</a></li>
+<li><a href="#run-typedid-agents-with-pydantic"
+id="toc-run-typedid-agents-with-pydantic"><span
+class="toc-section-number">19.3</span> Run TypeDID Agents with
+Pydantic</a></li>
+<li><a href="#adapt-a-typedid-agent-to-langchain"
+id="toc-adapt-a-typedid-agent-to-langchain"><span
+class="toc-section-number">19.4</span> Adapt a TypeDID Agent to
+LangChain</a></li>
+<li><a href="#python-as-the-experiment-surface"
+id="toc-python-as-the-experiment-surface"><span
+class="toc-section-number">19.5</span> Python as the Experiment
+Surface</a></li>
+</ul></li>
+<li><a href="#operator-workflow" id="toc-operator-workflow"><span
+class="toc-section-number">20</span> Operator Workflow</a></li>
+<li><a href="#why-querygraph-is-an-alternative-to-big-ai"
+id="toc-why-querygraph-is-an-alternative-to-big-ai"><span
+class="toc-section-number">21</span> Why Querygraph Is an Alternative to
+Big AI</a></li>
+<li><a href="#the-goshawk-interoperability-release"
+id="toc-the-goshawk-interoperability-release"><span
+class="toc-section-number">22</span> The Goshawk Interoperability
+Release</a>
+<ul>
+<li><a href="#real-signatures-verified-across-languages"
+id="toc-real-signatures-verified-across-languages"><span
+class="toc-section-number">22.1</span> Real Signatures, Verified Across
+Languages</a></li>
+<li><a href="#a-service-surface-the-v1-api"
+id="toc-a-service-surface-the-v1-api"><span
+class="toc-section-number">22.2</span> A Service Surface: the /v1
+API</a></li>
+<li><a href="#mcp-one-server-every-framework"
+id="toc-mcp-one-server-every-framework"><span
+class="toc-section-number">22.3</span> MCP: One Server, Every
+Framework</a></li>
+<li><a href="#the-agent-card" id="toc-the-agent-card"><span
+class="toc-section-number">22.4</span> The Agent Card</a></li>
+<li><a href="#conformance-proven-rather-than-asserted"
+id="toc-conformance-proven-rather-than-asserted"><span
+class="toc-section-number">22.5</span> Conformance, Proven Rather than
+Asserted</a></li>
+<li><a href="#the-governed-navigator-loop"
+id="toc-the-governed-navigator-loop"><span
+class="toc-section-number">22.6</span> The Governed Navigator
+Loop</a></li>
+</ul></li>
+<li><a href="#where-querygraph-goes-next"
+id="toc-where-querygraph-goes-next"><span
+class="toc-section-number">23</span> Where Querygraph Goes Next</a></li>
+</ul>
+</nav>
+<section class="cover-page" epub:type="titlepage">
+  <div class="cover-title">Querygraph</div>
+  <div class="cover-version">covers querygraph (0.4.0-1c1df83)</div>
+  <div class="cover-subtitle">A Governed Semantic Lakehouse for AI Agents</div>
+  <div class="cover-author">Alexy Khrabrov and Slava Tykhonov</div>
+  <div class="cover-author-site">querygraph.ai</div>
+</section>
+<h1 data-number="1" id="preface"><span
+class="header-section-number">1</span> Preface</h1>
+<p>Querygraph is an AI Navigator over governed enterprise data. It
+starts from a simple disagreement with the dominant direction of AI
+infrastructure: serious knowledge work should not require throwing
+enormous, global, poorly scoped contexts at expensive GPU systems
+whenever a user asks a precise question. Most enterprise and scientific
+questions are local, contextual, permissioned, and reproducible. They
+deserve an architecture built for that reality.</p>
+<p>Querygraph treats a lakehouse as more than tables: each dataset is
+described by Semantic Croissant, projected through CDIF, governed by
+RBAC and ODRL, addressed by DIDs, and audited through OpenLineage. The
+result is a focused retrieval and reasoning environment where agents
+operate inside precise semantic contexts rather than wandering through
+giant prompt buffers.</p>
+<p>The implementation in this repository is intentionally practical. It
+can load Dataverse and CODATA data into Sail, materialize typed tables,
+generate Croissant and CDIF sidecars, wrap agent requests with TypeSec
+TypeDID envelopes, and emit OpenLineage events back into Sail. The point
+of this book is to make that architecture legible as a textbook: first
+the motivation, then the pieces, then the full working system.</p>
+<p>The system rests on three coordinated, named open-source releases
+that this book tracks throughout: Grust 0.12.0 “Lobster” for the graph
+and query substrate, TypeSec 0.12.0 “Torcello” for the typed security
+fabric, and LakeCat 0.3.0 “Ocelot” for the catalog boundary. Where a
+chapter leans on a specific capability, it names the release that
+brought it — many foundations arrived with the previous line (Grust
+“Crab”, TypeSec “Burano”, LakeCat “Lynx”), and the chapters keep that
+history.</p>
+<h1 data-number="2" id="the-vision-from-querygraph.ai"><span
+class="header-section-number">2</span> The Vision from
+QueryGraph.ai</h1>
+<p>The public QueryGraph.ai posts describe a larger ambition than a
+metadata library. They describe an AI Navigator: a system that lets
+agents move through data with the same precision that a navigation
+system gives to physical travel. The navigator does not merely retrieve
+documents. It finds the right semantic object, checks whether the agent
+is allowed to use it, records the provenance of every step, and makes
+the resulting answer reproducible.</p>
+<p>The motivation begins with a critique of contemporary LLM systems.
+They are fluent but unstable. The same prompt can drift across time,
+model version, provider, and context window. For casual chat this may be
+charming. For science, policy, medicine, finance, infrastructure, and
+enterprise operations, it is a control failure. A reliable AI system
+needs context, provenance, and governance before it needs more
+tokens.</p>
+<p>The deeper critique is computational. Big AI often treats ambiguity
+by scaling up: bigger models, larger context windows, more embeddings,
+more GPU cycles, more remote inference, more global search. Querygraph
+takes the opposite bet: the best way to make AI useful is to reduce the
+problem before inference. Resolve the ontology. Find the exact dataset.
+Select the permitted fields. Reuse cached semantic descriptions.
+Retrieve the smallest responsible context. Then call a local or governed
+model only when the model is actually needed.</p>
+<p>The posts make several claims that become design principles in
+Querygraph:</p>
+<ul>
+<li>Data must be understandable by both humans and agents.</li>
+<li>Ontologies must carry domain meaning, units, hierarchies, and
+controlled vocabularies.</li>
+<li>AI answers should be reproducible enough to inspect and compare over
+time.</li>
+<li>Prompts, skills, variables, datasets, and agents need
+identities.</li>
+<li>Governance must be machine-actionable and attached to the data
+itself.</li>
+<li>Graphs and vectors should work together: the graph provides
+identity, provenance, and relationships; vector search provides
+similarity and discovery.</li>
+<li>A responsible AI platform starts at the data layer, not at the last
+safety prompt before inference.</li>
+</ul>
+<p>In this vision, an AI Navigator is not a chatbot. It is the semantic
+operating layer for agentic AI.</p>
+<figure>
+<img src="diagrams/diagram-01.png" alt="Diagram 1" />
+<figcaption aria-hidden="true">Diagram 1</figcaption>
+</figure>
+<h2 data-number="2.1" id="compression-not-noise"><span
+class="header-section-number">2.1</span> Compression, Not Noise</h2>
+<p>One QueryGraph.ai theme is compression: a system understands
+something only when it can reduce noise to a portable, structured
+signal. Querygraph applies that idea to enterprise data. A raw table
+with 800 columns is not yet knowledge. A table described by Croissant,
+grounded in CDIF variables, linked to ontology terms, governed by ODRL,
+and indexed in a graph has been compressed into a form an agent can
+safely use.</p>
+<p>Example: an energy survey may contain a column that looks like a
+number. The compressed semantic signal says what the number means, what
+unit it uses, which geography it belongs to, which survey instrument
+produced it, whether a given agent may summarize it, and what redaction
+rule applies before sharing.</p>
+<h2 data-number="2.2"
+id="freezing-time-without-freezing-the-world"><span
+class="header-section-number">2.2</span> Freezing Time Without Freezing
+the World</h2>
+<p>Another theme is vector stabilization and temporal ground truth.
+Querygraph does not claim that all knowledge is timeless. It assumes the
+opposite: knowledge changes, models drift, policies change, and experts
+disagree. The task is to record the time, source, authority, model,
+prompt, and data state behind an answer so later agents can compare one
+answer to another.</p>
+<p>Example: a climate-health briefing generated on June 14, 2026 should
+be replayable against the same lakehouse manifest, Croissant/CDIF
+sidecars, TypeDID envelopes, OpenLineage event, and DID attestation
+hash. If the answer changes after a model upgrade or a dataset
+correction, Querygraph should show what changed.</p>
+<h2 data-number="2.3" id="the-data-infrastructure-for-agentic-ai"><span
+class="header-section-number">2.3</span> The Data Infrastructure for
+Agentic AI</h2>
+<p>The QueryGraph.ai data-infrastructure post argues that responsible AI
+needs context, provenance, and governance. Querygraph maps those
+directly:</p>
+<ul>
+<li>Context comes from Semantic Croissant, CDIF, OSI, controlled
+vocabularies, and Grust graph relationships.</li>
+<li>Provenance comes from Dataverse metadata, file hashes, OpenLineage
+events, DIDs, and signed TypeDID envelopes.</li>
+<li>Governance comes from RBAC, ODRL, TypeSec capabilities, and access
+receipts.</li>
+</ul>
+<p>Example: an agent asks for a mobility-risk prediction. Querygraph
+does not hand it every transportation table. It resolves the question to
+a mobility compartment, identifies dockless-transportation and
+pedestrian-injury tables, checks whether the agent may derive a summary,
+records the run, and returns only a signed summary.</p>
+<h2 data-number="2.4" id="graph-and-vector-navigation"><span
+class="header-section-number">2.4</span> Graph and Vector
+Navigation</h2>
+<p>The Palefire posts point toward graph-plus-vector navigation.
+Querygraph’s current Rust implementation emphasizes the graph and
+lakehouse side, but the architecture leaves room for vector stores. The
+graph identifies things: datasets, variables, policies, agents, claims,
+prompts, and lineage events. Vectors help discover similar things:
+related papers, near-synonymous terms, translation candidates, or
+concept clusters.</p>
+<p>Example: a user asks about “energy burden.” A vector search may find
+related phrases such as “energy insecurity” or “access to clean
+cooking.” The graph then decides which are official terms, which
+datasets contain them, what ontology defines them, and what policies
+govern them.</p>
+<h2 data-number="2.5" id="digital-public-infrastructure"><span
+class="header-section-number">2.5</span> Digital Public
+Infrastructure</h2>
+<p>The AgStack post matters because it shows the same pattern outside a
+single company. Agriculture, climate, health, food security, and
+geospatial identity all need shared infrastructure. Querygraph’s
+lakehouse example is enterprise shaped, but the architecture works for
+public infrastructure too:</p>
+<ul>
+<li>open datasets with rich metadata;</li>
+<li>decentralized identities for contributors and data products;</li>
+<li>policies that allow reuse while protecting sensitive resources;</li>
+<li>graph navigation across domains;</li>
+<li>local AI agents that can work even when central infrastructure is
+limited.</li>
+</ul>
+<p>Example: a regional food-security agent could combine weather, crop,
+soil, market, and logistics data. It should know which datasets are
+public, which are licensed, which are embargoed, and which are local to
+a cooperative.</p>
+<h2 data-number="2.6" id="ontology-driven-precise-ai"><span
+class="header-section-number">2.6</span> Ontology-Driven Precise AI</h2>
+<p>The strongest version of Querygraph is ontology-driven precise AI. It
+is not satisfied with “probably relevant chunks.” It wants the exact
+concept, the exact variable, the exact unit, the exact source, and the
+exact permission.</p>
+<p>Precision does not mean rigidity. The navigator can still use LLMs,
+embeddings, and agents. But those systems operate inside a semantic
+frame:</p>
+<ol type="1">
+<li>The question is mapped to ontology terms.</li>
+<li>Terms are resolved to CDIF variables and OSI business concepts.</li>
+<li>Variables are mapped to Croissant fields and Sail columns.</li>
+<li>DIDs identify the requester, agent, service, dataset, and
+attestation issuer.</li>
+<li>ODRL and TypeSec determine which actions are permitted.</li>
+<li>Grust traverses the graph of datasets, policies, variables, agents,
+and lineage events.</li>
+<li>Sail executes table access and stores audit records.</li>
+<li>Ollama or another model receives only the governed prompt it is
+allowed to process.</li>
+<li>OpenLineage records the run.</li>
+<li>A DID attestation signs the root.</li>
+</ol>
+<figure>
+<img src="diagrams/diagram-02.png" alt="Diagram 2" />
+<figcaption aria-hidden="true">Diagram 2</figcaption>
+</figure>
+<p>This is the opposite of a giant ungoverned context window. It is a
+precise navigation path through meaning, authority, and permitted
+action.</p>
+<h2 data-number="2.7" id="local-first-oss-ai"><span
+class="header-section-number">2.7</span> Local-First, OSS AI</h2>
+<p>Querygraph is local-first by design. Local-first does not mean
+isolated or small-minded. It means the organization keeps its data,
+metadata, policies, lineage, and agent traces inspectable on
+infrastructure it can understand. Open-source systems matter here
+because responsible AI is not only a model property. It is an
+operational property. If the routing, retrieval, policy, identity, and
+audit layers are opaque, the system cannot be fully governed.</p>
+<p>The practical target is not “never use GPUs” or “never call a
+frontier model.” The target is to avoid making expensive global
+inference the default path for questions that can be answered by precise
+retrieval, graph traversal, cached semantic metadata, SQL, and compact
+local model calls. Querygraph tries to move as much work as possible
+into stable, CPU-friendly infrastructure:</p>
+<ul>
+<li>parse and type the data once;</li>
+<li>materialize Croissant, CDIF, and OSI once per dataset version;</li>
+<li>cache graph neighborhoods and semantic projections;</li>
+<li>use Sail and Spark SQL for table computation;</li>
+<li>use Grust for relationship traversal;</li>
+<li>use TypeSec and ODRL to prune unauthorized work before
+retrieval;</li>
+<li>use local models such as Ollama only after the prompt has been
+narrowed.</li>
+</ul>
+<p>This is the AI Navigator thesis: a well-built semantic route is
+cheaper, safer, and more reproducible than a giant prompt.</p>
+<h2 data-number="2.8" id="source-posts"><span
+class="header-section-number">2.8</span> Source Posts</h2>
+<p>This vision section synthesizes the QueryGraph.ai posts on CODATA,
+Semantic Croissant, responsible AI infrastructure, vector stabilization,
+compression, Palefire, and AgStack:</p>
+<ul>
+<li><a
+href="https://querygraph.ai/alexy-interviews-slava-tykhonov-at-codata/"
+class="uri">https://querygraph.ai/alexy-interviews-slava-tykhonov-at-codata/</a></li>
+<li><a
+href="https://querygraph.ai/moving-toward-a-verifiable-ai-future/"
+class="uri">https://querygraph.ai/moving-toward-a-verifiable-ai-future/</a></li>
+<li><a
+href="https://querygraph.ai/compression-not-attention-is-all-you-need-for-ai/"
+class="uri">https://querygraph.ai/compression-not-attention-is-all-you-need-for-ai/</a></li>
+<li><a
+href="https://querygraph.ai/freezing-time-in-ai-how-vector-stabilization-captures-historical-ground-truth/"
+class="uri">https://querygraph.ai/freezing-time-in-ai-how-vector-stabilization-captures-historical-ground-truth/</a></li>
+<li><a
+href="https://querygraph.ai/building-data-infrastructure-for-agentic-ai/"
+class="uri">https://querygraph.ai/building-data-infrastructure-for-agentic-ai/</a></li>
+<li><a href="https://querygraph.ai/agstack/"
+class="uri">https://querygraph.ai/agstack/</a></li>
+<li><a href="https://querygraph.ai/palefire/"
+class="uri">https://querygraph.ai/palefire/</a></li>
+<li><a href="https://querygraph.ai/semantic-croissant/"
+class="uri">https://querygraph.ai/semantic-croissant/</a></li>
+</ul>
+<h1 data-number="3" id="the-ai-navigator-thesis"><span
+class="header-section-number">3</span> The AI Navigator Thesis</h1>
+<p>An AI Navigator is a system for turning a broad question into a
+narrow, governed, reproducible computational path. It is not merely
+search, not merely RAG, and not merely an agent framework. It is a
+control system for context.</p>
+<p>The basic problem is easy to state. A person asks:</p>
+<blockquote>
+<p>Which communities face overlapping fiscal capacity, energy burden,
+mobility disruption, and climate-health risk?</p>
+</blockquote>
+<p>A Big AI system is tempted to gather everything that might be
+relevant: finance documents, energy surveys, mobility tables, climate
+reports, health studies, prior briefings, policy files, and maybe a few
+thousand embeddings. That creates a huge context-selection problem. The
+model must infer meanings, ignore irrelevant fields, respect
+permissions, remember provenance, avoid forbidden data, and explain its
+answer after the fact. Some of that work may happen inside a GPU-bound
+model call where the organization has the least control and the least
+reproducibility.</p>
+<p>Querygraph reverses the order. It does not begin with a model. It
+begins with the route:</p>
+<ol type="1">
+<li>Identify the intent.</li>
+<li>Resolve the ontology terms.</li>
+<li>Find the datasets and fields that actually express those terms.</li>
+<li>Check rights and roles before retrieval.</li>
+<li>Use graph traversal and SQL before generative inference.</li>
+<li>Pass only the permitted, focused context to an agent or model.</li>
+<li>Return a signed summary or a signed denial.</li>
+<li>Record lineage so the route can be inspected later.</li>
+</ol>
+<figure>
+<img src="diagrams/diagram-03.png" alt="Diagram 3" />
+<figcaption aria-hidden="true">Diagram 3</figcaption>
+</figure>
+<p>The model becomes one component in a governed path, not the place
+where every hard problem is dumped.</p>
+<h2 data-number="3.1" id="the-alternative-to-big-ai"><span
+class="header-section-number">3.1</span> The Alternative to Big AI</h2>
+<p>Big AI is powerful, but its default architecture is poorly matched to
+many enterprise and scientific tasks. It rewards centralization, massive
+context, remote inference, opaque optimization, and constant
+recomputation. Those features are useful for some problems. They are
+costly and risky for governed knowledge work.</p>
+<p>Querygraph proposes a different stack:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Big AI default</th>
+<th>Querygraph alternative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Send large context to a large model.</td>
+<td>Build a small, permitted semantic context first.</td>
+</tr>
+<tr>
+<td>Treat retrieval as approximate chunks.</td>
+<td>Resolve ontology terms, variables, fields, and policies.</td>
+</tr>
+<tr>
+<td>Recompute context for each question.</td>
+<td>Cache dataset metadata, graph routes, and lineage.</td>
+</tr>
+<tr>
+<td>Centralize inference around GPU services.</td>
+<td>Keep data local and use CPU-friendly SQL/graph work first.</td>
+</tr>
+<tr>
+<td>Govern after the model responds.</td>
+<td>Govern before retrieval and before prompting.</td>
+</tr>
+<tr>
+<td>Trust logs after the fact.</td>
+<td>Sign requests, responses, denials, and lineage roots.</td>
+</tr>
+<tr>
+<td>Accept model drift as inevitable.</td>
+<td>Record versions, prompts, payload hashes, and data state.</td>
+</tr>
+</tbody>
+</table>
+<p>The point is not to pretend that small models always beat large
+models. The point is to stop using large models as a substitute for data
+infrastructure. When the semantic route is precise, the model has less
+to guess. When the context is focused, inference is cheaper. When the
+policy is checked before retrieval, safety is structural rather than
+rhetorical. When lineage is stored in the lakehouse, reproducibility
+becomes part of the data platform.</p>
+<h2 data-number="3.2"
+id="focused-context-as-a-first-class-artifact"><span
+class="header-section-number">3.2</span> Focused Context as a
+First-Class Artifact</h2>
+<p>In Querygraph, context is not a bag of text. A focused context is a
+structured artifact with:</p>
+<ul>
+<li>the user question and resolved intent;</li>
+<li>ontology terms and OSI concepts;</li>
+<li>Croissant record sets and fields;</li>
+<li>CDIF discovery, access, and rights metadata;</li>
+<li>Sail table and column references;</li>
+<li>DID identities for requester, agent, and issuer;</li>
+<li>ODRL permissions and prohibitions;</li>
+<li>TypeSec capability receipts;</li>
+<li>OpenLineage input and output references.</li>
+</ul>
+<p>That artifact can be cached, hashed, signed, replayed, compared, and
+audited. This is why Querygraph can be stable in a way that prompt-only
+systems are not. The expensive part of understanding the domain does not
+have to be regenerated inside a model context every time.</p>
+<h2 data-number="3.3" id="cpu-bound-before-gpu-bound"><span
+class="header-section-number">3.3</span> CPU-Bound Before GPU-Bound</h2>
+<p>The CPU-friendly parts of the system are not second-class. They are
+the foundation. Parsing a Dataverse file, inferring column types,
+writing Parquet, loading a Sail table, traversing a Grust graph,
+evaluating an ODRL permission, computing a hash, and generating an
+OpenLineage event are all deterministic or nearly deterministic
+operations. They can be tested. They can run locally. They can be
+repeated.</p>
+<p>GPU-bound inference is reserved for the part that genuinely needs
+generation: summarizing a small body of permitted evidence, translating
+a user question into a candidate ontology term, or drafting a narrative
+from signed summaries. Even then, the model call is wrapped by TypeDID,
+bounded by ODRL, and recorded by OpenLineage.</p>
+<p>That is the practical alternative to Big AI: use conventional
+computing for what conventional computing does well, and use models only
+after the problem has been made small enough to govern.</p>
+<h1 data-number="4" id="the-querygraph-spine"><span
+class="header-section-number">4</span> The Querygraph Spine</h1>
+<p>Querygraph is built around a simple but demanding product promise: an
+agent should be able to answer a serious question over enterprise data
+without turning the enterprise into an unbounded prompt. The system must
+know what the data is, where it came from, who is asking, which action
+is allowed, which model was used, what the answer depends on, and how to
+replay the run.</p>
+<p>That promise becomes the spine of the platform:</p>
+<ol type="1">
+<li>Semantic Croissant describes the data as agents will encounter
+it.</li>
+<li>CDIF publishes the same data as interoperable FAIR metadata.</li>
+<li>DIDs identify agents, datasets, bundles, issuers, and
+attestations.</li>
+<li>ODRL expresses governed data rights as machine-actionable
+policies.</li>
+<li>TypeSec turns those identities and policies into typed
+capabilities.</li>
+<li>Grust gives the navigator a graph of meaning, policy, lineage, and
+agents.</li>
+<li>OSI gives business concepts stable names and relationships.</li>
+<li>Sail executes the lakehouse and keeps the audit data queryable.</li>
+<li>OpenLineage records runs, inputs, outputs, and derivations.</li>
+<li>QG Lakehouse ties all of it together in Rust.</li>
+</ol>
+<figure>
+<img src="diagrams/diagram-04.png" alt="Diagram 4" />
+<figcaption aria-hidden="true">Diagram 4</figcaption>
+</figure>
+<p>The rest of the book walks that spine component by component. Each
+chapter answers three questions: why the component exists, how
+Querygraph uses it, and what becomes possible when it is combined with
+the others.</p>
+<h1 data-number="5" id="semantic-croissant"><span
+class="header-section-number">5</span> Semantic Croissant</h1>
+<p>Semantic Croissant is the moment a file becomes navigable. Before
+Croissant, an enterprise lake is a heap of formats: CSV files,
+spreadsheets, Parquet directories, APIs, attachments, survey exports,
+and institutional oddities with names only a local analyst understands.
+After Croissant, an agent can ask a more disciplined question: what
+datasets exist, what files belong to them, what record sets they
+contain, what fields exist, what those fields mean, and which types
+should be expected at runtime.</p>
+<p>The first principle is simple: a model should not have to inspect raw
+data in order to learn what the data is. If every agent begins by
+sampling files, guessing schemas, and inferring meanings from column
+names, the system wastes compute and invites mistakes. Semantic
+Croissant moves that knowledge into a stable metadata artifact. The file
+can be large, private, or expensive to query, while its shape remains
+small, public enough for planning, and cacheable.</p>
+<p>For an AI Navigator, this is the first compression step. Instead of
+asking a model to read a million-row survey to discover that a field
+means household energy source, Croissant gives the model and the policy
+engine a structured description of the field. That description can be
+reused across agents and runs. It can also be compared against the
+actual table, which makes drift visible.</p>
+<p>In Querygraph, Croissant is not decorative metadata. It is the first
+contract between the lakehouse and the agent. A model should not see raw
+rows until a semantic layer has explained the shape of those rows. That
+explanation is not only for the model. It is for policy, validation,
+lineage, and replay.</p>
+<p>The Rust implementation lives in <code>croissant.rs</code>. It
+defines a compact model of datasets, file objects, record sets, and
+fields, then emits JSON-LD sidecars. When the lakehouse loader parses a
+Dataverse or CODATA asset, it does two things at once: it materializes a
+typed table for execution, and it materializes a Croissant description
+so the table has a semantic face.</p>
+<p>Consider the energy access survey in the demonstration lakehouse. A
+column may look like an integer. Croissant lets Querygraph say more:
+this field came from this file, belongs to this record set, represents
+this survey variable, has this inferred type, and should be interpreted
+under this dataset. That is the difference between an agent guessing and
+an agent navigating.</p>
+<figure>
+<img src="diagrams/diagram-05.png" alt="Diagram 5" />
+<figcaption aria-hidden="true">Diagram 5</figcaption>
+</figure>
+<p>The important practical detail is that Croissant remains close to the
+data. It describes the concrete files and tables that actually exist.
+Querygraph does not ask Croissant to decide access policy, replace
+business ontology, or store lineage events. It gives the navigator a
+trustworthy map of the terrain.</p>
+<p>Textbook rule: Croissant answers “what is physically and semantically
+present?” It does not answer “who may use it?” or “which business
+question does it serve?” Those are ODRL and OSI questions. Keeping those
+layers separate is how Querygraph avoids turning metadata into another
+ungoverned blob.</p>
+<h1 data-number="6" id="cdif"><span
+class="header-section-number">6</span> CDIF</h1>
+<p>CDIF answers a different question from Croissant. Croissant says,
+“Here is how this dataset is structured.” CDIF says, “Here is how this
+dataset participates in a larger interoperable data ecosystem.” That
+distinction matters because an AI Navigator must operate both inside a
+local lakehouse and across institutions, domains, catalogs, and
+communities of practice.</p>
+<p>The first principle of CDIF is interoperability. A local system can
+be precise and still be provincial. If each repository describes
+discovery, access, rights, variables, and provenance differently, agents
+cannot move responsibly across domains. CDIF gives Querygraph a way to
+publish local assets in a language that other FAIR data systems can
+understand.</p>
+<p>This is another answer to Big AI. Instead of asking a model to infer
+cross- domain meaning from whatever text happens to be nearby, CDIF
+makes the interoperability layer explicit. Discovery, manifest, data
+description, access, rights, vocabularies, integration, universals, and
+provenance become structured profiles rather than hidden prompt
+assumptions.</p>
+<p>In Querygraph, CDIF is the publication projection over the
+Croissant-grounded asset. The Rust module <code>cdif.rs</code> projects
+datasets into profiles for discovery, manifest, data description, data
+access, access rights, controlled vocabulary, integration, universals,
+and provenance. Those profiles are not bureaucratic checkboxes. They are
+the handles that make cross-domain AI possible.</p>
+<p>Imagine a resilience analyst asking whether fiscal fragility and
+energy insecurity overlap in vulnerable communities. Finance tables and
+energy survey tables do not naturally speak the same language. CDIF
+helps Querygraph describe the asset in a way another system can
+discover, compare, cite, and connect. The CDIF projection gives the
+navigator publication-grade metadata while Croissant remains the
+close-up record-set description.</p>
+<figure>
+<img src="diagrams/diagram-06.png" alt="Diagram 6" />
+<figcaption aria-hidden="true">Diagram 6</figcaption>
+</figure>
+<p>CDIF lives beside the lakehouse, not above it as an abstract
+aspiration. For each dataset Querygraph loads, the sidecar
+<code>semantic/cdif.json</code> travels with the corresponding prepared
+data and Croissant sidecar. The validator checks that these semantic
+artifacts remain shaped correctly, because stale metadata is worse than
+no metadata: it gives an agent confidence in the wrong map.</p>
+<p>Textbook rule: Croissant makes a dataset locally legible; CDIF makes
+it federation-ready. Querygraph needs both because the navigator must be
+precise inside one Sail warehouse and intelligible across many
+catalogs.</p>
+<h1 data-number="7" id="did"><span
+class="header-section-number">7</span> DID</h1>
+<p>DIDs give Querygraph names that do not depend on a single database
+row or cloud account. In ordinary software, a user, job, dataset, or
+model run may be identified by whatever the local application happens to
+assign. In responsible agentic AI, that is too weak. The system needs
+identifiers that can be carried across messages, signatures,
+attestations, policies, and ledgers.</p>
+<p>The first principle is portable accountability. An agent is not
+merely a process. It is an actor in a chain of delegation. A dataset is
+not merely a path. It is an object that can be cited, governed, signed,
+and audited. A model answer is not merely text. It is a claim made by an
+identified actor over an identified context. DIDs give those actors and
+objects stable handles.</p>
+<p>This matters especially in local-first AI. A local system should not
+have to ask a central cloud service for permission to name its agents or
+sign its lineage. Deterministic local DIDs let demos and offline
+workflows preserve the same identity pattern that a production
+deployment can later anchor more strongly.</p>
+<p>Querygraph uses DIDs for agents, bundles, issuers, and attestations.
+The demo implementation in <code>did.rs</code> provides deterministic
+local <code>did:oyd</code> documents so the examples can run without
+external ceremony. TypeSec then lifts those identities into TypeDID
+envelopes and typed capability checks.</p>
+<p>The practical value appears when something goes wrong. Suppose a
+supervisor receives a summary that claims a climate-health pathway
+overlaps with an energy-burden cluster. Querygraph should be able to say
+which agent produced the claim, which DID identified that agent, which
+dataset DIDs or bundle DIDs were in scope, which issuer signed the
+lineage attestation, and which payload hash was signed. The DID is the
+thread that lets the answer be pulled back through the system.</p>
+<figure>
+<img src="diagrams/diagram-07.png" alt="Diagram 7" />
+<figcaption aria-hidden="true">Diagram 7</figcaption>
+</figure>
+<p>The DID ledger is intentionally compact. Querygraph does not need to
+store every raw row or every full OpenLineage event in a DID ledger. The
+lakehouse is better for large queryable event bodies. The ledger should
+store roots, hashes, issuers, subjects, and signatures: enough to prove
+that the larger record has not been quietly rewritten.</p>
+<p>Textbook rule: DIDs identify and attest; they do not replace the
+warehouse, the catalog, or the policy engine. Their job is to keep
+accountability portable across those systems.</p>
+<h1 data-number="8" id="odrl"><span
+class="header-section-number">8</span> ODRL</h1>
+<p>ODRL is the rights language in Querygraph. It is the place where
+permissions, prohibitions, duties, constraints, targets, assigners, and
+assignees become machine-actionable. Querygraph should not invent a
+second name for that layer. It should use ODRL clearly and then explain
+how RBAC, DIDs, TypeSec, and Sail surround it.</p>
+<p>The first principle is that governance must happen before context
+assembly. Many AI systems retrieve first and redact later. That is
+backwards. If an agent is not allowed to read respondent-level health
+data, those rows should not enter its prompt, vector search, cache, or
+intermediate scratchpad. ODRL lets Querygraph express that rule as data
+rather than as a warning in a prompt.</p>
+<p>ODRL also turns denial into an accountable event. A system that only
+logs successful access is incomplete. Querygraph records signed denials
+because a future reviewer needs to know not only what evidence was used,
+but also what evidence was correctly excluded.</p>
+<p>The Rust implementation in <code>odrl.rs</code> models the part of
+ODRL needed by the current demos: policy targets, permissions,
+prohibitions, actions, assignees, and a simple <code>allows</code>
+decision. That is intentionally small, but it preserves the key
+discipline: an agent action is allowed only when the policy grants it
+and does not prohibit it.</p>
+<p>An ODRL policy should be able to say:</p>
+<ul>
+<li>this agent may read public finance data;</li>
+<li>this agent may summarize energy survey data but may not export raw
+rows;</li>
+<li>this broker may reveal restricted dataset metadata but not
+restricted respondent-level records;</li>
+<li>this model may receive a redacted prompt but not sensitive
+columns;</li>
+<li>this supervisor may aggregate signed summaries without inheriting
+every raw permission held by a specialist.</li>
+</ul>
+<figure>
+<img src="diagrams/diagram-08.png" alt="Diagram 8" />
+<figcaption aria-hidden="true">Diagram 8</figcaption>
+</figure>
+<p>This chapter is where responsibility stops being a slogan. A
+responsible system must be able to deny access in a way that is as
+legible and auditable as approval. Querygraph treats ODRL denials as
+first-class outputs. They are signed, included in lineage, and passed to
+synthesis agents so the final answer knows which evidence was
+deliberately not used.</p>
+<p>Textbook rule: ODRL is a pre-retrieval filter, not a post-answer
+apology. It shrinks the computational problem while making the ethical
+boundary explicit.</p>
+<h1 data-number="9" id="typesec"><span
+class="header-section-number">9</span> TypeSec</h1>
+<p>TypeSec is the security fabric that makes the policy layer
+programmable without making it squishy. Querygraph needs more than
+bearer tokens. Agents delegate to other agents. Prompts become
+operational artifacts. Model calls need bounded capabilities. Responses
+need signed provenance. A token that says “this process is
+authenticated” is not enough.</p>
+<p>The first principle is typed authority. In ordinary API security, a
+service may receive a token and then decide what that token means inside
+application code. Agentic systems need something sharper. The system
+should know that this agent, in this conversation, may perform this
+action, over this resource, with this payload hash, under this policy.
+TypeSec gives Querygraph that shape.</p>
+<p>This is a direct alternative to “trust the orchestrator.” A LangChain
+planner, an Ollama call, a local script, and a Rust service should all
+receive bounded capabilities rather than broad ambient authority. That
+keeps experimentation possible without letting every experiment become a
+privileged data channel.</p>
+<p>TypeSec brings typed security to that world. In Querygraph,
+<code>agent.rs</code> builds TypeDID request envelopes, access receipts,
+governed prompts, and signed responses. The TypeDID protocol gives each
+agent interaction an identity-bound envelope. The policy decision can
+then mint typed capabilities such as <code>read</code>,
+<code>summarize</code>, <code>derive</code>, <code>normalize</code>, or
+<code>ai:infer</code> for a specific resource and action.</p>
+<p>The strongest example is the Ollama path. A local model is useful
+because it keeps inference close to the data. But local inference is
+still dangerous if the prompt is an ungoverned blob. Querygraph wraps
+the prompt in a TypeDID envelope, checks the resource and action, and
+sends only the governed prompt to the model. The response comes back as
+another signed artifact rather than a loose string.</p>
+<figure>
+<img src="diagrams/diagram-09.png" alt="Diagram 9" />
+<figcaption aria-hidden="true">Diagram 9</figcaption>
+</figure>
+<p>This is where TypeSec and DIDs become more than identity plumbing.
+They let Querygraph preserve compartmentalization through an agent
+hierarchy. A synthesis agent can receive signed summaries from
+specialists without automatically receiving the raw permissions that
+produced those summaries.</p>
+<p>Querygraph tracks TypeSec 0.12.0, “Torcello,” the fourth
+Venetian-landmark release after Murano and Burano. Burano is what made
+the cross-agent envelopes in the Ollama path trustworthy as evidence:
+each authorized interaction carries an audit-safe TypeDID attestation
+recording who did what to which resource, at which privacy level,
+without ever exposing the payload or the signing material. Torcello
+grows the same fabric into a security platform other agent stacks plug
+into — an interop plane that guards OpenAI, Anthropic, LangChain, and
+Pydantic-AI tool calls; a deny-by-default MCP gate; signed decision
+receipts with logging and replay; schema-validated tool bindings; and an
+OpenAI/Anthropic-compatible enforcement proxy.</p>
+<p>Textbook rule: DIDs say who is acting; ODRL says what action is
+allowed; TypeSec turns that decision into a typed, signed capability
+that software can carry safely.</p>
+<h1 data-number="10" id="grust"><span
+class="header-section-number">10</span> Grust</h1>
+<p>Grust gives Querygraph its graph mind. The lakehouse stores tables
+beautifully, but an AI Navigator needs relationships: dataset contains
+file, file contains record set, record set contains field, field maps to
+concept, concept belongs to ontology, policy targets asset, agent has
+role, run consumed input, answer derived from summary. These are
+graph-shaped facts.</p>
+<p>The first principle is that meaning is relational. A column does not
+become useful merely because it has a name. It becomes useful because it
+is connected to a dataset, record set, ontology term, policy, lineage
+event, and agent workflow. A table engine is excellent at scanning rows.
+A graph engine is excellent at following those relationships.</p>
+<p>This is why Querygraph does not treat vector search as the whole
+retrieval story. Vectors can find similarity, but they do not by
+themselves prove that a field belongs to an approved concept, that an
+agent has the right role, or that a previous answer used the same
+dataset version. Grust gives the navigator the explicit route.</p>
+<p>In Querygraph, Grust is the property graph substrate that makes those
+facts traversable from Rust. The module <code>sail.rs</code> stages
+Dataverse metadata and semantic graph nodes through the Grust Sail
+adapter. The graph is not an ornament beside the lakehouse. It is how
+the navigator plans safe routes through data.</p>
+<p>For example, an analyst may ask for mobility disruption in areas with
+fiscal constraints. The graph can connect “mobility disruption” to
+transportation datasets, injury severity tables, dockless transportation
+fields, urban-form features, policies, and lineage from previous runs.
+Sail can then execute the table operations. The graph decides where to
+go; the lakehouse carries the weight.</p>
+<figure>
+<img src="diagrams/diagram-10.png" alt="Diagram 10" />
+<figcaption aria-hidden="true">Diagram 10</figcaption>
+</figure>
+<p>Rust matters here because graph navigation becomes systems
+programming when it is part of a security boundary. Querygraph benefits
+from explicit types, predictable serialization, careful error handling,
+and the ability to keep graph, policy, metadata, and CLI code in one
+compiled implementation.</p>
+<p>Querygraph tracks Grust 0.12.0, the “Lobster” release. Crab was the
+moment the graph gained a language: a standards-conformant GQL/Cypher
+layer — lexer, parser, AST, and semantic analysis — over the same
+property graph, with backend read pushdown into Sail and SQLite. It also
+gave the navigator first-class Decimal, Duration, and temporal values
+that order and compute correctly, and catalog procedures such as
+<code>CALL db.labels()</code> for introspecting the graph the lakehouse
+projects. Lobster completes the language: the merged Full39075 GQL
+profile brings <code>CALL { … }</code> subqueries, table-valued
+functions, <code>shortestPath()</code>/<code>allShortestPaths()</code>,
+backend-native passthrough escape hatches, and atomic Cypher transaction
+batches. The graph stops being only a store of facts and becomes a
+queryable substrate.</p>
+<p>Textbook rule: use vectors for fuzzy discovery; use graphs for
+accountable navigation. Querygraph needs both, but the graph is what
+turns retrieval into a route that can be explained.</p>
+<h1 data-number="11" id="osi"><span
+class="header-section-number">11</span> OSI</h1>
+<p>Open Semantic Interchange is the business-meaning layer. Croissant
+knows the shape of a dataset. CDIF knows how to publish it across
+ecosystems. OSI names the business concepts that make the dataset useful
+to an enterprise or public mission: metrics, dimensions, terms,
+relationships, and semantic models.</p>
+<p>The first principle is that users ask business and scientific
+questions, not table questions. “Energy burden” is not a file format.
+“Fiscal capacity” is not a column type. “Mobility disruption” is not
+guaranteed to appear as a literal label. OSI gives those concepts a
+stable home so the navigator can map human intent onto executable
+data.</p>
+<p>This is how Querygraph avoids the worst form of RAG: retrieving
+documents that sound related and hoping the model invents the right
+metric. With OSI, a term can point to dimensions, measures, expressions,
+fields, units, and allowed uses. The model can still help interpret the
+user question, but it is no longer solely responsible for defining the
+domain.</p>
+<p>Without OSI, an AI Navigator can still find columns. With OSI, it can
+find the right concept. That distinction matters when users ask ordinary
+human questions. “Energy burden” may not be a column. It may be a
+concept composed from survey variables, household context, geography,
+unit conventions, and policy constraints. OSI gives Querygraph a place
+to model that concept instead of hoping a vector search finds a nearby
+phrase.</p>
+<p>The Rust module <code>osi.rs</code> loads or synthesizes an OSI model
+over datasets. In a small demo, the model can be generated from
+Dataverse metadata. In a serious deployment, the OSI model should be
+curated by domain experts and versioned like application code.</p>
+<figure>
+<img src="diagrams/diagram-11.png" alt="Diagram 11" />
+<figcaption aria-hidden="true">Diagram 11</figcaption>
+</figure>
+<p>OSI is where ontology-driven AI becomes pleasant to use. Users should
+not need to know table names to ask precise questions. Agents should not
+need to infer business meaning from column labels alone. OSI provides
+the semantic bridge.</p>
+<p>Textbook rule: OSI is the layer that turns local metadata into domain
+language. It is what lets focused retrieval start from a human question
+rather than a warehouse schema.</p>
+<h1 data-number="12" id="openlineage"><span
+class="header-section-number">12</span> OpenLineage</h1>
+<p>OpenLineage is the memory of what actually happened. Querygraph can
+generate beautiful metadata and enforce careful policies, but an
+operator still needs the operational story: which run executed, when it
+started, which job produced which output, which datasets were inputs,
+which facets described the run, and which event completed the
+derivation.</p>
+<p>The first principle is reproducibility. A responsible answer is not
+only an answer that sounds right. It is an answer with a route behind
+it. If two runs produce different results, the operator should be able
+to compare data versions, prompts, model paths, policies, and input
+scopes. OpenLineage gives Querygraph an operational grammar for that
+comparison.</p>
+<p>This is also a cost-control mechanism. Lineage lets the system reuse
+what is already known. If a dataset has been loaded, profiled,
+summarized, and attested, a future agent can inspect that history before
+recomputing. Stable history is one of the ways Querygraph avoids
+wasteful global recomputation.</p>
+<p>The implementation in <code>lineage.rs</code> constructs OpenLineage
+events, writes JSONL and HTTP sinks, writes Sail audit rows, and creates
+TypeSec-backed DID attestations. The key design choice is that
+OpenLineage belongs in Sail itself for the local lakehouse. The event
+body is operational data. It should be queryable beside the tables and
+metadata it describes.</p>
+<p>When QG Lakehouse produces a resilience briefing, the lineage event
+records the input scopes for finance, energy, mobility, climate-health,
+reference data, and restricted metadata. The output is the briefing
+artifact. The DID attestation then signs a compact hash of that event.
+Auditors get both convenience and cryptographic accountability: query
+the full event in Sail, verify the root in the DID ledger.</p>
+<figure>
+<img src="diagrams/diagram-12.png" alt="Diagram 12" />
+<figcaption aria-hidden="true">Diagram 12</figcaption>
+</figure>
+<p>This is reproducibility as a product feature. The answer is not just
+text. It is text with an execution trail.</p>
+<p>Textbook rule: lineage makes context durable. Without lineage, every
+answer is a rumor; with lineage, an answer becomes an inspectable
+derivation.</p>
+<h1 data-number="13" id="sail"><span
+class="header-section-number">13</span> Sail</h1>
+<p>Sail is the right lakehouse substrate for Querygraph because it makes
+the data layer local, inspectable, Spark-compatible, and Rust-friendly.
+Querygraph wants to load real Dataverse and CODATA assets, infer strong
+column types, expose tables to PySpark and Spark Connect, and store
+audit events next to the data. Sail gives that work a serious execution
+surface without forcing the demo into a remote warehouse account.</p>
+<p>The first principle is that governed AI needs a governed data
+substrate. Prompting over loose files is not enough. The system needs
+typed tables, stable locations, query execution, catalog records, and
+audit tables. Sail gives Querygraph a local lakehouse where data and
+evidence can live together.</p>
+<p>Sail is also part of the alternative to Big AI. If ordinary SQL and
+Spark operations can answer part of a question, they should. Counting
+rows, joining tables, filtering by geography, and reading audit events
+do not require a large language model. They require a reliable execution
+engine. The model should receive the result of that focused computation,
+not the entire raw warehouse.</p>
+<p>The local schema is <code>qg_lakehouse</code>. It contains typed
+tables and catalog records such as <code>lakehouse_datasets</code>,
+<code>lakehouse_files</code>, and <code>lakehouse_columns</code>. The
+audit schema is <code>qg_audit</code>. It stores OpenLineage events and
+DID attestations. That separation mirrors the product boundary: data and
+metadata in one governed space, operational evidence in another governed
+space, both queryable.</p>
+<figure>
+<img src="diagrams/diagram-13.png" alt="Diagram 13" />
+<figcaption aria-hidden="true">Diagram 13</figcaption>
+</figure>
+<p>Rust is the right implementation language for this because the system
+lives at the intersection of parsing, security, metadata, policy, graph
+traversal, serialization, and reproducibility. These are not soft edges.
+A loader should not silently coerce a sensitive identifier into
+nonsense. A policy evaluator should not accidentally treat an absent
+prohibition as a broad grant. A lineage attestation should not hash a
+different payload than the one written to audit storage.</p>
+<p>Rust helps Querygraph make those boundaries explicit.
+<code>Result</code>-driven error handling keeps ingestion honest.
+<code>serde</code> keeps JSON-LD, OpenLineage, and TypeDID envelopes
+structured. Strong enums make action vocabularies and event types harder
+to confuse. Cargo keeps the CLI, library, tests, and book examples close
+enough to evolve together. Sail gives the execution layer; Rust gives
+the control layer.</p>
+<p>Textbook rule: Sail is where focused retrieval becomes executable. It
+keeps the data local and queryable so the AI layer can remain small,
+governed, and inspectable.</p>
+<h1 data-number="14" id="python-interop"><span
+class="header-section-number">14</span> Python Interop</h1>
+<p>Rust is the control plane for Querygraph, but Python is the working
+surface for many of the people who will use it. Data scientists live in
+notebooks. Spark users expect PySpark. AI engineers assemble agents with
+Python libraries. Analysts want to inspect a Sail warehouse without
+learning the Rust internals. The sister project <code>qg-python</code>
+exists for that world.</p>
+<p>The first principle is that responsible AI must meet practitioners
+where they work without abandoning the system’s guarantees. If the Rust
+implementation is precise but the Python notebook path is loose, the
+platform fails. If the notebook can bypass ODRL, TypeDID, or lineage,
+the local-first story collapses. The Python ecosystem therefore mirrors
+the same concepts with Python-native tools rather than inventing a
+separate, weaker layer.</p>
+<p>The Python implementation is not a toy wrapper around a command line.
+It is a Python-native ecosystem over the same concepts:</p>
+<ul>
+<li><code>croissant.py</code> and <code>cdif.py</code> build Semantic
+Croissant and CDIF JSON-LD.</li>
+<li><code>osi.py</code> projects Semantic Croissant fields into OSI
+datasets, metrics, expressions, and ontology terms.</li>
+<li><code>typedid.py</code> models TypeDID envelopes, governed prompts,
+access receipts, and signed agent responses with Pydantic.</li>
+<li><code>agents.py</code> exposes compartment agents and an optional
+LangChain <code>StructuredTool</code> adapter.</li>
+<li><code>lakehouse.py</code> registers Sail warehouse Parquet tables in
+a PySpark/Spark Connect session.</li>
+<li><code>lineage.py</code> emits OpenLineage run events and DID-style
+attestations.</li>
+<li><code>odrl_rights.py</code> and <code>rbac.py</code> give Python
+agents the same rights checks used in the Rust story.</li>
+<li><code>dataverse.py</code> projects Dataverse native API payloads
+into Semantic Croissant.</li>
+<li><code>qglake.py</code> runs the Python version of the supervised QG
+Lakehouse story.</li>
+</ul>
+<figure>
+<img src="diagrams/diagram-14.png" alt="Diagram 14" />
+<figcaption aria-hidden="true">Diagram 14</figcaption>
+</figure>
+<p>This division is deliberate. Rust is where Querygraph wants tight
+control: ingestion, typing, hashing, policy boundaries, graph staging,
+and reproducible CLI workflows. Python is where Querygraph wants fluent
+exploration: notebooks, PySpark queries, LangChain tool composition, and
+domain-agent iteration.</p>
+<p>Textbook rule: Python is the laboratory; Rust is the contract. Both
+must speak the same semantic, policy, identity, and lineage
+language.</p>
+<h2 data-number="14.1" id="pydantic"><span
+class="header-section-number">14.1</span> Pydantic</h2>
+<p>Pydantic is the Python side’s type boundary. A TypeDID envelope
+should not be a loose dictionary passed from one agent to another. A
+governed prompt should have a question, semantic context, allowed
+sources, denied sources, and access receipts. An agent response should
+have a status, summary, evidence, redactions, and an envelope hash.
+Pydantic makes those shapes explicit while remaining natural for Python
+users.</p>
+<p>In <code>qg-python</code>, <code>TypeDidEnvelope</code> validates the
+request/reply structure and recomputes payload hashes.
+<code>GovernedPrompt</code> carries the semantic context that came from
+Croissant, CDIF, OSI, and Sail. <code>AgentResponse</code> preserves the
+signed summary or denial. The synthesis agent receives those models, not
+ad hoc JSON.</p>
+<p>The point is not type ceremony. The point is that Python agents can
+be creative without being unbounded. Pydantic gives the agent framework
+a shape that can be validated, logged, hashed, and compared to the Rust
+implementation.</p>
+<h2 data-number="14.2" id="langchain"><span
+class="header-section-number">14.2</span> LangChain</h2>
+<p>LangChain fits as an adapter layer, not as the source of authority.
+Querygraph does not ask LangChain to decide whether a model may see
+restricted data. That decision belongs to DID identity, ODRL policy,
+TypeSec capability checks, and the semantic target in
+Croissant/CDIF/OSI. LangChain receives a governed tool only after those
+boundaries exist.</p>
+<p>The Python adapter <code>TypeDidLangChainToolAdapter</code> turns a
+TypeDID agent into a LangChain <code>StructuredTool</code>. The tool
+returns the same signed response or denial that a non-LangChain caller
+would receive. This keeps LangChain useful while preventing it from
+becoming a policy bypass.</p>
+<p>Example: a LangChain planner may choose <code>FinanceAgent</code> to
+summarize fiscal capacity. The actual tool invocation still goes through
+a TypeDID request, policy receipt, payload hash, and signed response. If
+the planner asks the restricted broker for raw health rows, the tool
+returns a signed denial.</p>
+<h2 data-number="14.3" id="pyspark"><span
+class="header-section-number">14.3</span> PySpark</h2>
+<p>PySpark is the inspection and analysis surface for Sail. The Rust
+loader materializes the warehouse. Python registers the generated
+Parquet tables into a Spark Connect session and lets analysts query them
+with familiar Spark SQL. That is how a user can inspect
+<code>qg_lakehouse</code> without leaving the Python world.</p>
+<p>The current Python helper can register the loaded data tables and the
+audit tables:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run querygraph lakehouse-register <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--manifest</span> ../qg-rust/.querygraph/lakehouse/manifest/load-report.json <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--warehouse</span> ../qg-rust/spark-warehouse</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run querygraph audit-register <span class="at">--warehouse</span> ../qg-rust/spark-warehouse</span></code></pre></div>
+<p>Then a notebook or shell can ask:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;SELECT COUNT(*) FROM global_temp.government_finance__countydata&quot;</span>).show()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;SELECT quantity, value, unit FROM global_temp.codata_constants_2022__codata_constants_2022 LIMIT 5&quot;</span>).show(truncate<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;SELECT event_hash, event_type, job_name FROM global_temp.openlineage_events LIMIT 10&quot;</span>).show(truncate<span class="op">=</span><span class="va">False</span>)</span></code></pre></div>
+<p>That is the interop story in one loop: Rust loads, Sail stores,
+Python queries, Pydantic agents reason, LangChain orchestrates when
+useful, and OpenLineage records the trail.</p>
+<h1 data-number="15" id="the-demonstration-datasets"><span
+class="header-section-number">15</span> The Demonstration Datasets</h1>
+<p>The default corpus is intentionally broad. It is not a toy table. It
+mixes finance, energy, transportation, health, climate, social science,
+geospatial assets, and reference data so the navigator has to cross real
+semantic boundaries.</p>
+<p>The first principle is that an AI Navigator should be demonstrated on
+messy, multi-domain data, not a polished single-table example. The point
+is not to show that a model can summarize a CSV. The point is to show
+that governed AI can move across domains while keeping each dataset’s
+shape, rights, lineage, and meaning visible.</p>
+<p>The corpus is also a computational argument. A Big AI demonstration
+might stuff documents and table samples into a prompt. Querygraph
+instead turns the corpus into a lakehouse, sidecars, graph nodes,
+policies, and lineage. Once that work is done, later questions reuse the
+structure. The system pays the metadata cost once, then benefits from
+focused retrieval many times.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>Category</th>
+<th>Persistent ID or source</th>
+<th style="text-align: right;">Typed tables</th>
+<th style="text-align: right;">Rows</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Government Finance Database</td>
+<td>finance</td>
+<td><code>doi:10.7910/DVN/LMS8NT</code></td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1,724,447</td>
+<td>Fiscal capacity, county/municipal/district budgeting, and
+public-sector constraints.</td>
+</tr>
+<tr>
+<td>Roadway vulnerability LiDAR DTM</td>
+<td>geospatial</td>
+<td><code>doi:10.7910/DVN/1VT6FZ</code></td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td>Non-tabular assets and geospatial metadata; proves the catalog can
+track assets that are not immediately typed tables.</td>
+</tr>
+<tr>
+<td>ACCESS 2018 energy survey</td>
+<td>energy</td>
+<td><code>doi:10.7910/DVN/AHFINM</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">35,779</td>
+<td>Household access to clean cooking energy and electricity.</td>
+</tr>
+<tr>
+<td>Dockless transportation study</td>
+<td>transportation</td>
+<td><code>doi:10.7910/DVN/B2LJSB</code></td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">479,853</td>
+<td>Urban form, trip hotspots, mode shift, and mobility disruption.</td>
+</tr>
+<tr>
+<td>HAALSI Baseline Survey</td>
+<td>health</td>
+<td><code>doi:10.7910/DVN/F5YHML</code></td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td>Restricted or inaccessible raw data; demonstrates metadata-only
+access and signed denial.</td>
+</tr>
+<tr>
+<td>Global Party Survey, 2019</td>
+<td>social science</td>
+<td><code>doi:10.7910/DVN/WMGTNS</code></td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">6,033</td>
+<td>Institutional and political context as a social-science signal.</td>
+</tr>
+<tr>
+<td>Connecticut pedestrian injury severity</td>
+<td>transportation</td>
+<td><code>doi:10.7910/DVN/TXIKF9</code></td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">14,645</td>
+<td>Injury severity, land use, transit stops, roadway, and demographic
+factors.</td>
+</tr>
+<tr>
+<td>Energy insecurity during COVID-19</td>
+<td>energy</td>
+<td><code>doi:10.7910/DVN/OMJWNB</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">37,907</td>
+<td>Sociodemographic disparities in household energy insecurity.</td>
+</tr>
+<tr>
+<td>Climate and health pathways</td>
+<td>climate health</td>
+<td><code>doi:10.7910/DVN/DHDNIC</code></td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">522</td>
+<td>Climate-linked mortality and pathway data.</td>
+</tr>
+<tr>
+<td>CODATA/NIST 2022 constants</td>
+<td>reference</td>
+<td>NIST ASCII table</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">355</td>
+<td>Trusted reference units and constants for normalization.</td>
+</tr>
+</tbody>
+</table>
+<p>The loaded corpus verifies to 28 typed tables and 2,299,541 typed
+rows. The row count is not the point by itself. The point is
+heterogeneity: tabular files, XLSX conversion, CODATA normalization,
+non-tabular assets, and restricted data all travel through one governed
+catalog.</p>
+<figure>
+<img src="diagrams/diagram-15.png" alt="Diagram 15" />
+<figcaption aria-hidden="true">Diagram 15</figcaption>
+</figure>
+<h1 data-number="16" id="qg-lakehouse-with-all-components"><span
+class="header-section-number">16</span> QG Lakehouse with All
+Components</h1>
+<p>QG Lakehouse is where the chapters stop being separate ideas and
+become a single run. The executable story is:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> qglake-story</span></code></pre></div>
+<p>The default output is a readable briefing. The full machine report
+is:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> qglake-story <span class="at">--json</span></span></code></pre></div>
+<p>The story asks a mission-shaped question:</p>
+<blockquote>
+<p>Where do fiscal capacity, energy burden, mobility disruption, and
+climate-health risk overlap, and what can a supervisor responsibly know
+without violating restricted-data boundaries?</p>
+</blockquote>
+<p>The answer is not a single omniscient model response. It is a
+governed multi-agent run over Sail, Grust, Semantic Croissant, CDIF,
+OSI, DIDs, ODRL, TypeSec, OpenLineage, and optional Ollama
+inference.</p>
+<p>Read this chapter as a worked example, not merely a demo. Each step
+removes work from the model and moves it into a more reliable layer.
+Loading removes file ambiguity. Croissant removes schema ambiguity. CDIF
+removes publication ambiguity. OSI removes domain ambiguity. Grust
+removes route ambiguity. DID, ODRL, and TypeSec remove authority
+ambiguity. OpenLineage removes historical ambiguity. The final model
+call, if used, is smaller because the system has already done the
+disciplined work.</p>
+<h2 data-number="16.1" id="step-1-load-the-lakehouse"><span
+class="header-section-number">16.1</span> Step 1: Load the
+Lakehouse</h2>
+<p>The first step is ingestion. <code>lakehouse.rs</code> downloads the
+default Dataverse and CODATA corpus, normalizes parseable assets, infers
+strong column types, writes typed tables, and records a manifest. This
+is where Rust earns its keep: every file has to become either a typed
+table, a cataloged non-tabular asset, or an explicitly reported
+unavailable/restricted asset.</p>
+<p>From a textbook perspective, ingestion is not plumbing. It is the
+first act of responsibility. If the system cannot say what it loaded,
+what it skipped, what it typed, and how many rows it verified, later AI
+claims have no foundation. Local ingestion also means the organization
+can inspect the data path without trusting a remote indexing
+service.</p>
+<p>The lakehouse does not hide partial success. A LiDAR asset can be
+cataloged even when it is not a table. A restricted survey can
+contribute metadata while raw rows remain unavailable. The navigator can
+reason over both facts.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakehouse-load <span class="at">--root</span> .querygraph/lakehouse <span class="at">--schema</span> qg_lakehouse</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakehouse-verify <span class="at">--report</span> .querygraph/lakehouse/manifest/load-report.json</span></code></pre></div>
+<h2 data-number="16.2" id="step-2-materialize-semantic-croissant"><span
+class="header-section-number">16.2</span> Step 2: Materialize Semantic
+Croissant</h2>
+<p>For each loaded dataset, Querygraph writes a
+<code>semantic/croissant.json</code> sidecar. This sidecar names files,
+record sets, and fields so agents can inspect the data before requesting
+access. It is the catalog entry an agent can actually understand.</p>
+<p>This step turns raw storage into a reusable context cache. The model
+does not need to rediscover schema. The policy layer can target fields.
+The graph can connect metadata to concepts. A future run can compare its
+expected fields against the sidecar before touching the data.</p>
+<p>In the story, FinanceAgent does not receive a vague instruction to
+“look at finance data.” It receives a semantic projection of the
+government-finance tables it is allowed to summarize. The projection
+tells the agent what tables and fields exist, and the policy layer tells
+it what action is allowed.</p>
+<h2 data-number="16.3" id="step-3-project-cdif"><span
+class="header-section-number">16.3</span> Step 3: Project CDIF</h2>
+<p>Next, Querygraph writes <code>semantic/cdif.json</code>. The CDIF
+sidecar takes the same dataset and expresses it through interoperable
+profiles: discovery, manifest, data access, access rights, controlled
+vocabulary, integration, universals, and provenance.</p>
+<p>This is how QG Lakehouse avoids becoming a private demo format. The
+local Sail schema can be inspected by Spark, the sidecars can be shared
+with FAIR data tools, and the graph can connect local variables to
+broader community semantics.</p>
+<p>This step matters because local-first should not mean isolated.
+Querygraph can keep computation local while making metadata
+interoperable. That is the combination serious scientific and enterprise
+systems need.</p>
+<h2 data-number="16.4" id="step-4-build-the-osi-semantic-model"><span
+class="header-section-number">16.4</span> Step 4: Build the OSI Semantic
+Model</h2>
+<p>The OSI layer turns dataset metadata into business concepts. In the
+example, the user asks about fiscal capacity, energy burden, mobility
+disruption, and climate-health risk. Those are not merely table names.
+They are concepts that must be connected to metrics, dimensions,
+variables, fields, and policies.</p>
+<p><code>osi.rs</code> can synthesize a model from available metadata
+for the demo. In a real deployment, this is where domain experts make
+the navigator precise: they define the terms the organization actually
+uses and connect them to the data that can support those terms.</p>
+<p>This is the step that changes retrieval from lexical matching to
+domain navigation. The navigator can ask which fields express fiscal
+capacity or energy burden because those concepts have been modeled
+before inference.</p>
+<h2 data-number="16.5" id="step-5-load-the-grust-graph"><span
+class="header-section-number">16.5</span> Step 5: Load the Grust
+Graph</h2>
+<p>Grust turns semantic metadata into navigable relationships. The graph
+can say that a dataset has files, a file has record sets, a field maps
+to a concept, a concept appears in a policy, an agent has a role, and a
+run produced an answer.</p>
+<p>The graph does not replace Sail. It makes Sail usable by agents. Sail
+answers table questions. Grust answers route questions.</p>
+<p>This step is the difference between retrieval and navigation.
+Retrieval says “here are possible matches.” Navigation says “this is the
+route from question to concept, dataset, field, policy, run, and
+answer.” Routes can be audited.</p>
+<figure>
+<img src="diagrams/diagram-16.png" alt="Diagram 16" />
+<figcaption aria-hidden="true">Diagram 16</figcaption>
+</figure>
+<h2 data-number="16.6" id="step-6-identify-agents-with-dids"><span
+class="header-section-number">16.6</span> Step 6: Identify Agents with
+DIDs</h2>
+<p>Every actor in the story has an identity: SupervisorAgent,
+FinanceAgent, EnergyAgent, MobilityAgent, ClimateHealthAgent,
+ReferenceAgent, RestrictedDataBroker, and SynthesisAgent. Those
+identities are represented as DIDs and carried through TypeDID
+envelopes.</p>
+<p>The supervisor is powerful, but not magical. Its DID allows
+orchestration. It does not automatically grant raw access to every
+compartment. That is the central discipline of the platform.</p>
+<p>This step prevents agent hierarchies from becoming privilege
+laundries. A supervisor can coordinate work, but each specialist still
+acts under its own identity and scoped authority.</p>
+<h2 data-number="16.7" id="step-7-apply-odrl-rights"><span
+class="header-section-number">16.7</span> Step 7: Apply ODRL Rights</h2>
+<p>The ODRL layer evaluates what each agent may do against a semantic
+target. FinanceAgent can read or summarize finance assets. EnergyAgent
+can derive approved energy summaries. RestrictedDataBroker can inspect
+restricted metadata but cannot reveal raw restricted health records.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Compartment</th>
+<th>Allowed action</th>
+<th>Explicit boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FinanceAgent</td>
+<td><code>compartment:finance</code></td>
+<td><code>read</code>, <code>summarize</code></td>
+<td>No energy or health raw data.</td>
+</tr>
+<tr>
+<td>EnergyAgent</td>
+<td><code>compartment:energy</code></td>
+<td><code>summarize</code>, <code>derive</code></td>
+<td>No respondent-level restricted data.</td>
+</tr>
+<tr>
+<td>MobilityAgent</td>
+<td><code>compartment:mobility</code></td>
+<td><code>summarize</code>, <code>derive</code></td>
+<td>No finance-table mutation.</td>
+</tr>
+<tr>
+<td>ClimateHealthAgent</td>
+<td><code>compartment:climate-health</code></td>
+<td><code>summarize</code>, <code>derive</code></td>
+<td>No restricted health rows.</td>
+</tr>
+<tr>
+<td>ReferenceAgent</td>
+<td><code>compartment:reference</code></td>
+<td><code>normalize</code></td>
+<td>Can normalize units, not expand access.</td>
+</tr>
+<tr>
+<td>RestrictedDataBroker</td>
+<td><code>compartment:restricted</code></td>
+<td>metadata-only receipt</td>
+<td>Raw access denied.</td>
+</tr>
+<tr>
+<td>SynthesisAgent</td>
+<td><code>compartment:synthesis</code></td>
+<td>aggregate signed summaries</td>
+<td>Does not inherit raw specialist permissions.</td>
+</tr>
+</tbody>
+</table>
+<p>The signed denial is as important as the signed summary. It prevents
+a supervisor from silently assuming evidence was considered when it was
+not.</p>
+<p>This step is where focused computation becomes responsible
+computation. The system does less work because it excludes forbidden
+data early, and it becomes safer because the exclusion is explicit.</p>
+<h2 data-number="16.8" id="step-8-mint-typesec-capabilities"><span
+class="header-section-number">16.8</span> Step 8: Mint TypeSec
+Capabilities</h2>
+<p>Once a policy decision is made, TypeSec turns it into typed
+capability evidence. The capability is scoped to an action, resource,
+principal, and envelope. This is the difference between “the process is
+authenticated” and “this agent may perform this operation on this
+semantic asset for this run.”</p>
+<p>TypeDID envelopes carry the request and response. They bind the agent
+identity, resource, action, payload hash, and signature. The result is
+an agent protocol that can be logged, replayed, and audited.</p>
+<p>This step turns a policy decision into a software object. That object
+can move through Python, Rust, LangChain, Ollama, and audit tables
+without losing its meaning.</p>
+<h2 data-number="16.9"
+id="step-9-route-to-compartmentalized-agents"><span
+class="header-section-number">16.9</span> Step 9: Route to
+Compartmentalized Agents</h2>
+<p>The supervisor delegates instead of centralizing all data.
+FinanceAgent, EnergyAgent, MobilityAgent, ClimateHealthAgent,
+ReferenceAgent, and RestrictedDataBroker work inside their compartments.
+They produce signed summaries, normalization notes, and denial
+receipts.</p>
+<figure>
+<img src="diagrams/diagram-17.png" alt="Diagram 17" />
+<figcaption aria-hidden="true">Diagram 17</figcaption>
+</figure>
+<p>This is the human organizational model reflected in software. A
+supervisor can coordinate experts without becoming every expert and
+without inheriting every restricted permission.</p>
+<p>This step is also a cost-control pattern. Specialists receive small
+contexts and produce small signed summaries. The synthesis agent
+aggregates summaries rather than raw datasets.</p>
+<h2 data-number="16.10" id="step-10-call-ollama-through-typedid"><span
+class="header-section-number">16.10</span> Step 10: Call Ollama Through
+TypeDID</h2>
+<p>When the run uses a local model, Querygraph calls Ollama only after
+TypeSec has verified the governed prompt. The model receives a bounded
+question with approved context. It does not receive the lakehouse. It
+does not receive restricted rows merely because a prompt asked
+nicely.</p>
+<p>In the JSON report, this appears under the Ollama TypeDID path. The
+important thing is not Ollama specifically. It is the pattern: any model
+runtime should be downstream of identity, semantics, policy, and
+lineage.</p>
+<p>This step is the local-first model story. Querygraph can use an
+open-source local model when generation is useful, but the model call is
+not the system’s source of truth. It is a bounded operation over a
+prepared context.</p>
+<h2 data-number="16.11"
+id="step-11-synthesize-without-boundary-collapse"><span
+class="header-section-number">16.11</span> Step 11: Synthesize Without
+Boundary Collapse</h2>
+<p>The synthesis agent receives signed summaries and hashes. It
+aggregates them into a resilience briefing:</p>
+<blockquote>
+<p>Priority areas are those where weak fiscal capacity, energy burden,
+mobility fragility, and climate-health exposure overlap. Restricted
+health data contributed only a signed metadata/denial receipt, so the
+briefing uses approved compartment summaries rather than raw restricted
+rows.</p>
+</blockquote>
+<p>This is the product experience Querygraph is aiming for: a useful
+answer that also tells the truth about its limits.</p>
+<p>This step proves that aggregation does not require universal access.
+A system can combine evidence without flattening compartments into one
+privileged prompt.</p>
+<h2 data-number="16.12" id="step-12-emit-openlineage-to-sail"><span
+class="header-section-number">16.12</span> Step 12: Emit OpenLineage to
+Sail</h2>
+<p>The run emits a <code>COMPLETE</code> OpenLineage event. Inputs
+include each Sail scope. The output is the briefing. The job name, run
+id, producer, event time, and facets become queryable audit data in
+<code>qg_audit</code>.</p>
+<p>OpenLineage in Sail means operators can ask ordinary lakehouse
+questions about AI behavior. Which datasets were used in this briefing?
+Which model path was called? Which runs touched energy survey data?
+Which answers included a restricted-data denial?</p>
+<p>This step keeps AI operations inside the data platform. Audit is not
+a PDF appendix or a vendor dashboard. It is queryable data.</p>
+<h2 data-number="16.13" id="step-13-anchor-the-did-attestation"><span
+class="header-section-number">16.13</span> Step 13: Anchor the DID
+Attestation</h2>
+<p>Finally, Querygraph signs a compact attestation root. The full event
+remains in Sail. The DID ledger carries the issuer, subject, Merkle
+root, signature, and payload hash. This gives the platform a verifiable
+memory without turning the ledger into a dumping ground for operational
+data.</p>
+<p>This step separates evidence from proof. Sail stores the full
+queryable event. The DID attestation stores the compact proof that the
+event existed in this form. That keeps the ledger small and the audit
+trail useful.</p>
+<figure>
+<img src="diagrams/diagram-18.png" alt="Diagram 18" />
+<figcaption aria-hidden="true">Diagram 18</figcaption>
+</figure>
+<h1 data-number="17"
+id="lakecat-as-the-querygraph-catalog-boundary"><span
+class="header-section-number">17</span> LakeCat as the QueryGraph
+Catalog Boundary</h1>
+<p>LakeCat is where QueryGraph stops pretending that catalog state is
+background plumbing. A QueryGraph import is only useful if the catalog
+can prove what table, view, policy, lineage, and receipt state it
+accepted. LakeCat gives that proof while staying a thin
+Iceberg-compatible catalog: normal clients still see standard table
+access, while QueryGraph receives derived control-plane evidence.</p>
+<p>The current QGLake handoff has four durable artifacts:</p>
+<ul>
+<li>a LakeCat bootstrap bundle with table, view, graph, OSI, ODRL,
+Croissant, CDIF, OpenLineage, and QueryGraph import hashes;</li>
+<li>a lineage-drain artifact replaying the outbox and OpenLineage
+evidence that produced the bundle;</li>
+<li>a QueryGraph import plan generated from the verified bundle;</li>
+<li>a compact handoff summary binding the saved files, captured command
+output, tenant scope, governed scan proof, credential proof,
+commit-history proof, view receipt-chain proof, and graph counts.</li>
+</ul>
+<p>The important new rule is the view-chain rule. Active accepted views
+must carry an <code>acceptedReceiptChainHash</code> that appears in
+namespace <code>receiptChains[].chainHashes</code>. That prevents a
+handoff from pairing a valid view receipt with unrelated namespace chain
+evidence. Tombstoned accepted views are different: their accepted chain
+can be a prefix of the later tombstone chain, so the proof must instead
+include tombstone receipt evidence whose
+<code>expectedViewVersion</code> preserves the accepted view
+version.</p>
+<figure>
+<img src="diagrams/diagram-19.png" alt="Diagram 19" />
+<figcaption aria-hidden="true">Diagram 19</figcaption>
+</figure>
+<p>The local integration test is intentionally concrete:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../lakecat</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/qglake-handoff-local.sh</span></span></code></pre></div>
+<p>That command starts LakeCat, creates the local QGLake fixture, drains
+lineage, asks QueryGraph to verify and import the saved bundle, writes
+<code>querygraph-import-plan.json</code>, and verifies
+<code>handoff-summary.json</code>. The current passing handoff proves
+one table, one view, 26 outbox/lineage events, and 53 catalog graph
+events. QueryGraph rejects the handoff if the saved bundle, saved drain,
+captured output, compact summary, graph envelope, view receipt evidence,
+or QueryGraph import plan drift from one another.</p>
+<p>The same boundary shows up in code:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakecat-verify <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--bundle</span> ../lakecat/target/qglake-handoff/lakecat-bootstrap.json</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakecat-import <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--bundle</span> ../lakecat/target/qglake-handoff/lakecat-bootstrap.json <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> ../lakecat/target/qglake-handoff/querygraph-import-plan.json</span></code></pre></div>
+<p><code>lakecat-verify</code> recomputes the LakeCat manifest hashes
+for tables, views, OpenLineage, graph, and the outer bundle. It also
+validates the QueryGraph import compatibility contract, including
+<code>receipt-chain-hash</code> in view receipt evidence.
+<code>lakecat-import</code> then creates the import plan only after that
+proof has survived round-trip JSON parsing. QueryGraph does not invent
+catalog truth; it accepts LakeCat proof, validates the Grust graph
+shape, and builds the next agent context from the smallest verified
+scope.</p>
+<p>QueryGraph tracks LakeCat 0.3.0, the “Ocelot” release. Lynx put the
+catalog spine on Turso MVCC, so commits to different tables run truly
+concurrently and a same-table race converges to exactly one winner
+through a pointer compare-and- swap — no global write lock. That matters
+to the handoff: the audit event, the lineage outbox row, and the
+idempotency record that this chapter relies on are written in the
+<em>same</em> transaction as the table change, which is what lets a
+QueryGraph import accept catalog state as proof rather than as a
+best-effort side effect.</p>
+<p>Lynx also tightened this boundary in a way the importer feels
+directly. LakeCat extracted the bootstrap-bundle <em>wire format and its
+verification</em> into a small shared <code>qglake-bundle</code> crate,
+so QueryGraph no longer keeps a hand-written copy of those types: it
+deserializes the canonical <code>QueryGraphBootstrap</code> and runs
+LakeCat’s own <code>verify_manifest</code>, then layers its Cypher
+import plan on top. The producer and the consumer now validate the
+handoff with one set of types — the bundle can no longer mean two
+slightly different things on the two sides of the boundary.</p>
+<p>Ocelot proves the other side of the same boundary: stock-client
+Iceberg REST conformance, demonstrated by a PyIceberg round-trip against
+the running catalog — spec-correct error types (403 on authorization
+denial, 409 on a duplicate namespace, 404 on a missing one),
+<code>listTables</code>, and fail-closed commit-requirement validation —
+over dependencies moved to the Grust “Lobster” and TypeSec “Torcello”
+line. The catalog QueryGraph accepts proof from is the same catalog an
+ordinary Iceberg client simply uses.</p>
+<h1 data-number="18" id="rust-examples"><span
+class="header-section-number">18</span> Rust Examples</h1>
+<p>The Rust examples are the reference implementation. They show the
+system from the operator and platform-engineering side: load real data,
+materialize typed tables, generate semantic metadata, enforce rights,
+run agents, and emit audit evidence.</p>
+<h2 data-number="18.1" id="build-a-four-layer-semantic-bundle"><span
+class="header-section-number">18.1</span> Build a Four-Layer Semantic
+Bundle</h2>
+<p>The smallest useful Rust run builds the original AI Navigator
+bundle:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> navigator <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dataset-name</span> <span class="st">&quot;Hazard vocabulary&quot;</span> <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--description</span> <span class="st">&quot;Controlled vocabulary with multilingual technical terms&quot;</span> <span class="dt">\</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--landing-page</span> <span class="st">&quot;https://querygraph.ai/datasets/hazards&quot;</span> <span class="dt">\</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--data-url</span> <span class="st">&quot;https://querygraph.ai/datasets/hazards.csv&quot;</span> <span class="dt">\</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--creator</span> <span class="st">&quot;QueryGraph&quot;</span> <span class="dt">\</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--agent-name</span> <span class="st">&quot;AI Navigator&quot;</span></span></code></pre></div>
+<p>That command produces a JSON-LD bundle with:</p>
+<ul>
+<li>Semantic Croissant for dataset shape;</li>
+<li>CDIF for FAIR discovery, data access, access rights, and data
+elements;</li>
+<li>a DID document for the navigator;</li>
+<li>ODRL policy for read, index, and derive boundaries.</li>
+</ul>
+<p>This is the seed pattern for every richer workflow. A dataset should
+always enter the agent world with shape, publication metadata, identity,
+and policy.</p>
+<h2 data-number="18.2" id="load-and-verify-the-sail-warehouse"><span
+class="header-section-number">18.2</span> Load and Verify the Sail
+Warehouse</h2>
+<p>The lakehouse loader is the Rust example that proves Querygraph can
+handle more than toy JSON:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakehouse-load <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> .querygraph/lakehouse <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--schema</span> qg_lakehouse</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakehouse-verify <span class="dt">\</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report</span> .querygraph/lakehouse/manifest/load-report.json</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakehouse-validate <span class="dt">\</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report</span> .querygraph/lakehouse/manifest/load-report.json</span></code></pre></div>
+<p>The loader downloads Dataverse and CODATA assets, prepares parseable
+files, infers column types, writes Sail tables, emits Croissant/CDIF
+sidecars, and records row counts in a manifest. The verifier checks that
+the executable data matches the report. The validator checks that the
+semantic sidecars and audit shapes are still usable.</p>
+<h2 data-number="18.3" id="run-the-supervised-agent-story"><span
+class="header-section-number">18.3</span> Run the Supervised Agent
+Story</h2>
+<p>The readable story:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> qglake-story</span></code></pre></div>
+<p>The machine report:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> qglake-story <span class="at">--json</span></span></code></pre></div>
+<p>The Rust story is intentionally elaborate. It creates a supervisor,
+specialist agents, restricted broker, synthesis agent, TypeDID requests
+and responses, RBAC and ODRL receipts, Semantic Croissant and CDIF
+projections, an OpenLineage event, and a DID attestation. It
+demonstrates the product rule: aggregate signed summaries without
+collapsing raw-data boundaries.</p>
+<h2 data-number="18.4"
+id="run-the-live-sail-typedid-openlineage-and-ollama-path"><span
+class="header-section-number">18.4</span> Run the Live Sail, TypeDID,
+OpenLineage, and Ollama Path</h2>
+<p>With Sail running:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sail</span> spark server <span class="at">--port</span> 50051</span></code></pre></div>
+<p>Run the live end-to-end path:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> dataverse-e2e <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--live-sail</span> <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sail-endpoint</span> http://127.0.0.1:50051 <span class="dt">\</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--openlineage-file</span> .querygraph/openlineage/events.jsonl <span class="dt">\</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--did-ledger-file</span> .querygraph/did-ledger/attestations.jsonl</span></code></pre></div>
+<p>When Ollama is available, the same path can wrap model inference
+through TypeDID. The important property is the order: semantic target
+first, policy decision second, typed capability third, model call
+fourth, lineage fifth.</p>
+<h2 data-number="18.5" id="rust-as-the-contract"><span
+class="header-section-number">18.5</span> Rust as the Contract</h2>
+<p>The Rust examples define the contract that other languages should
+preserve. Python may be more comfortable for notebooks and agent
+composition, but it should not silently change CDIF shape, policy
+semantics, payload hashes, or lineage meaning. That is why
+<code>qg-python</code> includes an equivalence test against the Rust
+<code>navigator</code> command.</p>
+<h1 data-number="19" id="python-examples"><span
+class="header-section-number">19</span> Python Examples</h1>
+<p>The Python examples are the user-facing and notebook-facing
+complement to the Rust examples. They do not replace the Rust lakehouse
+loader. They make the warehouse, semantic sidecars, agent protocol, and
+audit trail easy to inspect, compose, and extend.</p>
+<p>From the sister project:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../qg-python</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync <span class="at">--extra</span> test</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python <span class="at">-m</span> pytest</span></code></pre></div>
+<p>The test suite checks both Python-only behavior and Rust equivalence
+for the semantic bundle. That matters because Python agents should speak
+the same semantic and security language as the Rust platform.</p>
+<h2 data-number="19.1" id="build-osi-from-semantic-croissant"><span
+class="header-section-number">19.1</span> Build OSI from Semantic
+Croissant</h2>
+<p><code>examples/osi_semantic_croissant.py</code> starts with a
+concrete Croissant dataset: files, record sets, fields, types, and
+semantic meanings. It then projects the dataset into an OSI model:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python examples/osi_semantic_croissant.py</span></code></pre></div>
+<p>The result has:</p>
+<ul>
+<li>an OSI dataset whose source points at Sail;</li>
+<li>fields mapped from Croissant fields;</li>
+<li>Sail SQL expressions for field access;</li>
+<li>ontology terms derived from semantic field identifiers;</li>
+<li>a simple metric such as <code>row_count</code>.</li>
+</ul>
+<p>This is the bridge from file metadata to business meaning. The agent
+does not need to guess that <code>monthly_energy_cost</code> belongs to
+an energy-burden concept. The OSI model says so.</p>
+<h2 data-number="19.2" id="query-sail-with-pyspark"><span
+class="header-section-number">19.2</span> Query Sail with PySpark</h2>
+<p>After the Rust loader has materialized the warehouse, start Sail:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../qg-rust</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">sail</span> spark server <span class="at">--port</span> 50051</span></code></pre></div>
+<p>Register the data and audit tables from Python:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../qg-python</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync <span class="at">--extra</span> lakehouse</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run querygraph lakehouse-register <span class="dt">\</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--manifest</span> ../qg-rust/.querygraph/lakehouse/manifest/load-report.json <span class="dt">\</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--warehouse</span> ../qg-rust/spark-warehouse</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run querygraph audit-register <span class="dt">\</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--warehouse</span> ../qg-rust/spark-warehouse</span></code></pre></div>
+<p>Open a shell:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run pyspark <span class="at">--remote</span> sc://127.0.0.1:50051</span></code></pre></div>
+<p>Example queries:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;SELECT COUNT(*) AS rows FROM global_temp.government_finance__countydata&quot;</span>).show()</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;SELECT COUNT(*) AS rows FROM global_temp.codata_constants_2022__codata_constants_2022&quot;</span>).show()</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;SELECT quantity, value, unit FROM global_temp.codata_constants_2022__codata_constants_2022 LIMIT 5&quot;</span>).show(truncate<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;SELECT event_hash, event_type, job_name FROM global_temp.openlineage_events LIMIT 10&quot;</span>).show(truncate<span class="op">=</span><span class="va">False</span>)</span></code></pre></div>
+<p>This gives Python users direct inspection of both governed data and
+audit evidence.</p>
+<h2 data-number="19.3" id="run-typedid-agents-with-pydantic"><span
+class="header-section-number">19.3</span> Run TypeDID Agents with
+Pydantic</h2>
+<p>The Python QG Lakehouse story is:</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run querygraph qglake-story <span class="at">--pretty</span></span></code></pre></div>
+<p>It creates the same cast as the Rust story: supervisor, finance,
+energy, mobility, climate-health, reference, restricted-data broker, and
+synthesis. Each request and response is a Pydantic TypeDID model. Each
+response carries a payload hash. The restricted broker returns a denial
+instead of leaking raw data. The final report includes OpenLineage and a
+DID-style attestation.</p>
+<p>A minimal Python sketch looks like this:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.typedid <span class="im">import</span> TypeDidAgent</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>supervisor <span class="op">=</span> TypeDidAgent.new(<span class="st">&quot;SupervisorAgent&quot;</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>finance <span class="op">=</span> TypeDidAgent.new(<span class="st">&quot;FinanceAgent&quot;</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>request <span class="op">=</span> supervisor.request(</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    finance,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    action<span class="op">=</span><span class="st">&quot;summarize&quot;</span>,</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    resource<span class="op">=</span><span class="st">&quot;compartment:finance&quot;</span>,</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    payload<span class="op">=</span>{<span class="st">&quot;question&quot;</span>: <span class="st">&quot;Where is fiscal stress highest?&quot;</span>},</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>response <span class="op">=</span> finance.answer(</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    request,</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    status<span class="op">=</span><span class="st">&quot;allowed&quot;</span>,</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>    summary<span class="op">=</span><span class="st">&quot;Fiscal stress summary over governed finance tables.&quot;</span>,</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> request.verify_payload()</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> response.envelope.payload[<span class="st">&quot;requestSha256&quot;</span>] <span class="op">==</span> request.payload_sha256</span></code></pre></div>
+<p>This is what Pydantic contributes: a natural Python object model that
+is still strict enough to validate, hash, serialize, and test.</p>
+<h2 data-number="19.4" id="adapt-a-typedid-agent-to-langchain"><span
+class="header-section-number">19.4</span> Adapt a TypeDID Agent to
+LangChain</h2>
+<p>LangChain is useful when a planner should choose tools. Querygraph’s
+rule is that the tool must already be governed. The Python adapter turns
+a TypeDID agent into a LangChain <code>StructuredTool</code>:</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync <span class="at">--extra</span> agents</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python examples/typedid_langchain_agents.py</span></code></pre></div>
+<p>Conceptually:</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.agents <span class="im">import</span> TypeDidLangChainToolAdapter, deterministic_specialist</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.typedid <span class="im">import</span> TypeDidAgent</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>finance <span class="op">=</span> TypeDidAgent.new(<span class="st">&quot;FinanceAgent&quot;</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>handler <span class="op">=</span> deterministic_specialist(</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    finance,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    summary<span class="op">=</span><span class="st">&quot;Fiscal capacity summary from governed Sail finance tables.&quot;</span>,</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    evidence<span class="op">=</span>[<span class="st">&quot;global_temp.government_finance__countydata&quot;</span>],</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>tool <span class="op">=</span> TypeDidLangChainToolAdapter(finance, handler).as_tool()</span></code></pre></div>
+<p>The LangChain planner can invoke the tool, but the tool returns a
+TypeDID response. The planner does not receive a secret back door into
+Sail.</p>
+<h2 data-number="19.5" id="python-as-the-experiment-surface"><span
+class="header-section-number">19.5</span> Python as the Experiment
+Surface</h2>
+<p>Python is where new agent behavior can be prototyped quickly:</p>
+<ul>
+<li>tune OSI concept mappings;</li>
+<li>inspect Sail tables with PySpark;</li>
+<li>build notebook dashboards over OpenLineage events;</li>
+<li>try LangChain planners over governed tools;</li>
+<li>compare Pydantic TypeDID outputs with Rust TypeDID outputs;</li>
+<li>write domain-specific specialist agents before hardening them in
+Rust.</li>
+</ul>
+<p>The ideal development loop is not Rust versus Python. It is Rust for
+the contract and Python for the exploration, both operating over the
+same Sail warehouse and the same semantic sidecars.</p>
+<h1 data-number="20" id="operator-workflow"><span
+class="header-section-number">20</span> Operator Workflow</h1>
+<p>A normal local workflow looks like this:</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sail</span> spark server <span class="at">--port</span> 50051</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakehouse-load <span class="at">--root</span> .querygraph/lakehouse <span class="at">--schema</span> qg_lakehouse</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakehouse-verify <span class="at">--report</span> .querygraph/lakehouse/manifest/load-report.json</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakehouse-validate <span class="at">--report</span> .querygraph/lakehouse/manifest/load-report.json</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> qglake-story</span></code></pre></div>
+<p>For the full machine-readable story:</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> qglake-story <span class="at">--json</span></span></code></pre></div>
+<p>For a live TypeDID, Sail, OpenLineage, and Ollama path:</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> dataverse-e2e <span class="dt">\</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--live-sail</span> <span class="dt">\</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sail-endpoint</span> http://127.0.0.1:50051 <span class="dt">\</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--openlineage-file</span> .querygraph/openlineage/events.jsonl <span class="dt">\</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--did-ledger-file</span> .querygraph/did-ledger/attestations.jsonl</span></code></pre></div>
+<h1 data-number="21"
+id="why-querygraph-is-an-alternative-to-big-ai"><span
+class="header-section-number">21</span> Why Querygraph Is an Alternative
+to Big AI</h1>
+<p>Querygraph is not anti-model. It is anti-waste, anti-ambiguity, and
+anti-ungoverned computation. The difference matters. A model can be
+powerful and still be the wrong place to solve every part of the
+problem.</p>
+<p>Big AI often asks organizations to centralize data, trust opaque
+retrieval, expand context windows, and pay for repeated GPU inference.
+Querygraph asks a different question: how much of the work can be made
+precise, cached, local, typed, governed, and reproducible before a model
+is called?</p>
+<p>The answer is: a lot.</p>
+<p>Semantic Croissant can describe files and fields without a model.
+CDIF can publish discovery and access metadata without a model. OSI can
+define business terms without a model. ODRL can deny unauthorized access
+without a model. Grust can traverse the route from question to concept
+to field without a model. Sail can execute SQL without a model.
+OpenLineage can record the run without a model. DIDs and TypeSec can
+identify and bound agents without a model.</p>
+<p>When all of that work is done first, the model receives a smaller and
+more meaningful task. It summarizes. It drafts. It explains. It may help
+resolve an ambiguous phrase. It does not have to impersonate the entire
+data platform.</p>
+<figure>
+<img src="diagrams/diagram-20.png" alt="Diagram 20" />
+<figcaption aria-hidden="true">Diagram 20</figcaption>
+</figure>
+<p>This is the proof of the alternative:</p>
+<ul>
+<li>If the question can be answered by SQL, use Sail.</li>
+<li>If the question needs relationships, use Grust.</li>
+<li>If the question needs meaning, use OSI and ontologies.</li>
+<li>If the question needs dataset shape, use Croissant.</li>
+<li>If the question needs interoperability, use CDIF.</li>
+<li>If the question needs permission, use ODRL and TypeSec.</li>
+<li>If the question needs accountability, use DIDs and OpenLineage.</li>
+<li>If the question still needs language generation, use a model over
+the smallest responsible context.</li>
+</ul>
+<p>Querygraph therefore competes with Big AI not by claiming that
+smaller models are always smarter, but by changing the unit of
+intelligence. Intelligence is not only in the model weights. It is in
+the route, the metadata, the policy, the graph, the lineage, the cache,
+and the disciplined refusal to compute over what the agent should never
+have seen.</p>
+<p>That is why the AI Navigator matters. It makes precision cheaper than
+guesswork.</p>
+<h1 data-number="22" id="the-goshawk-interoperability-release"><span
+class="header-section-number">22</span> The Goshawk Interoperability
+Release</h1>
+<p>Everything to this point describes the kernel that shipped as 0.2.0
+“Peregrine”: a library and a CLI that could load, project, govern, and
+audit — but that nothing else could reach. Release 0.3.0 “Goshawk” is
+the interoperability release: the same governed semantics, now reachable
+over a network, over the Model Context Protocol, and across languages
+with real cryptography on both sides.</p>
+<h2 data-number="22.1"
+id="real-signatures-verified-across-languages"><span
+class="header-section-number">22.1</span> Real Signatures, Verified
+Across Languages</h2>
+<p>The Python port originally carried demonstration digests where
+signatures belonged. Goshawk replaces them with real Ed25519 keys,
+derived deterministically from agent seeds exactly the way TypeSec
+derives them in Rust: the SHA-256 of the seed becomes the private key,
+and the public key is published as a W3C <code>did:key</code>
+verification method on every envelope. An envelope now names the key
+that can verify it.</p>
+<p>The two implementations verify each other with no shared state. Rust
+reconstructs Python’s documented signing payload
+(<code>querygraph-typedid-signing-v1</code>), resolves the
+<code>did:key</code>, and checks the signature — including recomputing
+Python’s canonical JSON byte-for-byte, <code>sort_keys</code>, compact
+separators, <code>ensure_ascii</code> escapes and all. Rust can also
+mint envelopes in the same format from the same seeds, so the
+equivalence suite proves both directions: Python signs and Rust
+verifies; Rust signs and Python verifies; a tampered envelope fails on
+either side. Where the crypto extra is absent, Python labels its digests
+<code>unsigned:sha256:</code> so nothing can mistake a hash for a
+signature.</p>
+<h2 data-number="22.2" id="a-service-surface-the-v1-api"><span
+class="header-section-number">22.2</span> A Service Surface: the /v1
+API</h2>
+<p>Goshawk gives the platform its first network surface, the beginning
+of the <code>querygraphd</code> shape sketched at the end of this book.
+<code>querygraph serve</code> exposes <code>/v1</code>: health,
+four-layer Navigator bundles, the QGLake story with its full evidence
+chain, envelope verification, a semantic-model registry
+(<code>models/import/osi</code>, <code>models/import/croissant</code>,
+<code>models</code>, <code>search</code>), and <code>answer</code>. A
+Semantic Croissant document POSTed to the registry projects into an OSI
+model the same way in Rust as in Python, and <code>search</code> walks
+names, descriptions, <code>ai_context</code>, semantic types, and
+ontology terms.</p>
+<p>Governed routes can demand proof. With <code>--require-auth</code>,
+importing a model or asking for an answer requires a signed TypeDID
+envelope in the <code>x-qg-envelope</code> header — its action fixed to
+<code>invoke</code>, its resource bound to the exact request path, and
+its payload bound to the SHA-256 of the request body, so an envelope can
+be neither replayed against another endpoint nor attached to a different
+body. A failed check returns a receipt that explains the contract; a
+denial is a document, not a mystery. The Python client mints these
+headers with two lines of <code>querygraph.api_auth</code>.</p>
+<h2 data-number="22.3" id="mcp-one-server-every-framework"><span
+class="header-section-number">22.3</span> MCP: One Server, Every
+Framework</h2>
+<p>The Model Context Protocol is how agent frameworks discover tools in
+2026, and Goshawk speaks it from both languages.
+<code>querygraph mcp-serve</code> in Python exposes the governed layer
+through the official SDK; the Rust binary carries a dependency-free MCP
+implementation over stdio. Both offer the same surface: search the
+semantic model, resolve metrics with dialect fallback, check access (the
+RBAC+ODRL dual gate, where a denial returns a receipt rather than an
+error), build Navigator bundles, run the governed story, verify
+envelopes, and answer questions. Any MCP client — Claude, LangChain,
+PydanticAI, LlamaIndex, CrewAI — reaches all of it with zero adapter
+code.</p>
+<p>For frameworks that speak function-calling rather than MCP,
+<code>TypeDidAgent.to_tool_schema()</code> exports standard JSON-Schema
+tool definitions in OpenAI and Anthropic flavors, and the LangChain
+adapter gained async variants. Every adapter returns the envelope with
+the answer; nothing hands back a bare string.</p>
+<h2 data-number="22.4" id="the-agent-card"><span
+class="header-section-number">22.4</span> The Agent Card</h2>
+<p>The agent runs in this book always labeled their protocol
+<code>typedid/a2a</code>. Goshawk makes the label honest: both
+implementations publish a Linux Foundation Agent2Agent card — served at
+<code>/.well-known/agent-card.json</code>, printed by
+<code>agent-card</code> — declaring the same five skills and a security
+scheme that documents the TypeDID envelope contract. The card is a
+cross-language contract; the equivalence suite asserts the two
+implementations publish identical skills.</p>
+<h2 data-number="22.5"
+id="conformance-proven-rather-than-asserted"><span
+class="header-section-number">22.5</span> Conformance, Proven Rather
+than Asserted</h2>
+<p>Goshawk vendors the official OpenLineage 2-0-2 JSON Schema and
+validates generated events against it, with format checking on. The very
+first run of that validator caught a real nonconformance: the spec
+requires <code>run.runId</code> to be a UUID, and both implementations
+were emitting prefixed hashes. Both now derive run ids as deterministic
+UUIDv5 values under a shared QueryGraph namespace — the same seed
+produces the same UUID in either language, pinned by a fixture test —
+and the equivalence suite schema-validates the events both CLIs emit.
+That is the difference between asserting interoperability and proving
+it.</p>
+<h2 data-number="22.6" id="the-governed-navigator-loop"><span
+class="header-section-number">22.6</span> The Governed Navigator
+Loop</h2>
+<p>Release 0.4.0 “Sentinel” — the governed-answer release that follows
+Goshawk — adds the loop this book has been building toward.
+<code>GovernedNavigatorLoop</code> in Python takes a question; searches
+the semantic model by name, synonym, and bigram; gates every matched
+dataset through RBAC+ODRL and collects the receipts; plans SQL only over
+allowed sources; names the denied sources in the prompt as explicitly
+off-limits; synthesizes with any <code>Callable[[str], str]</code> — an
+OpenAI-compatible helper binds Ollama, vLLM, llama.cpp, or LM Studio —
+or deterministically when no model is given; and returns the answer
+inside a signed envelope with a schema-valid OpenLineage event and an
+Ed25519 attestation. The deterministic path is the golden baseline: the
+same governance, with or without a language model in the loop.</p>
+<h1 data-number="23" id="where-querygraph-goes-next"><span
+class="header-section-number">23</span> Where Querygraph Goes Next</h1>
+<p>The current codebase is the compact kernel, plus its first
+interoperable shell:</p>
+<ul>
+<li>typed Sail lakehouse loading;</li>
+<li>Semantic Croissant and CDIF sidecars;</li>
+<li>OSI model projection;</li>
+<li>Grust-backed semantic graph loading;</li>
+<li>DID and TypeSec TypeDID agent envelopes;</li>
+<li>ODRL rights, RBAC, approvals, and denials;</li>
+<li>OpenLineage in Sail with DID attestation;</li>
+<li>the <code>/v1</code> service, MCP servers in both languages, the A2A
+card, and cross-language Ed25519 verification.</li>
+</ul>
+<p>The long-running <code>querygraphd</code> service has begun —
+Goshawk’s <code>/v1</code> is its first slice — and grows toward full
+model import, semantic search, access explanation, governed planning,
+answer generation, and audit verification, with the navigator loop
+maturing from its deterministic baseline into the live, LLM-driven path
+under the same receipts.</p>
+<p>Querygraph’s ambition is not to replace Sail, Grust, TypeSec, OSI,
+Croissant, CDIF, ODRL, OpenLineage, or Dataverse. It is to make them
+work together as one agent-safe semantic operating layer: precise enough
+for data scientists, legible enough for auditors, and alive enough for
+agents to navigate.</p>
+</body>
+</html>
