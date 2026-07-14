@@ -43,7 +43,8 @@ pub fn agent_card(base_url: &str) -> Value {
                 "description": "TypeDID signed envelope: Ed25519 signature over \
                      the querygraph-typedid-signing-v1 payload, verifiable \
                      against the did:key verification method carried in the \
-                     envelope. Denials are receipts, not errors.",
+                     envelope. The sender must equal that signing DID. \
+                     Denials are receipts, not errors.",
             },
         },
     })

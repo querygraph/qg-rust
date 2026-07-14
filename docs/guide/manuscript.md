@@ -1032,6 +1032,7 @@ guards them.
 | `GET /v1/models`, `GET /v1/models/{name}` | registry listing and fetch |
 | `GET /v1/search?q=` | search names, descriptions, ai_context, semantic types, ontology terms |
 | `POST /v1/answer` | search → plan → synthesize → sign (Chapter 21) |
+| `POST /v1/memory/{remember,recall,forget}` | TypeSec-capability-secured, Turso-persistent agent memory |
 | `GET /.well-known/agent-card.json` | the A2A card (Chapter 20) |
 
 With `--require-auth`, the governed routes (`models/import/*`, `answer`)
@@ -1039,7 +1040,8 @@ demand a signed TypeDID envelope in the **`x-qg-envelope`** header. The
 contract binds three things: the action must be `invoke`; the resource must
 equal the request path (no cross-route replay); and the payload must carry
 `bodySha256`, the hash of the exact request body (no body swapping). The
-signature verifies against the envelope's own `did:key` verification method.
+signature verifies against the envelope's own `did:key` verification method,
+and the sender must equal that verification-method DID.
 
 ### Worked example: the guarded /v1, from both sides
 
@@ -1087,13 +1089,28 @@ with a Python-minted header (asserting the governed answer).
 
 ### API reference
 
-`querygraph serve --port 8080 [--require-auth]`. The `x-qg-envelope` header
+`querygraph serve --port 8080 [--require-auth] [--memory-policy POLICY
+--memory-db DATABASE]`. The `x-qg-envelope` header
 is a compact-JSON TypeDID envelope; the middleware checks, in order:
 signature validity (against the envelope's `did:key` `verification_method`),
-`action == "invoke"`, `resource == <request path>`, and
+sender equality with that verification-method DID, `action == "invoke"`,
+`resource == <request path>`, and
 `payload.bodySha256 == sha256(body)`. Failure returns
 `401 {error, receipt: {allowed: false, path, checks, contract}}`. Clients:
 `querygraph.api_auth.mint_envelope_header` / `governed_post`.
+
+### Durable capability-secured memory
+
+Supplying `--memory-policy` opens and bootstraps a file-backed
+`querygraph-memory::TursoMemoryStore` (default path
+`.querygraph/memory.db`). The three memory routes are authenticated even when
+`--require-auth` is absent: without the verified DID there is no legitimate
+subject for TypeSec to mint a read, write, or delete capability. Each call runs
+through `ToolCallGuard`, `MemoryToolRouter`, `MemoryVault`, and then the Grust
+store. Clearance-aware recall and tenant policy remain TypeSec concerns;
+durability and transactions remain Grust concerns. A body `subject` field is
+ignored. The runnable Pydantic AI v2 demo in qg-python proves specialist write,
+server restart, supervisor recall, and outsider denial.
 
 ## Chapter 19. MCP: One Server, Every Framework
 
@@ -1510,7 +1527,7 @@ each release hash.
 | `lakecat-verify` / `lakecat-import` | bootstrap-bundle verification and import planning |
 | `qglake-story [--json]` | the Resilience Desk |
 | `verify-envelope --file` | envelope verification (exit 1 on failure) |
-| `serve [--port] [--require-auth]` | the `/v1` API + agent card |
+| `serve [--port] [--require-auth] [--memory-policy … --memory-db …]` | the `/v1` API, persistent memory, and agent card |
 | `agent-card [--base-url]` | print the A2A card |
 | `mcp-serve` | MCP over stdio |
 

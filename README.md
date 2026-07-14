@@ -28,6 +28,7 @@ src/
   did.rs         Deterministic local did:oyd identity document
   lakecat.rs     LakeCat QueryGraph bootstrap bundle verification
   lineage.rs     OpenLineage event plus TypeDID-style lineage attestation
+  memory.rs      TypeSec-guarded Marciana memory over persistent Grust/Turso
   odrl.rs        Policy, permissions, prohibitions, and access checks
   codata.rs      Client for CODATA ODRL demo DID anchoring APIs
   navigator.rs   AI Navigator composition pipeline
@@ -38,7 +39,10 @@ src/
   main.rs        CLI entry point
 ```
 
-The first product boundary is intentionally narrow: build a semantic bundle that can be indexed by a knowledge graph, served by an agent, or attached to a dataset catalog. Query/search, graph storage, and external policy resolution should build on this library instead of being embedded directly in it.
+The semantic-bundle core stays reusable, while the `serve` application now
+assembles optional persistent agent memory from the sibling TypeSec and Grust
+crates. Native GQL predicate pushdown, LanceDB ANN, Sail cognition jobs, and a
+hosted multi-tenant control plane remain separate scale layers.
 
 ## Sail, TypeSec, Grust, OSI, and OpenLineage Target
 
@@ -223,6 +227,41 @@ append the signed root attestation to a DID-ledger-style JSONL file. Live Sail
 runs also append the OpenLineage event and the TypeDID attestation into Sail
 audit tables under `qg_audit` by default; use `--openlineage-sail` to force the
 same audit sink without `--live-sail`.
+
+## Persistent, Identity-Bound Agent Memory
+
+`serve` can attach Marciana memory to a file-backed Turso/libSQL graph. Memory
+is opt-in: provide an RBAC policy whose assignment subjects are the exact
+`did:key` identities used by client TypeDID credentials.
+
+```yaml
+roles:
+  - name: research-memory
+    permissions: [read, write, delete]
+    resources: ["memory/team:marciana/shared"]
+assignments:
+  - subject: "did:key:z6Mk..."
+    roles: [research-memory]
+```
+
+```bash
+cargo run -- serve \
+  --port 8080 \
+  --memory-policy memory-policy.yaml \
+  --memory-db .querygraph/memory.db
+```
+
+The three routes are `POST /v1/memory/remember`, `recall`, and `forget`.
+They always require a recipient-, path-, and body-bound Ed25519 TypeDID
+envelope—even when the compatibility `--require-auth` switch is off for older
+routes. The recipient must be `did:web:qg-server`; the server also requires
+the envelope sender to be the `did:key` that verifies its signature, then uses
+that verified sender as the TypeSec policy subject. A `subject` field in the
+JSON body has no authority.
+
+See [`docs/memory-service.md`](docs/memory-service.md) for request shapes,
+deployment checks, and the Pydantic AI v2 multi-agent demo in the sibling
+qg-python repository.
 
 ## Test
 

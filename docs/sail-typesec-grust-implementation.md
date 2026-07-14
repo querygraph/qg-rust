@@ -551,6 +551,9 @@ GET  /v1/models/{model_id}/metrics
 POST /v1/search
 POST /v1/plan
 POST /v1/answer
+POST /v1/memory/remember
+POST /v1/memory/recall
+POST /v1/memory/forget
 GET  /v1/lineage/events/{event_id}
 GET  /v1/audit/attestations/{attestation_id}
 POST /v1/audit/verify
@@ -559,6 +562,12 @@ POST /v1/audit/verify
 Every endpoint that exposes non-public content should accept a TypeDID
 envelope or a transport-level authenticated request that is converted into a
 local verified TypeDID view.
+
+The implemented memory routes are stricter than the general compatibility
+mode: they always require an Ed25519 TypeDID envelope, bind its sender to the
+verification-method `did:key`, and use that verified DID as the TypeSec RBAC
+subject. `querygraph-memory` persists the vault in Turso/libSQL; see
+[`memory-service.md`](memory-service.md) for the operational contract.
 
 ## Implementation Phases
 

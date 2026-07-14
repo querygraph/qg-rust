@@ -5,11 +5,14 @@ on:
     branches: [main]
   pull_request:
 
-# qg-rust depends on sibling checkouts (../../grust, ../../lakecat), so the
+# qg-rust depends on sibling checkouts (../../grust, ../../lakecat,
+# ../../typesec), so the
 # workspace is assembled to mirror the local ~/src layout:
 #   src/querygraph/qg-rust  (this repo)
+#   src/querygraph/qg-python (querygraph/qg-python)
 #   src/grust               (querygraph/grust)
 #   src/lakecat             (querygraph/lakecat)
+#   src/typesec             (querygraph/typesec)
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -26,12 +29,26 @@ jobs:
           token: ${{ secrets.STACK_CHECKOUT_TOKEN || github.token }}
           path: src/grust
 
+      - name: Checkout qg-python
+        uses: actions/checkout@v4
+        with:
+          repository: querygraph/qg-python
+          token: ${{ secrets.STACK_CHECKOUT_TOKEN || github.token }}
+          path: src/querygraph/qg-python
+
       - name: Checkout lakecat
         uses: actions/checkout@v4
         with:
           repository: querygraph/lakecat
           token: ${{ secrets.STACK_CHECKOUT_TOKEN || github.token }}
           path: src/lakecat
+
+      - name: Checkout typesec
+        uses: actions/checkout@v4
+        with:
+          repository: querygraph/typesec
+          token: ${{ secrets.STACK_CHECKOUT_TOKEN || github.token }}
+          path: src/typesec
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -54,3 +71,15 @@ jobs:
       - name: Tests
         working-directory: src/querygraph/qg-rust
         run: cargo test
+
+      - name: Install uv for the Pydantic AI v2 integration
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Pydantic AI v2 credential and persistent-memory demo
+        working-directory: src/querygraph/qg-python
+        run: |
+          uv sync --extra test --extra crypto --extra pydantic-ai
+          uv run pytest tests/test_pydantic_ai_memory_capabilities.py -q
+          uv run python examples/pydantic_ai_v2_memory_agents.py

@@ -7,6 +7,16 @@ recorded here. The codename pool and the shared version line live in
 ## 0.5.0-dev — unreleased
 
 ### Added
+- **Persistent capability-secured agent memory**: `querygraph-memory` now
+  connects qg-rust to a bootstrapped, file-backed Turso/libSQL graph through
+  TypeSec's `MemoryVault`. `serve --memory-policy … --memory-db …` enables
+  signed-only `/v1/memory/{remember,recall,forget}` routes. The verified
+  TypeDID `did:key`—not a body field—is the policy subject; the signature key
+  must match that sender, and the envelope recipient must be the QueryGraph
+  service DID. Calls pass through `ToolCallGuard`, typed capability minting,
+  clearance-aware recall, and the persistent vault. Router tests prove
+  unsigned rejection, cross-recipient replay rejection, body-subject spoof
+  resistance, RBAC denial, and close/reopen persistence.
 - **The stack guide restructured as a full book** (`docs/guide`): executive
   summary and overview up front; four Parts — I. The Substrate (Grust, the
   query language, TypeSec, TypeDID, LakeCat, the bootstrap handoff, Sail),

@@ -10,6 +10,7 @@ pub mod lakecat;
 pub mod lakehouse;
 pub mod lineage;
 pub mod mcp;
+pub mod memory;
 pub mod navigator;
 pub mod odrl;
 pub mod osi;

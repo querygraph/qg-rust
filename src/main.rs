@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::PathBuf};
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -158,6 +158,13 @@ enum Commands {
         /// Require a signed TypeDID envelope (x-qg-envelope) on governed routes.
         #[arg(long)]
         require_auth: bool,
+        /// RBAC policy enabling persistent Marciana memory. Subjects should be
+        /// the exact did:key identities carried by signed TypeDID envelopes.
+        #[arg(long)]
+        memory_policy: Option<PathBuf>,
+        /// File-backed Turso/libSQL database used when --memory-policy is set.
+        #[arg(long, default_value = ".querygraph/memory.db")]
+        memory_db: PathBuf,
     },
     /// Print the A2A Agent Card (also served at /.well-known/agent-card.json).
     AgentCard {
@@ -428,9 +435,19 @@ fn main() -> Result<()> {
                 std::process::exit(1);
             }
         }
-        Commands::Serve { port, require_auth } => {
-            tokio::runtime::Runtime::new()?
-                .block_on(querygraph::server::serve(port, require_auth))?;
+        Commands::Serve {
+            port,
+            require_auth,
+            memory_policy,
+            memory_db,
+        } => {
+            let memory = memory_policy
+                .map(|policy| querygraph::server::MemoryConfig::new(memory_db, policy));
+            tokio::runtime::Runtime::new()?.block_on(querygraph::server::serve_with_memory(
+                port,
+                require_auth,
+                memory,
+            ))?;
         }
         Commands::AgentCard { base_url } => {
             println!(

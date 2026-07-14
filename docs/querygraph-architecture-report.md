@@ -1,5 +1,12 @@
 # QueryGraph Architecture: Semantic Infrastructure for Agentic AI
 
+> **Historical baseline.** This report describes the original four-layer
+> implementation and preserves its initial roadmap. It is not current status:
+> qg-rust now has Grust graph adapters, `/v1`, MCP, A2A, TypeDID envelope auth,
+> and persistent TypeSec/Grust memory. Use the
+> [stack guide](guide/manuscript.md) and
+> [memory-service runbook](memory-service.md) for implemented behavior.
+
 ## Abstract
 
 QueryGraph is a Rust codebase for building an AI Navigator semantic layer: a machine-readable contract between datasets, knowledge graphs, autonomous agents, decentralized identity, and digital rights policy. The first implementation composes four layers into a single JSON-LD bundle:
@@ -351,16 +358,18 @@ The current implementation uses:
 - `reqwest` for CODATA ODRL API calls.
 - `anyhow` for CLI error handling.
 
-## Tests and Verification
+## Historical Tests and Verification
 
-The repository currently includes one unit test in [src/navigator.rs](/Users/alexy/src/querygraph/src/navigator.rs). It verifies that `AiNavigator::build` produces all four semantic layers:
+At the time of this report, the repository included one unit test in
+[`src/navigator.rs`](../src/navigator.rs). It verified that
+`AiNavigator::build` produced all four semantic layers:
 
 - Croissant dataset
 - CDIF dataset
 - DID beginning with `did:oyd:zQm`
 - ODRL policy
 
-The implementation was also manually verified with:
+That implementation was also manually verified with:
 
 ```bash
 cargo fmt
@@ -369,11 +378,11 @@ cargo run -- navigator ...
 cargo run -- anchor-url --url https://querygraph.ai/resources/
 ```
 
-## Limitations
+## Historical Limitations (at the initial report)
 
 This is a foundation, not a finished platform.
 
-Current limitations:
+The limitations recorded at that time were:
 
 - ODRL constraints are strings, not a full typed constraint expression model.
 - Duties, consequences, remedies, obligations, and conflict strategies are not implemented yet.
@@ -388,7 +397,7 @@ Current limitations:
 
 These limitations are acceptable for the first codebase because the most important early outcome is a coherent architecture that compiles and produces usable semantic bundles.
 
-## Roadmap
+## Historical Roadmap
 
 ### 1. Full ODRL Policy Engine
 
