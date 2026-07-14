@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-14" />
+  <title>Part III: The Interoperability Surfaces</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="book.css" />
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="chapter-001.html" accesskey="u" rel="up">The QueryGraph Stack</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">The QueryGraph Stack</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="chapter-007.html" accesskey="n" rel="next">Part IV: Integration in Practice</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="chapter-005.html" accesskey="p" rel="previous">Part II: QueryGraph, the Semantic Layer</a>
+</span>
+</div>
+</nav>
+<h1 data-number="5" id="part-iii-the-interoperability-surfaces"><span
+class="header-section-number">5</span> Part III: The Interoperability
+Surfaces</h1>
+<p>QueryGraph does not compete with agent frameworks — it is the
+governed data and semantics plane they plug into. Goshawk built these
+doors; Sentinel guards them.</p>
+<h2 data-number="5.1"
+id="chapter-18.-the-v1-api-and-envelope-auth"><span
+class="header-section-number">5.1</span> Chapter 18. The /v1 API and
+Envelope Auth</h2>
+<p><code>querygraph serve --port 8080</code> exposes the platform over
+HTTP:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Route</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /v1/health</code></td>
+<td>service, API version, release</td>
+</tr>
+<tr>
+<td><code>POST /v1/navigator/bundle</code></td>
+<td>the four-layer semantic bundle</td>
+</tr>
+<tr>
+<td><code>GET /v1/qglake/story</code></td>
+<td>the Resilience Desk with full evidence chain</td>
+</tr>
+<tr>
+<td><code>POST /v1/audit/verify-envelope</code></td>
+<td>envelope verification (a bad signature is a 200 + receipt, not a
+5xx)</td>
+</tr>
+<tr>
+<td><code>POST /v1/models/import/{osi,croissant}</code></td>
+<td>semantic-model registry imports</td>
+</tr>
+<tr>
+<td><code>GET /v1/models</code>, <code>GET /v1/models/{name}</code></td>
+<td>registry listing and fetch</td>
+</tr>
+<tr>
+<td><code>GET /v1/search?q=</code></td>
+<td>search names, descriptions, ai_context, semantic types, ontology
+terms</td>
+</tr>
+<tr>
+<td><code>POST /v1/answer</code></td>
+<td>search → plan → synthesize → sign (Chapter 21)</td>
+</tr>
+<tr>
+<td><code>GET /.well-known/agent-card.json</code></td>
+<td>the A2A card (Chapter 20)</td>
+</tr>
+</tbody>
+</table>
+<p>With <code>--require-auth</code>, the governed routes
+(<code>models/import/*</code>, <code>answer</code>) demand a signed
+TypeDID envelope in the <strong><code>x-qg-envelope</code></strong>
+header. The contract binds three things: the action must be
+<code>invoke</code>; the resource must equal the request path (no
+cross-route replay); and the payload must carry <code>bodySha256</code>,
+the hash of the exact request body (no body swapping). The signature
+verifies against the envelope’s own <code>did:key</code> verification
+method.</p>
+<h3 data-number="5.1.1"
+id="worked-example-the-guarded-v1-from-both-sides"><span
+class="header-section-number">5.1.1</span> Worked example: the guarded
+/v1, from both sides</h3>
+<p>An unauthenticated request gets a 401 whose receipt <em>teaches the
+contract</em> (captured from a live server):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> curl <span class="at">-s</span> <span class="at">-X</span> POST http://127.0.0.1:8080/v1/answer <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">-H</span> <span class="st">&#39;content-type: application/json&#39;</span> <span class="at">-d</span> <span class="st">&#39;{&quot;question&quot;:&quot;?&quot;}&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;error&quot;</span><span class="fu">:</span> <span class="st">&quot;missing x-qg-envelope header&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;receipt&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;allowed&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;/v1/answer&quot;</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;contract&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;header&quot;</span><span class="fu">:</span> <span class="st">&quot;x-qg-envelope&quot;</span><span class="fu">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;invoke&quot;</span><span class="fu">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;resource&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;request path&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;payload&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;bodySha256&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;sha256 hex of request body&gt;&quot;</span><span class="fu">},</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;signature&quot;</span><span class="fu">:</span> <span class="st">&quot;ed25519 over querygraph-typedid-signing-v1&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The Python client satisfies it in two lines:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.api_auth <span class="im">import</span> governed_post</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.typedid <span class="im">import</span> TypeDidAgent</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> governed_post(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;http://127.0.0.1:8080&quot;</span>, <span class="st">&quot;/v1/answer&quot;</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    {<span class="st">&quot;question&quot;</span>: <span class="st">&quot;what is fiscal capacity?&quot;</span>},</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    TypeDidAgent.new(<span class="st">&quot;ApiClient&quot;</span>),</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<p>The equivalence suite proves this live: it boots
+<code>qg-rust serve --require-auth</code>, posts without the header
+(asserting the 401 receipt), then with a Python-minted header (asserting
+the governed answer).</p>
+<h3 data-number="5.1.2" id="api-reference-10"><span
+class="header-section-number">5.1.2</span> API reference</h3>
+<p><code>querygraph serve --port 8080 [--require-auth]</code>. The
+<code>x-qg-envelope</code> header is a compact-JSON TypeDID envelope;
+the middleware checks, in order: signature validity (against the
+envelope’s <code>did:key</code> <code>verification_method</code>),
+<code>action == "invoke"</code>,
+<code>resource == &lt;request path&gt;</code>, and
+<code>payload.bodySha256 == sha256(body)</code>. Failure returns
+<code>401 {error, receipt: {allowed: false, path, checks, contract}}</code>.
+Clients: <code>querygraph.api_auth.mint_envelope_header</code> /
+<code>governed_post</code>.</p>
+<h2 data-number="5.2"
+id="chapter-19.-mcp-one-server-every-framework"><span
+class="header-section-number">5.2</span> Chapter 19. MCP: One Server,
+Every Framework</h2>
+<p>The Model Context Protocol is how agent frameworks discover tools in
+2026, and the stack speaks it from both languages:</p>
+<ul>
+<li><strong>Python</strong> (<code>querygraph mcp-serve</code>, official
+SDK): tools <code>search_semantic_model</code>,
+<code>resolve_metric</code> (dialect fallback),
+<code>check_access</code> (the dual gate — denials are receipts),
+<code>build_navigator_bundle</code>, <code>run_qglake_story</code>,
+<code>verify_envelope</code>, and <code>answer_question</code>;
+resources <code>qg://story/resilience-desk</code> and
+<code>qg://models/current</code>; stdio, SSE, and streamable-HTTP
+transports; <code>--osi</code> loads your model, <code>--rights</code>
+your governance JSON.</li>
+<li><strong>Rust</strong> (<code>querygraph mcp-serve</code>): a
+dependency-free JSON-RPC 2.0 implementation of the MCP handshake
+(protocol 2024-11-05) over stdio, with the same governed surface,
+sharing the <code>/v1</code> internals (the answer core is literally the
+same function).</li>
+</ul>
+<p>Any MCP client — Claude Code/Desktop, LangChain via
+<code>langchain-mcp-adapters</code>, PydanticAI, LlamaIndex, CrewAI, the
+OpenAI Agents SDK — reaches everything with zero adapter code.</p>
+<h3 data-number="5.2.1" id="worked-example-an-mcp-session-by-hand"><span
+class="header-section-number">5.2.1</span> Worked example: an MCP
+session, by hand</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> printf <span class="st">&#39;%s\n%s\n%s\n&#39;</span> <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{}}&#39;</span> <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;method&quot;:&quot;notifications/initialized&quot;}&#39;</span> <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:2,&quot;method&quot;:&quot;tools/list&quot;}&#39;</span> <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">querygraph</span> mcp-serve</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;protocolVersion&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-11-05&quot;</span><span class="fu">,</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;serverInfo&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;querygraph&quot;</span><span class="fu">,</span> <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;0.4.0&quot;</span><span class="fu">},</span> <span class="er">…</span><span class="fu">}}</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;tools&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;build_navigator_bundle&quot;</span><span class="ot">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;run_qglake_story&quot;</span><span class="ot">,</span> <span class="st">&quot;verify_envelope&quot;</span><span class="ot">,</span> <span class="st">&quot;import_semantic_model&quot;</span><span class="ot">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;search_semantic_models&quot;</span><span class="ot">,</span> <span class="st">&quot;answer_question&quot;</span><span class="ot">]</span><span class="fu">}}</span></span></code></pre></div>
+<h3 data-number="5.2.2" id="api-reference-tools"><span
+class="header-section-number">5.2.2</span> API reference (tools)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Arguments</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>search_semantic_model</code> (py) /
+<code>search_semantic_models</code> (rs)</td>
+<td><code>term</code></td>
+<td>matches: kind/name/dataset</td>
+</tr>
+<tr>
+<td><code>resolve_metric</code> (py)</td>
+<td><code>name</code>, <code>dialect="SAIL_SQL"</code></td>
+<td>expression, with dialect fallback</td>
+</tr>
+<tr>
+<td><code>check_access</code> (py)</td>
+<td><code>principal</code>, <code>resource</code>,
+<code>action</code></td>
+<td>the full dual-gate decision + receipt</td>
+</tr>
+<tr>
+<td><code>build_navigator_bundle</code></td>
+<td>dataset name/description/landing/data URL/creator/agent</td>
+<td>the four-layer bundle</td>
+</tr>
+<tr>
+<td><code>run_qglake_story</code></td>
+<td>—</td>
+<td>the Resilience Desk report</td>
+</tr>
+<tr>
+<td><code>verify_envelope</code></td>
+<td><code>envelope</code></td>
+<td>verification report</td>
+</tr>
+<tr>
+<td><code>import_semantic_model</code> (rs)</td>
+<td><code>osi</code> or <code>croissant</code> document</td>
+<td>import summary</td>
+</tr>
+<tr>
+<td><code>answer_question</code></td>
+<td><code>question</code></td>
+<td>answer + plans + envelope (+ receipts in py)</td>
+</tr>
+</tbody>
+</table>
+<p>Python resources: <code>qg://story/resilience-desk</code>,
+<code>qg://models/current</code>. Transports: stdio (both), SSE and
+streamable-HTTP (Python).</p>
+<h2 data-number="5.3"
+id="chapter-20.-a2a-tool-schemas-and-adapters"><span
+class="header-section-number">5.3</span> Chapter 20. A2A, Tool Schemas,
+and Adapters</h2>
+<p><strong>The Agent Card.</strong> Both implementations publish the
+same Linux Foundation Agent2Agent v0.3.0 card — served at
+<code>/.well-known/agent-card.json</code>, printed by
+<code>agent-card</code> — declaring five skills
+(<code>navigator-bundle</code>, <code>qglake-story</code>,
+<code>verify-envelope</code>, <code>import-semantic-model</code>,
+<code>semantic-search</code>) and a security scheme that documents the
+TypeDID envelope contract. The card is a cross-language contract: the
+equivalence suite asserts the two implementations publish identical
+skills, capabilities, and security schemes.</p>
+<p><strong>Tool schemas.</strong> For function-calling runtimes rather
+than MCP, one agent exports both flavors — accepted by OpenAI,
+Anthropic, Mistral, vLLM, Ollama, and most local servers:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>agent <span class="op">=</span> TypeDidAgent.new(<span class="st">&quot;FinanceAgent&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>agent.to_tool_schema()                    <span class="co"># {&quot;type&quot;: &quot;function&quot;, &quot;function&quot;:</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                                          <span class="co">#  {&quot;name&quot;: &quot;FinanceAgent&quot;,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                                          <span class="co">#   &quot;parameters&quot;: {…</span><span class="re">}}}</span><span class="co">   ← OpenAI</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>agent.to_tool_schema(flavor<span class="op">=</span><span class="st">&quot;anthropic&quot;</span>)  <span class="co"># {&quot;name&quot;: &quot;FinanceAgent&quot;,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                                          <span class="co">#  &quot;input_schema&quot;: {…}}   ← Anthropic</span></span></code></pre></div>
+<p><strong>LangChain.</strong> <code>TypeDidLangChainToolAdapter</code>
+wraps a governed agent as a <code>StructuredTool</code> —
+<code>as_tool()</code> for sync runtimes, <code>as_async_tool()</code>
+for async ones. Every adapter result carries the signed envelope with
+the answer; nothing hands back a bare string.</p>
+<h2 data-number="5.4" id="chapter-21.-the-governed-navigator-loop"><span
+class="header-section-number">5.4</span> Chapter 21. The Governed
+Navigator Loop</h2>
+<p>Sentinel’s centerpiece: the loop that turns a question into a
+governed, signed, lineage-anchored answer.</p>
+<ol type="1">
+<li><strong>Search</strong> the semantic model — names, synonyms
+(including multi-word synonyms via bigrams), descriptions,
+<code>ai_context</code>.</li>
+<li><strong>Gate</strong> every matched dataset through RBAC+ODRL;
+collect receipts; denied sources go into <code>denied_sources</code> and
+are <em>named in the prompt as off-limits</em> — never planned, never
+touched.</li>
+<li><strong>Plan</strong> SQL over allowed Sail sources only, resolving
+matched metrics with dialect fallback.</li>
+<li><strong>Synthesize</strong> with any
+<code>Callable[[str], str]</code> — the
+<code>openai_compatible_llm</code> helper binds Ollama, vLLM, llama.cpp,
+LM Studio, or OpenRouter — or deterministically when no model is given.
+Same governance either way; the deterministic path is the golden
+baseline.</li>
+<li><strong>Sign and record</strong>: the answer, plans, and receipts
+travel in a signed TypeDID envelope; a schema-valid OpenLineage event
+and an Ed25519 attestation complete the chain.</li>
+</ol>
+<p>The Rust side serves the deterministic core as
+<code>POST /v1/answer</code> and the <code>answer_question</code> MCP
+tool (one shared function).</p>
+<h3 data-number="5.4.1"
+id="worked-example-the-loop-receipts-and-all"><span
+class="header-section-number">5.4.1</span> Worked example: the loop,
+receipts and all</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.navigator_loop <span class="im">import</span> GovernedNavigatorLoop</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>loop <span class="op">=</span> GovernedNavigatorLoop.demo()   <span class="co"># or (your_osi_doc, your_rights, llm=…)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> loop.answer(</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Where do fiscal capacity and energy burden overlap with health risk?&quot;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<p>Captured from a real run:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;answer&quot;</span><span class="fu">:</span> <span class="st">&quot;Answerable from governed sources</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="st">     sail.qg_lakehouse.access_2018__access_data,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">     sail.qg_lakehouse.government_finance__countydata via 3 planned</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="st">     queries. Restricted sources were denied with receipts:</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="st">     sail.qg_lakehouse.haalsi_baseline__restricted_raw.&quot;</span><span class="fu">,</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;denied_sources&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;sail.qg_lakehouse.haalsi_baseline__restricted_raw&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;plans&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT * FROM sail.qg_lakehouse.government_finance__countydata&quot;</span><span class="ot">,</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT `monthly_cost` FROM sail.qg_lakehouse.access_2018__access_data&quot;</span><span class="ot">,</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT SUM(total_revenue - mandated_spend)</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="st">       FROM sail.qg_lakehouse.government_finance__countydata&quot;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Swap in a live model with one callable — the governance is
+unchanged:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.navigator_loop <span class="im">import</span> openai_compatible_llm</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>loop <span class="op">=</span> GovernedNavigatorLoop.demo(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    llm<span class="op">=</span>openai_compatible_llm(<span class="st">&quot;http://localhost:11434&quot;</span>, <span class="st">&quot;llama3.2&quot;</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    llm_name<span class="op">=</span><span class="st">&quot;ollama:llama3.2&quot;</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<h3 data-number="5.4.2" id="api-reference-11"><span
+class="header-section-number">5.4.2</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GovernedNavigatorLoop(document, rights, llm=None, llm_name=…, agent_name=…, principal=…)</code></td>
+<td>the loop; <code>llm: Callable[[str], str]</code></td>
+</tr>
+<tr>
+<td><code>.answer(question) -&gt; NavigatorAnswer</code></td>
+<td><code>answer</code>, <code>synthesized_by</code>,
+<code>matches</code>,
+<code>plans: [PlannedQuery{dataset, source, sql, metric}]</code>,
+<code>receipts</code>, <code>denied_sources</code>,
+<code>envelope</code>, <code>openlineage</code>,
+<code>attestation</code></td>
+</tr>
+<tr>
+<td><code>GovernedNavigatorLoop.demo(llm=…, llm_name=…)</code></td>
+<td>the Resilience Desk demo configuration</td>
+</tr>
+<tr>
+<td><code>openai_compatible_llm(base_url, model, api_key=None)</code></td>
+<td>binds <code>/v1/chat/completions</code> — Ollama, vLLM, llama.cpp,
+LM Studio, OpenRouter</td>
+</tr>
+<tr>
+<td>Rust</td>
+<td><code>POST /v1/answer {question}</code>;
+<code>answer_question</code> MCP tool; shared
+<code>answer_over_models</code> core</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="5.5" id="chapter-22.-the-cross-language-contract"><span
+class="header-section-number">5.5</span> Chapter 22. The Cross-Language
+Contract</h2>
+<p>Rust and Python are held equivalent by an executable contract
+(<code>qg-python/tests/test_rust_equivalence.py</code>), not by
+discipline:</p>
+<ul>
+<li><strong>Bundles</strong>: <code>navigator</code> output is
+byte-identical modulo timestamps.</li>
+<li><strong>The story</strong>: same specialist roster, the restricted
+broker (and only it) denied, COMPLETE OpenLineage events, attestation
+schemas field-for-field identical.</li>
+<li><strong>Crypto, both directions</strong>: Python signs → the Rust
+CLI verifies and rejects a tampered copy with exit 1; Rust mints
+envelopes from the same seeds and a fixture pins the shared
+<code>did:key</code>.</li>
+<li><strong>Lineage</strong>: both CLIs’ events validate against the
+official OpenLineage schema; a fixture pins the shared UUIDv5 run-id
+derivation (<code>run_id_for("test")</code> is the same UUID in both
+languages).</li>
+<li><strong>A2A</strong>: both agent cards publish identical skills,
+capabilities, and security schemes.</li>
+<li><strong>Auth, live</strong>: a running
+<code>qg-rust serve --require-auth</code> rejects a bare POST (401 +
+receipt) and accepts a Python-minted header (200 + answer).</li>
+</ul>
+<p>The suite runs 49 Python tests (12 at the start of the
+interoperability work) alongside 40 Rust tests, in CI on every push.</p>
+</body>
+</html>

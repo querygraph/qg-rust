@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-14" />
+  <title>Part II: QueryGraph, the Semantic Layer</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="book.css" />
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="chapter-001.html" accesskey="u" rel="up">The QueryGraph Stack</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">The QueryGraph Stack</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="chapter-006.html" accesskey="n" rel="next">Part III: The Interoperability Surfaces</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="chapter-004.html" accesskey="p" rel="previous">Part I: The Substrate</a>
+</span>
+</div>
+</nav>
+<h1 data-number="4" id="part-ii-querygraph-the-semantic-layer"><span
+class="header-section-number">4</span> Part II: QueryGraph, the Semantic
+Layer</h1>
+<p>The layer that makes the substrate one system. Chapters 8–16 follow
+the Rust reference implementation; Chapter 17 covers the Python mirror.
+Everything in this part is exercised by the cross-language contract
+(Chapter 22).</p>
+<h2 data-number="4.1"
+id="chapter-8.-semantic-croissant-what-the-data-is"><span
+class="header-section-number">4.1</span> Chapter 8. Semantic Croissant:
+What the Data Is</h2>
+<p>MLCommons Croissant is the ML community’s standard for dataset
+metadata: a JSON-LD document describing a dataset’s identity, license,
+files (<code>distribution</code>), record sets, and fields, with
+<code>sameAs</code> links from fields to shared semantic types. It is
+how Hugging Face, Kaggle, and Google Dataset Search describe ML-ready
+data — which makes it QueryGraph’s front door: a Croissant document is
+both what QueryGraph <em>emits</em> for everything it loads and what it
+<em>accepts</em> from outside (LakeCat bundles, public dataset
+exports).</p>
+<p>QueryGraph generates a Croissant sidecar per dataset, then treats its
+fields as the atoms of meaning: they become OSI column expressions
+(Chapter 12), ontology terms, and Grust graph nodes. From a real
+bundle:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;cr:Dataset&quot;</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;https://querygraph.ai/datasets/hazards/#dataset&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Hazard vocabulary&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;license&quot;</span><span class="fu">:</span> <span class="st">&quot;https://creativecommons.org/licenses/by/4.0/&quot;</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;distribution&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;cr:FileObject&quot;</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;contentUrl&quot;</span><span class="fu">:</span> <span class="st">&quot;https://querygraph.ai/datasets/hazards.csv&quot;</span><span class="fu">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;encodingFormat&quot;</span><span class="fu">:</span> <span class="st">&quot;application/octet-stream&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;recordSet&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;cr:RecordSet&quot;</span><span class="fu">,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;field&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;cr:Field&quot;</span><span class="fu">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;subject&quot;</span><span class="fu">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;dataType&quot;</span><span class="fu">:</span> <span class="st">&quot;sc:Text&quot;</span><span class="fu">,</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;sameAs&quot;</span><span class="fu">:</span> <span class="st">&quot;https://schema.org/about&quot;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span> <span class="st">&quot;…&quot;</span><span class="ot">]</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">]</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The <code>sameAs</code> link is the semantic hook: it says this
+column <em>means</em> something shared, not just something typed.</p>
+<h2 data-number="4.2"
+id="chapter-9.-cdif-how-the-data-is-found-and-accessed"><span
+class="header-section-number">4.2</span> Chapter 9. CDIF: How the Data
+Is Found and Accessed</h2>
+<p>CODATA’s Cross-Domain Interoperability Framework covers the
+FAIR-metadata axes Croissant leaves out: discovery, access, rights,
+units, vocabularies, and profile declarations, expressed over the DCAT
+and Dublin Core vocabularies that data catalogs and national research
+infrastructures speak.</p>
+<p>QueryGraph projects every dataset into a CDIF resource that declares
+which CDIF profiles it satisfies and how to reach the data — and carries
+the ODRL policy reference, so discovery metadata and rights metadata
+never separate:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;dcat:Dataset&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dct:title&quot;</span><span class="fu">:</span> <span class="st">&quot;Hazard vocabulary&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cdif:profile&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;https://cdif.codata.org/profile/discovery&quot;</span><span class="ot">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;https://cdif.codata.org/profile/manifest&quot;</span><span class="ot">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;https://cdif.codata.org/profile/data-description&quot;</span><span class="ot">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;https://cdif.codata.org/profile/data-access&quot;</span><span class="ot">,</span> <span class="st">&quot;…&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dcat:landingPage&quot;</span><span class="fu">:</span> <span class="st">&quot;https://querygraph.ai/datasets/hazards&quot;</span><span class="fu">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cdif:dataElement&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;…field descriptors…&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dct:accessRights&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;odrl:hasPolicy&quot;</span><span class="fu">:</span> <span class="st">&quot;…/policy/default&quot;</span><span class="fu">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Croissant answers <em>what is in the data</em>; CDIF answers <em>how
+a stranger finds, evaluates, and accesses it</em>. QueryGraph derives
+the CDIF projection from the Croissant document
+(<code>CdifResource::from_croissant</code>), so the two can never
+disagree about the dataset they describe.</p>
+<h2 data-number="4.3" id="chapter-10.-did-who-is-acting"><span
+class="header-section-number">4.3</span> Chapter 10. DID: Who Is
+Acting</h2>
+<p>W3C Decentralized Identifiers give agents, services, and datasets
+stable identity without a registry. QueryGraph uses two DID methods,
+each earning its place:</p>
+<ul>
+<li><strong><code>did:oyd</code></strong> for deterministic agent and
+dataset identity: the DID is derived from a seed by hashing, so the same
+input always yields the same identifier — in Rust and Python, byte for
+byte (a fixture in the equivalence suite pins
+<code>did:oyd:zQmciWcCbpq…</code> for a known seed). Identity becomes
+reproducible: re-run the pipeline, get the same actors.</li>
+<li><strong><code>did:key</code></strong> for verification: Ed25519
+public keys published as self-certifying identifiers
+(<code>did:key:z6Mk…</code>) in envelope
+<code>verification_method</code> fields, resolvable by anyone with no
+infrastructure.</li>
+</ul>
+<p>A generated DID document, from a real bundle:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;@context&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;https://www.w3.org/ns/did/v1&quot;</span><span class="ot">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>               <span class="st">&quot;https://w3id.org/security/suites/ed25519-2020/v1&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;did:oyd:zQmciWcCbpqbsYcNPVzdQ4YqznbAK9kRsnNRDdXg5Z73qCe&quot;</span><span class="fu">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;controller&quot;</span><span class="fu">:</span> <span class="st">&quot;AI Navigator&quot;</span><span class="fu">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;public_key_multibase&quot;</span><span class="fu">:</span> <span class="st">&quot;zFNru6TqKpt4ymk5pbCM5Bq4beqJ9nEDgLucfyv9nr98e&quot;</span><span class="fu">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;service_endpoint&quot;</span><span class="fu">:</span> <span class="st">&quot;https://querygraph.ai/datasets/hazards&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Textbook rule: DIDs say <em>who is acting</em>; ODRL says <em>what is
+allowed</em>; TypeSec turns the decision into a proof the code can
+carry.</p>
+<h2 data-number="4.4" id="chapter-11.-odrl-what-is-allowed"><span
+class="header-section-number">4.4</span> Chapter 11. ODRL: What Is
+Allowed</h2>
+<p>The Open Digital Rights Language expresses machine-actionable policy:
+permissions and prohibitions binding an <strong>action</strong>, an
+<strong>assignee</strong>, and a <strong>target</strong>, each
+optionally constrained. QueryGraph’s profile uses <code>odrl:use</code>,
+<code>odrl:read</code>, <code>odrl:derive</code>, and two namespaced
+actions — <code>querygraph:translate</code> and
+<code>querygraph:index</code>. The evaluation rule is strict: an action
+is allowed only if a permission matches the assignee and action <em>and
+no prohibition does</em>.</p>
+<p>A generated policy — note the shape of the default: the public may
+read with attribution, the navigator may index, and <em>nobody</em> may
+derive (train on) without a separate agreement:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;odrl:Policy&quot;</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;odrl:target&quot;</span><span class="fu">:</span> <span class="st">&quot;https://querygraph.ai/datasets/hazards/#dataset&quot;</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;odrl:assigner&quot;</span><span class="fu">:</span> <span class="st">&quot;did:oyd:zQmciWcCbpq…&quot;</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;odrl:permission&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;odrl:action&quot;</span><span class="fu">:</span> <span class="st">&quot;odrl:read&quot;</span><span class="fu">,</span> <span class="dt">&quot;odrl:assignee&quot;</span><span class="fu">:</span> <span class="st">&quot;public&quot;</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;odrl:constraint&quot;</span><span class="fu">:</span> <span class="st">&quot;attribution required&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;odrl:action&quot;</span><span class="fu">:</span> <span class="st">&quot;querygraph:index&quot;</span><span class="fu">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;odrl:assignee&quot;</span><span class="fu">:</span> <span class="st">&quot;did:oyd:zQmciWcCbpq…&quot;</span><span class="fu">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;odrl:constraint&quot;</span><span class="fu">:</span> <span class="st">&quot;local semantic indexing for AI Navigator&quot;</span><span class="fu">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;odrl:prohibition&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;odrl:action&quot;</span><span class="fu">:</span> <span class="st">&quot;odrl:derive&quot;</span><span class="fu">,</span> <span class="dt">&quot;odrl:assignee&quot;</span><span class="fu">:</span> <span class="st">&quot;public&quot;</span><span class="fu">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;odrl:constraint&quot;</span><span class="fu">:</span> <span class="st">&quot;no model training without separate agreement&quot;</span><span class="fu">}</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The four layers ship together as the <strong>Navigator
+bundle</strong> — one JSON-LD document with <code>@context</code> for
+all four vocabularies — built by the CLI (<code>navigator</code>), the
+<code>/v1</code> API, and the MCP tools, identically in both languages
+(the equivalence suite asserts byte equality modulo timestamps):</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">querygraph</span> navigator <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dataset-name</span> <span class="st">&quot;Hazard vocabulary&quot;</span> <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--description</span> <span class="st">&quot;Controlled vocabulary with multilingual technical terms&quot;</span> <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--landing-page</span> <span class="st">&quot;https://querygraph.ai/datasets/hazards&quot;</span> <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--data-url</span> <span class="st">&quot;https://querygraph.ai/datasets/hazards.csv&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># → {&quot;@type&quot;: &quot;querygraph:AiNavigatorSemanticBundle&quot;,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#    &quot;layers&quot;: {&quot;semanticCroissant&quot;: …, &quot;cdif&quot;: …, &quot;did&quot;: …, &quot;odrl&quot;: …}}</span></span></code></pre></div>
+<h3 data-number="4.4.1"
+id="api-reference-the-four-projections-both-languages"><span
+class="header-section-number">4.4.1</span> API reference (the four
+projections, both languages)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Rust</th>
+<th>Python</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Croissant</td>
+<td><code>CroissantDataset { files, record_sets, … }</code>,
+<code>Field::new(…).semantic_type(iri)</code>,
+<code>.to_json_ld()</code></td>
+<td><code>croissant.CroissantDataset</code>,
+<code>Field(name, dtype, desc).semantic_type(iri)</code>,
+<code>.to_json_ld()</code></td>
+</tr>
+<tr>
+<td>CDIF</td>
+<td><code>CdifResource::from_croissant(dataset, landing, data_url)</code>,
+<code>.with_odrl_policy(id, json)</code>,
+<code>.to_json_ld()</code></td>
+<td><code>cdif.CdifResource</code> — same constructors</td>
+</tr>
+<tr>
+<td>DID</td>
+<td><code>DidDocument::new_oyd(seed, controller)</code>,
+<code>.with_service_endpoint(url)</code>, <code>.to_json()</code></td>
+<td><code>did.DidDocument.new_oyd(seed, controller)</code> —
+byte-identical output</td>
+</tr>
+<tr>
+<td>ODRL</td>
+<td><code>Policy { permissions, prohibitions }</code>,
+<code>Rule { action, assignee, constraint }</code>,
+<code>Action::{Use, Read, Derive, Translate, Index}</code>,
+<code>.allows(assignee, action)</code>, <code>.to_json_ld()</code></td>
+<td><code>odrl.Policy</code> / <code>Rule</code> / <code>Action</code> —
+same evaluation rule</td>
+</tr>
+<tr>
+<td>Bundle</td>
+<td><code>AiNavigator::build(NavigatorInput) -&gt; NavigatorOutput { croissant, cdif, did, odrl, bundle }</code></td>
+<td><code>AiNavigator().build(NavigatorInput(...))</code></td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="4.5" id="chapter-12.-osi-business-semantics"><span
+class="header-section-number">4.5</span> Chapter 12. OSI: Business
+Semantics</h2>
+<p>The Open Semantic Interchange model is where business language meets
+governed columns. An OSI document carries one semantic model:</p>
+<ul>
+<li><strong>datasets</strong>, each with a <code>source</code> (a
+governed Sail table like
+<code>sail.qg_lakehouse.government_finance__countydata</code>),
+primary/unique keys, and <strong>fields</strong>;</li>
+<li><strong>metrics</strong>, each with an expression per SQL
+<strong>dialect</strong> — QueryGraph supports <code>ANSI_SQL</code>,
+<code>SAIL_SQL</code>, <code>SNOWFLAKE</code>, <code>MDX</code>,
+<code>TABLEAU</code>, <code>DATABRICKS</code>, and <code>MAQL</code>,
+resolving a requested dialect with fallback to <code>ANSI_SQL</code>
+then <code>SAIL_SQL</code>;</li>
+<li><strong>relationships</strong> between datasets (join keys);</li>
+<li><strong>ontology terms</strong> linking fields to shared
+vocabularies;</li>
+<li><strong><code>ai_context</code></strong> on every level:
+instructions, synonyms, and examples written <em>for the LLM</em> — the
+model’s way of telling an agent how to use it.</li>
+</ul>
+<p>Croissant documents project into OSI mechanically: every recordSet
+field becomes a governed <code>SAIL_SQL</code> column expression,
+<code>sameAs</code> types become ontology terms, and a
+<code>row_count</code> metric is attached. The projection is implemented
+identically in Rust (<code>OsiDocument::from_croissant_json</code>,
+behind <code>POST /v1/models/import/croissant</code>) and Python
+(<code>OsiDocument.from_croissant</code>).</p>
+<h3 data-number="4.5.1"
+id="worked-example-croissant-becomes-osi-identically-in-both-languages"><span
+class="header-section-number">4.5.1</span> Worked example: Croissant
+becomes OSI, identically in both languages</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> croissant <span class="op">=</span> <span class="pp">serde_json::json!</span>(<span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;Energy Burden&quot;</span><span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;description&quot;</span><span class="op">:</span> <span class="st">&quot;Demo energy fields&quot;</span><span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;recordSet&quot;</span><span class="op">:</span> [<span class="op">{</span><span class="st">&quot;field&quot;</span><span class="op">:</span> [<span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span><span class="op">:</span> <span class="st">&quot;monthly_cost&quot;</span><span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;description&quot;</span><span class="op">:</span> <span class="st">&quot;Monthly household energy cost&quot;</span><span class="op">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;sameAs&quot;</span><span class="op">:</span> <span class="st">&quot;https://querygraph.ai/ontology/monthlyEnergyCost&quot;</span><span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>]<span class="op">}</span>]<span class="op">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> osi <span class="op">=</span> <span class="pp">OsiDocument::</span>from_croissant_json(<span class="op">&amp;</span>croissant<span class="op">,</span> <span class="st">&quot;qg_lakehouse&quot;</span>)<span class="op">?;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="pp">assert_eq!</span>(osi<span class="op">.</span>semantic_model<span class="op">.</span>name<span class="op">,</span> <span class="st">&quot;energy_burden_semantic_model&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="pp">assert_eq!</span>(osi<span class="op">.</span>semantic_model<span class="op">.</span>datasets[<span class="dv">0</span>]<span class="op">.</span>source<span class="op">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>           <span class="st">&quot;sail.qg_lakehouse.energy_burden&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.osi <span class="im">import</span> OsiDocument</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>osi <span class="op">=</span> OsiDocument.from_croissant(dataset)          <span class="co"># same projection rules</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>osi.semantic_model.resolve_metric(<span class="st">&quot;row_count&quot;</span>)     <span class="co"># &#39;COUNT(*)&#39; via SAIL_SQL</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>osi.semantic_model.find_by_synonym(<span class="st">&quot;energy&quot;</span>)       <span class="co"># datasets/fields/metrics</span></span></code></pre></div>
+<h3 data-number="4.5.2" id="api-reference-6"><span
+class="header-section-number">4.5.2</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OsiDocument</code></td>
+<td><code>from_mapping</code> (accepts upstream
+<code>semantic_model: []</code> lists), <code>from_yaml_file</code>,
+<code>to_json</code>; Rust adds
+<code>from_croissant_json(&amp;value, schema)</code> and
+<code>for_dataverse(&amp;datasets)</code>; Python adds
+<code>from_croissant(dataset)</code></td>
+</tr>
+<tr>
+<td><code>OsiSemanticModel</code></td>
+<td><code>datasets</code>, <code>metrics</code>,
+<code>relationships</code>, <code>ontology_terms</code>,
+<code>ai_context</code>; Python:
+<code>resolve_metric(name, dialect="SAIL_SQL")</code> (fallback
+<code>ANSI_SQL</code> → <code>SAIL_SQL</code>),
+<code>find_by_synonym(term)</code></td>
+</tr>
+<tr>
+<td><code>OsiAiContext</code></td>
+<td><code>instructions</code>, <code>synonyms</code>,
+<code>examples</code>; bare strings coerce to
+<code>instructions</code></td>
+</tr>
+<tr>
+<td>Dialects</td>
+<td><code>ANSI_SQL</code>, <code>SAIL_SQL</code>,
+<code>SNOWFLAKE</code>, <code>MDX</code>, <code>TABLEAU</code>,
+<code>DATABRICKS</code>, <code>MAQL</code></td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="4.6" id="chapter-13.-governance-the-dual-gate"><span
+class="header-section-number">4.6</span> Chapter 13. Governance: The
+Dual Gate</h2>
+<p>QueryGraph’s access decision is deliberately redundant: <strong>RBAC
+and ODRL must both allow</strong>.</p>
+<ul>
+<li>The RBAC layer is role-based: grants bind principals to roles;
+permissions bind roles to <code>(resource, action)</code> pairs.</li>
+<li>The ODRL layer is policy-based: a permission rule must match the
+assignee and action, and no prohibition may match.</li>
+</ul>
+<p>The two layers fail differently — a fat-fingered role grant does not
+bypass a prohibition, and a permissive policy does not bypass a missing
+role — and the combined decision is issued as an
+<strong><code>AccessReceipt</code></strong>: principal, resource, action
+IRI, the boolean, the reason, and the policy id. A denial is a receipt,
+not an error: it flows through the same channels as an allow, gets
+signed into the same envelopes, and appears in the same lineage.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.odrl_rights <span class="im">import</span> OdrlRightsLayer</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>decision <span class="op">=</span> rights.decide(principal, <span class="st">&quot;sail.qg_lakehouse.finance&quot;</span>, Action.READ)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>decision.allowed        <span class="co"># rbac_allowed AND odrl_allowed</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>decision.receipt.reason <span class="co"># &quot;RBAC and ODRL permitted action&quot; / &quot;… denied …&quot;</span></span></code></pre></div>
+<p>A real denial receipt, captured from a navigator-loop run (Chapter
+21):</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;principal&quot;</span><span class="fu">:</span> <span class="st">&quot;did:example:qg-navigator&quot;</span><span class="fu">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;resource&quot;</span><span class="fu">:</span> <span class="st">&quot;sail.qg_lakehouse.haalsi_baseline__restricted_raw&quot;</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;odrl:read&quot;</span><span class="fu">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;allowed&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;RBAC or ODRL denied action&quot;</span><span class="fu">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;policy_id&quot;</span><span class="fu">:</span> <span class="st">&quot;urn:querygraph:policy:navigator-demo&quot;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 data-number="4.6.1" id="api-reference-7"><span
+class="header-section-number">4.6.1</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RbacPolicy</code></td>
+<td><code>grants: [RoleGrant{principal, role}]</code>,
+<code>permissions: [RolePermission{role, resource, action}]</code>,
+<code>allows</code>, <code>roles_for</code>; Rust adds
+<code>decide -&gt; RbacDecision{matched_roles, …}</code></td>
+</tr>
+<tr>
+<td><code>Policy</code> (ODRL)</td>
+<td><code>allows(assignee, action)</code> — permission must match, no
+prohibition may</td>
+</tr>
+<tr>
+<td><code>OdrlRightsLayer</code></td>
+<td><code>decide(principal, resource, action) -&gt; OdrlDecision{rbac_allowed, odrl_allowed, allowed, receipt}</code></td>
+</tr>
+<tr>
+<td><code>AccessReceipt</code></td>
+<td><code>principal</code>, <code>resource</code>, <code>action</code>
+(IRI), <code>allowed</code>, <code>reason</code>,
+<code>policy_id</code>, <code>issued_at</code></td>
+</tr>
+<tr>
+<td>MCP</td>
+<td><code>check_access(principal, resource, action)</code> returns the
+full decision; denials are results</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="4.7" id="chapter-14.-lineage-and-attestations"><span
+class="header-section-number">4.7</span> Chapter 14. Lineage and
+Attestations</h2>
+<p>Every governed run emits an <strong>OpenLineage</strong> event — the
+open standard for data lineage that Marquez and the OpenLineage
+ecosystem consume. QueryGraph’s events are COMPLETE run events carrying
+a custom facet (<code>queryGraph_typeDid</code>) that binds the run to
+the envelope that authorized it: protocol, conversation id, payload
+hash, signature.</p>
+<p>Conformance is proven, not asserted. The official 2-0-2 JSON Schema
+is vendored in qg-python and validated with format checking on — a
+discipline that immediately caught a real bug: the spec requires
+<code>run.runId</code> to be a UUID, and both implementations were
+emitting prefixed hashes. Both now derive run ids as
+<strong>deterministic UUIDv5</strong> values under a shared namespace
+(<code>uuid5(NAMESPACE_URL, "https://querygraph.ai/openlineage")</code>),
+from the same seeds as before; a fixture pins the cross-language
+derivation, and the equivalence suite schema-validates the events both
+CLIs emit.</p>
+<p>Above the events sit <strong>attestations</strong>: the event’s
+canonical hash is signed (Ed25519, <code>did:key</code> verification
+method) into a <code>LineageAttestation</code> with a Merkle root, so an
+auditor can verify that the lineage record is exactly the one the issuer
+anchored. Events and attestations land in JSONL sinks and in Sail tables
+(<code>qg_audit</code>) next to the data they describe.</p>
+<h3 data-number="4.7.1"
+id="worked-example-sign-in-python-verify-in-rust"><span
+class="header-section-number">4.7.1</span> Worked example: sign in
+Python, verify in Rust</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Python signs an envelope and writes it out…</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python <span class="at">-</span> <span class="op">&lt;&lt;&#39;PY&#39;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="st">import json</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="st">from querygraph.typedid import TypeDidAgent</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="st">env = TypeDidAgent.new(&quot;SupervisorAgent&quot;).request(</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="st">    TypeDidAgent.new(&quot;FinanceAgent&quot;),</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="st">    action=&quot;summarize&quot;, resource=&quot;compartment:finance&quot;,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="st">    payload={&quot;question&quot;: &quot;Where is fiscal stress highest?&quot;})</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="st">open(&quot;envelope.json&quot;, &quot;w&quot;).write(env.model_dump_json())</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="op">PY</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co"># …and the Rust CLI verifies it with no shared state:</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> verify-envelope <span class="at">--file</span> envelope.json</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;payload_hash_valid&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;signed&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;signature_valid&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;verification_method&quot;</span><span class="fu">:</span> <span class="st">&quot;did:key:z6MkrdhpoFnCtEGK3RhXqryfjxVpy…&quot;</span><span class="fu">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;scheme&quot;</span><span class="fu">:</span> <span class="st">&quot;ed25519&quot;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Rust resolves the <code>did:key</code>, reconstructs the documented
+signing payload (<code>querygraph-typedid-signing-v1</code>), and
+recomputes Python’s canonical JSON byte-for-byte —
+<code>sort_keys</code>, compact separators, <code>ensure_ascii</code>
+escapes and all. Change one byte anywhere and
+<code>signature_valid</code> flips to <code>false</code> with a non-zero
+exit. The same check is served at
+<code>POST /v1/audit/verify-envelope</code> and as the
+<code>verify_envelope</code> MCP tool in both languages.</p>
+<h3 data-number="4.7.2" id="api-reference-8"><span
+class="header-section-number">4.7.2</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OpenLineageRunEvent</code></td>
+<td><code>for_agent_run(request=envelope, job_name, inputs, outputs)</code>
+(Python) / <code>for_dataverse_agent_run(…)</code> (Rust);
+<code>event_hash()</code> — canonical sha256</td>
+</tr>
+<tr>
+<td><code>run_id_for(seed)</code></td>
+<td>deterministic UUIDv5 under
+<code>uuid5(NAMESPACE_URL, "https://querygraph.ai/openlineage")</code> —
+identical in both languages</td>
+</tr>
+<tr>
+<td><code>LineageAttestation</code></td>
+<td><code>from_event(issuer, subject, event_hash, signer=…)</code>,
+<code>verify()</code>, <code>signing_payload()</code>
+(<code>querygraph-lineage-attestation-v1</code>)</td>
+</tr>
+<tr>
+<td>Validation (Python)</td>
+<td><code>validation.validate_openlineage_schema(event)</code> —
+vendored official 2-0-2 schema, format-checked;
+<code>validate_croissant</code>, <code>validate_cdif</code>,
+<code>validate_openlineage</code> shape checks</td>
+</tr>
+<tr>
+<td>Sinks</td>
+<td><code>append_jsonl(path, event)</code>; Sail <code>qg_audit</code>
+tables; Rust <code>--openlineage-{file,url,sail}</code></td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="4.8" id="chapter-15.-the-lakehouse-path"><span
+class="header-section-number">4.8</span> Chapter 15. The Lakehouse
+Path</h2>
+<p>The data side of the reference implementation:</p>
+<ul>
+<li><strong>Loaders</strong> stream CSV/TSV/XLSX into typed Parquet
+tables in Sail, registering views and writing a load manifest. Types are
+inferred, columns normalized to safe SQL names.</li>
+<li><strong>The Dataverse end-to-end path</strong>
+(<code>dataverse-e2e</code>) takes live Dataverse datasets through the
+whole chain — fetch, stage into Sail, project Croissant/CDIF/OSI, gate
+with RBAC+ODRL, wrap the question in a TypeDID envelope, optionally
+<strong>call Ollama through a DID-encrypted prompt-bound
+gateway</strong> (<code>--call-ollama</code>), and emit lineage. The
+<code>--live-sail</code> flag runs it against a real Sail server.</li>
+<li><strong>The demonstration corpus</strong> both books use: county
+government finance, household energy access, dockless-transportation
+trips, climate-health pathways, CODATA physical constants, and a
+<em>restricted</em> health baseline that exists to be denied.</li>
+<li>From Python, <code>querygraph lakehouse-register</code> and
+<code>audit-register</code> attach the loaded tables and the audit trail
+to a PySpark session over Spark Connect.</li>
+</ul>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;SELECT COUNT(*) FROM global_temp.government_finance__countydata&quot;</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;SELECT event_hash, job_name FROM global_temp.openlineage_events&quot;</span>)</span></code></pre></div>
+<h2 data-number="4.9"
+id="chapter-16.-the-qglake-story-the-resilience-desk"><span
+class="header-section-number">4.9</span> Chapter 16. The QGLake Story:
+The Resilience Desk</h2>
+<p>The stack’s canonical governed multi-agent narrative, implemented
+deterministically in both languages — the golden baseline the live loop
+is measured against:</p>
+<ul>
+<li>A <strong>supervisor</strong> takes the question (“Where do fiscal
+capacity, energy burden, mobility disruption, and climate-health risk
+overlap?”) and delegates to six <strong>compartmentalized
+specialists</strong> — finance, energy, mobility, climate-health,
+reference data, and a restricted-data broker — each holding capabilities
+scoped to its own compartment (<code>CanReadDatasetCompartment</code>,
+<code>CanDeriveRedactedSummary</code>, …).</li>
+<li>Specialists never share raw rows. Each returns a <strong>signed
+summary</strong> in a TypeDID envelope.</li>
+<li>The <strong>restricted-data broker is denied</strong>: it returns a
+signed metadata-only denial receipt instead of restricted health rows —
+the pattern that makes denial a first-class result.</li>
+<li>A <strong>synthesis agent</strong> sees only the signed summaries
+(capability: <code>CanAggregateSummaries</code>), never the
+compartments.</li>
+<li>The run emits an OpenLineage event over all consulted (and denied)
+sources, anchored by an Ed25519 attestation.</li>
+</ul>
+<p>Run it: <code>cargo run -- qglake-story --json</code> or
+<code>python -m querygraph qglake-story --pretty</code>. The equivalence
+suite asserts the two implementations agree on the governance semantics:
+same roster, the broker (and only it) denied, attestation schemas
+field-for-field identical.</p>
+<h3 data-number="4.9.1" id="api-reference-9"><span
+class="header-section-number">4.9.1</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rust</td>
+<td><code>run_qglake_story() -&gt; QgLakeStoryReport</code> (title,
+question, supervisor, specialists, synthesis, rbac, policies,
+semantic_catalog, typesec, open_lineage, did_attestation);
+<code>render_qglake_story(&amp;report)</code> for the readable
+briefing</td>
+</tr>
+<tr>
+<td>Python</td>
+<td><code>qglake.build_python_qglake_story() -&gt; dict</code> (prompt,
+agents, responses, synthesis, openlineage, attestation)</td>
+</tr>
+<tr>
+<td>CLI</td>
+<td><code>qglake-story --json</code> (Rust) ·
+<code>qglake-story --pretty</code> (Python); also
+<code>GET /v1/qglake/story</code> and the <code>run_qglake_story</code>
+MCP tool</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="4.10"
+id="chapter-17.-qg-python-the-pythonic-mirror"><span
+class="header-section-number">4.10</span> Chapter 17. qg-python: The
+Pythonic Mirror</h2>
+<p><code>qg-python</code> mirrors the same layers Pydantic-v2-first —
+every model above is a <code>BaseModel</code> with the same field names
+— and adds the ecosystem surfaces Python is for:</p>
+<ul>
+<li><strong>Real crypto</strong> (<code>crypto</code> extra): Ed25519
+signing with seed-derived keys, <code>did:key</code> verification
+methods, envelope and attestation verification. Without the extra,
+digests are labeled <code>unsigned:sha256:</code> — never mistakable for
+signatures.</li>
+<li><strong>The governed navigator loop</strong> (Chapter 21) and
+<strong><code>api_auth</code></strong> (Chapter 18’s client side).</li>
+<li><strong>MCP server</strong> (<code>mcp</code> extra) and <strong>A2A
+card</strong> (Chapters 19–20).</li>
+<li><strong>Framework adapters</strong>: LangChain
+<code>StructuredTool</code> (sync and async), vendor-neutral
+<code>to_tool_schema()</code>.</li>
+<li><strong>Lakehouse helpers</strong>: PySpark against Sail’s Spark
+Connect endpoint.</li>
+</ul>
+<p>Install: <code>pip install querygraph</code> (core is pure Pydantic),
+with extras <code>crypto</code>, <code>mcp</code>, <code>agents</code>,
+<code>validation</code>, <code>lakehouse</code>, or <code>all</code>.
+The package ships <code>py.typed</code>; the CLI mirrors the Rust
+commands.</p>
+<p>The division of labor: Rust loads and verifies the warehouse and
+serves the platform; Python gives notebooks, PySpark users, and agent
+frameworks a typed interop layer — and the two are held identical where
+they overlap (Chapter 22).</p>
+<h3 data-number="4.10.1" id="api-reference-package-map"><span
+class="header-section-number">4.10.1</span> API reference (package
+map)</h3>
+<ul>
+<li><strong><code>querygraph.crypto</code></strong> —
+<code>Ed25519Signer</code> constructors and signing methods;
+<code>verify</code>; <code>public_key_from_did_key</code>;
+<code>unsigned_digest</code>; <code>CRYPTO_AVAILABLE</code>.</li>
+<li><strong><code>querygraph.typedid</code></strong> —
+<code>TypeDidAgent</code> construction, request, answer, signer, DID
+key, and tool-schema methods; <code>TypeDidEnvelope</code> creation and
+verification; <code>AccessReceipt</code>; <code>GovernedPrompt</code>;
+<code>AgentResponse</code>; <code>signing_payload_v1</code>.</li>
+<li><strong><code>querygraph.navigator_loop</code></strong> —
+<code>GovernedNavigatorLoop</code>; <code>answer</code>;
+<code>demo</code>; <code>openai_compatible_llm</code>.</li>
+<li><strong><code>querygraph.api_auth</code></strong> —
+<code>mint_envelope_header</code>; <code>governed_post</code>.</li>
+<li><strong><code>querygraph.mcp_server</code></strong> —
+<code>create_server</code>; <code>serve</code>;
+<code>demo_rights_layer</code>; <code>load_rights_layer</code>;
+<code>parse_action</code>.</li>
+<li><strong><code>querygraph.a2a</code></strong> —
+<code>build_agent_card</code>; <code>SKILLS</code>;
+<code>A2A_PROTOCOL_VERSION</code>.</li>
+<li><strong><code>querygraph.agents</code></strong> —
+<code>TypeDidLangChainToolAdapter</code> sync and async invocation/tool
+methods; <code>to_tool_schema</code>;
+<code>deterministic_specialist</code>;
+<code>TypeDidAgentRun.aggregate</code>.</li>
+<li><strong>Layer mirrors</strong> — <code>querygraph.lakehouse</code>,
+<code>lineage</code>, <code>osi</code>, <code>croissant</code>,
+<code>cdif</code>, <code>did</code>, <code>odrl</code>,
+<code>odrl_rights</code>, <code>rbac</code>, and <code>validation</code>
+mirror the Rust layers from Chapters 8–15.</li>
+</ul>
+<p>Extras: <code>crypto</code>, <code>mcp</code>, <code>agents</code>,
+<code>validation</code>, <code>lakehouse</code>, <code>all</code>; the
+package ships <code>py.typed</code>.</p>
+</body>
+</html>

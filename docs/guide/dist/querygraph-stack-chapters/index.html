@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-14" />
+  <title>The QueryGraph Stack</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="book.css" />
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+</span>
+<span class="navlink">
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="chapter-001.html" accesskey="n" rel="next">The QueryGraph Stack</a>
+</span>
+<span class="navlink">
+</span>
+</div>
+</nav>
+<header id="title-block-header">
+<h1 class="title">The QueryGraph Stack</h1>
+<p class="subtitle">The Definitive Guide to the Governed Semantic
+Lakehouse</p>
+<p class="author">Alexy Khrabrov and Slava Tykhonov</p>
+<p class="date">2026-07-14</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="chapter-002.html#executive-summary"
+id="toc-executive-summary"><span class="toc-section-number">1</span>
+Executive Summary</a>
+<ul>
+<li><a href="chapter-002.html#links" id="toc-links"><span
+class="toc-section-number">1.1</span> Links</a></li>
+</ul></li>
+<li><a href="chapter-003.html#the-stack-an-overview"
+id="toc-the-stack-an-overview"><span class="toc-section-number">2</span>
+The Stack: An Overview</a>
+<ul>
+<li><a href="chapter-003.html#the-journey-of-a-question"
+id="toc-the-journey-of-a-question"><span
+class="toc-section-number">2.1</span> The journey of a question</a></li>
+<li><a href="chapter-003.html#versions-and-codenames"
+id="toc-versions-and-codenames"><span
+class="toc-section-number">2.2</span> Versions and codenames</a></li>
+<li><a href="chapter-003.html#the-workspace"
+id="toc-the-workspace"><span class="toc-section-number">2.3</span> The
+workspace</a></li>
+</ul></li>
+<li><a href="chapter-004.html#part-i-the-substrate"
+id="toc-part-i-the-substrate"><span class="toc-section-number">3</span>
+Part I: The Substrate</a>
+<ul>
+<li><a href="chapter-004.html#chapter-1.-grust-the-property-graph"
+id="toc-chapter-1.-grust-the-property-graph"><span
+class="toc-section-number">3.1</span> Chapter 1. Grust: The Property
+Graph</a></li>
+<li><a href="chapter-004.html#chapter-2.-the-query-language-gqlcypher"
+id="toc-chapter-2.-the-query-language-gqlcypher"><span
+class="toc-section-number">3.2</span> Chapter 2. The Query Language:
+GQL/Cypher</a></li>
+<li><a href="chapter-004.html#chapter-3.-typesec-capabilities-as-types"
+id="toc-chapter-3.-typesec-capabilities-as-types"><span
+class="toc-section-number">3.3</span> Chapter 3. TypeSec: Capabilities
+as Types</a></li>
+<li><a
+href="chapter-004.html#chapter-4.-typedid-identity-envelopes-and-the-torcello-platform"
+id="toc-chapter-4.-typedid-identity-envelopes-and-the-torcello-platform"><span
+class="toc-section-number">3.4</span> Chapter 4. TypeDID: Identity,
+Envelopes, and the Torcello Platform</a></li>
+<li><a
+href="chapter-004.html#chapter-5.-lakecat-the-iceberg-rest-catalog"
+id="toc-chapter-5.-lakecat-the-iceberg-rest-catalog"><span
+class="toc-section-number">3.5</span> Chapter 5. LakeCat: The Iceberg
+REST Catalog</a></li>
+<li><a href="chapter-004.html#chapter-6.-the-bootstrap-handoff"
+id="toc-chapter-6.-the-bootstrap-handoff"><span
+class="toc-section-number">3.6</span> Chapter 6. The Bootstrap
+Handoff</a></li>
+<li><a href="chapter-004.html#chapter-7.-sail-and-the-cypher-extension"
+id="toc-chapter-7.-sail-and-the-cypher-extension"><span
+class="toc-section-number">3.7</span> Chapter 7. Sail and the Cypher
+Extension</a></li>
+</ul></li>
+<li><a href="chapter-005.html#part-ii-querygraph-the-semantic-layer"
+id="toc-part-ii-querygraph-the-semantic-layer"><span
+class="toc-section-number">4</span> Part II: QueryGraph, the Semantic
+Layer</a>
+<ul>
+<li><a
+href="chapter-005.html#chapter-8.-semantic-croissant-what-the-data-is"
+id="toc-chapter-8.-semantic-croissant-what-the-data-is"><span
+class="toc-section-number">4.1</span> Chapter 8. Semantic Croissant:
+What the Data Is</a></li>
+<li><a
+href="chapter-005.html#chapter-9.-cdif-how-the-data-is-found-and-accessed"
+id="toc-chapter-9.-cdif-how-the-data-is-found-and-accessed"><span
+class="toc-section-number">4.2</span> Chapter 9. CDIF: How the Data Is
+Found and Accessed</a></li>
+<li><a href="chapter-005.html#chapter-10.-did-who-is-acting"
+id="toc-chapter-10.-did-who-is-acting"><span
+class="toc-section-number">4.3</span> Chapter 10. DID: Who Is
+Acting</a></li>
+<li><a href="chapter-005.html#chapter-11.-odrl-what-is-allowed"
+id="toc-chapter-11.-odrl-what-is-allowed"><span
+class="toc-section-number">4.4</span> Chapter 11. ODRL: What Is
+Allowed</a></li>
+<li><a href="chapter-005.html#chapter-12.-osi-business-semantics"
+id="toc-chapter-12.-osi-business-semantics"><span
+class="toc-section-number">4.5</span> Chapter 12. OSI: Business
+Semantics</a></li>
+<li><a href="chapter-005.html#chapter-13.-governance-the-dual-gate"
+id="toc-chapter-13.-governance-the-dual-gate"><span
+class="toc-section-number">4.6</span> Chapter 13. Governance: The Dual
+Gate</a></li>
+<li><a href="chapter-005.html#chapter-14.-lineage-and-attestations"
+id="toc-chapter-14.-lineage-and-attestations"><span
+class="toc-section-number">4.7</span> Chapter 14. Lineage and
+Attestations</a></li>
+<li><a href="chapter-005.html#chapter-15.-the-lakehouse-path"
+id="toc-chapter-15.-the-lakehouse-path"><span
+class="toc-section-number">4.8</span> Chapter 15. The Lakehouse
+Path</a></li>
+<li><a
+href="chapter-005.html#chapter-16.-the-qglake-story-the-resilience-desk"
+id="toc-chapter-16.-the-qglake-story-the-resilience-desk"><span
+class="toc-section-number">4.9</span> Chapter 16. The QGLake Story: The
+Resilience Desk</a></li>
+<li><a href="chapter-005.html#chapter-17.-qg-python-the-pythonic-mirror"
+id="toc-chapter-17.-qg-python-the-pythonic-mirror"><span
+class="toc-section-number">4.10</span> Chapter 17. qg-python: The
+Pythonic Mirror</a></li>
+</ul></li>
+<li><a href="chapter-006.html#part-iii-the-interoperability-surfaces"
+id="toc-part-iii-the-interoperability-surfaces"><span
+class="toc-section-number">5</span> Part III: The Interoperability
+Surfaces</a>
+<ul>
+<li><a href="chapter-006.html#chapter-18.-the-v1-api-and-envelope-auth"
+id="toc-chapter-18.-the-v1-api-and-envelope-auth"><span
+class="toc-section-number">5.1</span> Chapter 18. The /v1 API and
+Envelope Auth</a></li>
+<li><a
+href="chapter-006.html#chapter-19.-mcp-one-server-every-framework"
+id="toc-chapter-19.-mcp-one-server-every-framework"><span
+class="toc-section-number">5.2</span> Chapter 19. MCP: One Server, Every
+Framework</a></li>
+<li><a href="chapter-006.html#chapter-20.-a2a-tool-schemas-and-adapters"
+id="toc-chapter-20.-a2a-tool-schemas-and-adapters"><span
+class="toc-section-number">5.3</span> Chapter 20. A2A, Tool Schemas, and
+Adapters</a></li>
+<li><a href="chapter-006.html#chapter-21.-the-governed-navigator-loop"
+id="toc-chapter-21.-the-governed-navigator-loop"><span
+class="toc-section-number">5.4</span> Chapter 21. The Governed Navigator
+Loop</a></li>
+<li><a href="chapter-006.html#chapter-22.-the-cross-language-contract"
+id="toc-chapter-22.-the-cross-language-contract"><span
+class="toc-section-number">5.5</span> Chapter 22. The Cross-Language
+Contract</a></li>
+</ul></li>
+<li><a href="chapter-007.html#part-iv-integration-in-practice"
+id="toc-part-iv-integration-in-practice"><span
+class="toc-section-number">6</span> Part IV: Integration in Practice</a>
+<ul>
+<li><a
+href="chapter-007.html#chapter-23.-assembling-the-lakehouse-in-ten-steps"
+id="toc-chapter-23.-assembling-the-lakehouse-in-ten-steps"><span
+class="toc-section-number">6.1</span> Chapter 23. Assembling the
+Lakehouse in Ten Steps</a></li>
+<li><a
+href="chapter-007.html#chapter-24.-end-to-end-catalog-to-governed-answer"
+id="toc-chapter-24.-end-to-end-catalog-to-governed-answer"><span
+class="toc-section-number">6.2</span> Chapter 24. End to End: Catalog to
+Governed Answer</a></li>
+<li><a
+href="chapter-007.html#chapter-25.-live-dataverse-to-governed-answer"
+id="toc-chapter-25.-live-dataverse-to-governed-answer"><span
+class="toc-section-number">6.3</span> Chapter 25. Live Dataverse to
+Governed Answer</a></li>
+<li><a href="chapter-007.html#chapter-26.-plugging-in-agent-frameworks"
+id="toc-chapter-26.-plugging-in-agent-frameworks"><span
+class="toc-section-number">6.4</span> Chapter 26. Plugging In Agent
+Frameworks</a></li>
+<li><a href="chapter-007.html#chapter-27.-operating-and-releasing"
+id="toc-chapter-27.-operating-and-releasing"><span
+class="toc-section-number">6.5</span> Chapter 27. Operating and
+Releasing</a></li>
+</ul></li>
+<li><a href="chapter-008.html#future-work" id="toc-future-work"><span
+class="toc-section-number">7</span> Future Work</a></li>
+<li><a href="chapter-009.html#appendix-glossary-and-link-index"
+id="toc-appendix-glossary-and-link-index"><span
+class="toc-section-number">8</span> Appendix: Glossary and Link
+Index</a>
+<ul>
+<li><a href="chapter-009.html#glossary" id="toc-glossary"><span
+class="toc-section-number">8.1</span> Glossary</a></li>
+<li><a href="chapter-009.html#link-index" id="toc-link-index"><span
+class="toc-section-number">8.2</span> Link Index</a></li>
+</ul></li>
+</ul>
+</nav>
+
+</body>
+</html>

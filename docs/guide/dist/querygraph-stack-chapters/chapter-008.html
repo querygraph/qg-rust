@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-14" />
+  <title>Future Work</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="book.css" />
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="chapter-001.html" accesskey="u" rel="up">The QueryGraph Stack</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">The QueryGraph Stack</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="chapter-009.html" accesskey="n" rel="next">Appendix: Glossary and Link Index</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="chapter-007.html" accesskey="p" rel="previous">Part IV: Integration in Practice</a>
+</span>
+</div>
+</nav>
+<h1 data-number="7" id="future-work"><span
+class="header-section-number">7</span> Future Work</h1>
+<p>The near line (post-Sentinel):</p>
+<ul>
+<li><strong>The live navigator loop as the default path</strong>: LLM
+runs under identical receipts, benchmarked against the deterministic
+baseline; Rust parity for the full loop (search and plan are shared
+today; the LLM binding is Python-first).</li>
+<li><strong>The remaining <code>/v1</code> surface</strong>: lineage
+event queries, audit verification listings, access <em>explanation</em>
+(why was this denied?) — all behind envelope auth.</li>
+<li><strong>Adopting Torcello</strong>: TypeSec’s interop plane,
+<code>mcp-gate</code> in front of QueryGraph’s own MCP servers, signed
+decision receipts unified with QueryGraph’s access receipts, and the
+enforcement proxy as the governed inference layer. The dependency bump
+is done; the integration is the work.</li>
+</ul>
+<p>The wider arc (from the workspace review, FABLE-REVIEW-1 in the
+meta-repo):</p>
+<ul>
+<li><strong>Catalog ecosystem</strong>: Apache Polaris
+<code>SemanticModel</code> entities and a <code>/navigator-bundle</code>
+projection endpoint — LakeCat-first, then the upstream conversation; ODS
+packaging under <code>/.well-known/</code>.</li>
+<li><strong>Standards round-trips</strong>: <code>OSIMetricFacet</code>
+upstreaming to OpenLineage; Marquez in CI; <code>mlcroissant</code>
+validation; importers from dbt MetricFlow and Cube into OSI; a Hugging
+Face Croissant importer.</li>
+<li><strong>Distribution</strong>: crates.io publication once the
+path-dependency knot is cut; an ADBC/Flight SQL path so notebooks can
+query Sail without the PySpark stack; a <code>docker compose up</code>
+demo of the whole evidence chain.</li>
+<li><strong>Scale and research</strong>: Merkle-batched attestations per
+tenant and time window; OWL/SKOS ontology import into the Grust graph;
+cross-node federation with inbound signed bundles; and the benchmark
+that motivates the whole stack — <em>how much does a governed semantic
+layer improve agent accuracy over the same lakehouse?</em> — measured on
+text-to-SQL tasks with and without OSI/Croissant context.</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-14" />
+  <title>Part I: The Substrate</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="book.css" />
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="chapter-001.html" accesskey="u" rel="up">The QueryGraph Stack</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">The QueryGraph Stack</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="chapter-005.html" accesskey="n" rel="next">Part II: QueryGraph, the Semantic Layer</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="chapter-003.html" accesskey="p" rel="previous">The Stack: An Overview</a>
+</span>
+</div>
+</nav>
+<h1 data-number="3" id="part-i-the-substrate"><span
+class="header-section-number">3</span> Part I: The Substrate</h1>
+<p>The four components underneath the semantic layer: the graph and its
+query language, the security fabric and its identity machinery, the
+catalog and its handoff, and the compute engine. Each chapter explains
+its component from scratch and ends with worked examples.</p>
+<h2 data-number="3.1" id="chapter-1.-grust-the-property-graph"><span
+class="header-section-number">3.1</span> Chapter 1. Grust: The Property
+Graph</h2>
+<p>Grust is a modern property-graph API for Rust with a deliberately
+plain core model:</p>
+<pre class="text"><code>Graph = nodes + edges
+Node  = id + label + properties
+Edge  = optional id + from + to + label + properties</code></pre>
+<p>That shape is expressive enough for persistent graph databases but
+small enough for tests, import/export tools, scrapers, and
+knowledge-graph pipelines. The design principle is strict separation of
+concerns: application code builds a <code>grust::Graph</code>; backend
+crates decide how to persist or query it. Grust is not competing with
+<code>petgraph</code> for in-memory graph algorithms — it is the
+<em>persistent property-graph layer</em>: stable application IDs, node
+and edge labels, typed properties, optional schema metadata, traversal
+expressed as an IR rather than a query string, and an async
+<code>GraphStore</code> trait for persistence backends.</p>
+<p>The workspace ships a facade crate (<code>grust-graph</code>,
+imported as <code>grust</code>) over a core (model, builder, schema
+validation, traversal IR, <code>GraphStore</code>) and a family of
+backends:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Backend crate</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grust-memory</code></td>
+<td>deterministic in-memory store for tests and local use</td>
+</tr>
+<tr>
+<td><code>grust-sail</code></td>
+<td><strong>Sail SparkConnect</strong> — graphs as Spark DataFrames
+(QueryGraph’s choice)</td>
+</tr>
+<tr>
+<td><code>grust-turso</code></td>
+<td>embedded Turso/SQLite storage (LakeCat’s choice)</td>
+</tr>
+<tr>
+<td><code>grust-postgres</code>, <code>-postgres-pgq</code>,
+<code>-pggraph</code></td>
+<td>PostgreSQL: universal tables, SQL/PGQ, pgGraph</td>
+</tr>
+<tr>
+<td><code>grust-surreal</code>, <code>grust-helix</code>,
+<code>grust-falkor</code>, <code>grust-ladybug</code>,
+<code>grust-lancedb</code></td>
+<td>SurrealDB, HelixDB, FalkorDB, LadybugDB, LanceDB</td>
+</tr>
+<tr>
+<td><code>grust-cocoindex</code></td>
+<td>CocoIndex-style target-state export</td>
+</tr>
+</tbody>
+</table>
+<p>The builder deduplicates nodes by id and, by default, edges by
+<code>(from, label, to)</code>; domains that need multi-edges opt into
+<code>EdgePolicy::AllowDuplicates</code>. Typed property schemas
+validate graphs before they reach a store.</p>
+<p>QueryGraph uses Grust twice. First, the semantic graph — datasets,
+fields, ontology terms, agents, policies, as nodes and edges — loads
+into a Grust store. Second, the Sail fork compiles a Cypher extension
+<em>into</em> the engine (Chapter 7), reusing Grust’s model, so the same
+graph is queryable from Spark sessions.</p>
+<h3 data-number="3.1.1"
+id="worked-example-build-a-graph-store-it-traverse-it"><span
+class="header-section-number">3.1.1</span> Worked example: build a
+graph, store it, traverse it</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">grust::prelude::</span><span class="op">*;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> builder <span class="op">=</span> <span class="pp">GraphBuilder::</span>new()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> dataset <span class="op">=</span> builder</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>node(<span class="st">&quot;Dataset&quot;</span><span class="op">,</span> <span class="st">&quot;dataset:county-finance&quot;</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>prop(<span class="st">&quot;source&quot;</span><span class="op">,</span> <span class="st">&quot;sail.qg_lakehouse.government_finance__countydata&quot;</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>finish()<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> metric <span class="op">=</span> builder</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>node(<span class="st">&quot;Metric&quot;</span><span class="op">,</span> <span class="st">&quot;metric:fiscal-capacity&quot;</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>prop(<span class="st">&quot;expression&quot;</span><span class="op">,</span> <span class="st">&quot;SUM(total_revenue - mandated_spend)&quot;</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>finish()<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>builder<span class="op">.</span>edge(<span class="st">&quot;MEASURED_OVER&quot;</span><span class="op">,</span> <span class="op">&amp;</span>metric<span class="op">,</span> <span class="op">&amp;</span>dataset)<span class="op">.</span>finish()<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> graph <span class="op">=</span> builder<span class="op">.</span>build()<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Persist and traverse (memory store; SailGraphStore is the same trait).</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> store <span class="op">=</span> <span class="pp">MemoryGraphStore::</span>new()<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>store<span class="op">.</span>put_graph(<span class="op">&amp;</span>graph)<span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> datasets <span class="op">=</span> store</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>traverse(</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Traversal::</span>from_node(<span class="st">&quot;metric:fiscal-capacity&quot;</span>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>out(<span class="st">&quot;MEASURED_OVER&quot;</span>)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>to(<span class="st">&quot;Dataset&quot;</span>)<span class="op">,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="kw">await</span><span class="op">?;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="pp">assert_eq!</span>(datasets<span class="op">.</span>len()<span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span></span></code></pre></div>
+<p>The traversal is an IR, not a string: the same <code>Traversal</code>
+runs against memory, PostgreSQL, or Sail, each backend lowering it
+natively.</p>
+<h3 data-number="3.1.2" id="api-reference"><span
+class="header-section-number">3.1.2</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GraphBuilder</code></td>
+<td><code>new()</code>,
+<code>.node(label, id).prop(k, v).finish()</code>,
+<code>.edge(label, &amp;from, &amp;to).prop(k, v).finish()</code>,
+<code>.edge_policy(EdgePolicy::AllowDuplicates)</code>,
+<code>.build() -&gt; Graph</code></td>
+</tr>
+<tr>
+<td><code>Graph</code> / <code>Node</code> / <code>Edge</code></td>
+<td>plain data: ids, labels, typed property maps;
+serde-serializable</td>
+</tr>
+<tr>
+<td><code>Traversal</code></td>
+<td><code>from_node(id).out(label).to(label)</code> — an IR, lowered
+natively per backend</td>
+</tr>
+<tr>
+<td><code>GraphStore</code> (async trait)</td>
+<td><code>put_node</code>, <code>put_edge</code>,
+<code>put_graph</code>, <code>get_node</code>,
+<code>traverse</code></td>
+</tr>
+<tr>
+<td>Stores</td>
+<td><code>MemoryGraphStore::new()</code>; <code>SailGraphStore</code>
+(Spark Connect); <code>grust-turso</code>,
+<code>grust-postgres{,-pgq}</code>, <code>grust-surreal</code>,
+<code>grust-helix</code>, <code>grust-falkor</code>,
+<code>grust-ladybug</code>, <code>grust-lancedb</code></td>
+</tr>
+<tr>
+<td>Schema</td>
+<td>optional typed property schemas; graphs validate before reaching a
+store</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="3.2" id="chapter-2.-the-query-language-gqlcypher"><span
+class="header-section-number">3.2</span> Chapter 2. The Query Language:
+GQL/Cypher</h2>
+<p>Crab (0.11) gave the graph a language: a standards-conformant
+GQL/Cypher layer — lexer, parser, AST, semantic analysis — over the
+property graph, with read pushdown into Sail and SQLite, first-class
+Decimal/Duration/temporal values, and catalog procedures such as
+<code>CALL db.labels()</code>.</p>
+<p>Lobster (0.12) completes it. The merged <strong>Full39075
+profile</strong> brings:</p>
+<ul>
+<li><code>CALL { … }</code> subqueries;</li>
+<li>table-valued functions (<code>CALL</code> with correlated
+arguments);</li>
+<li><code>shortestPath()</code> / <code>allShortestPaths()</code> on the
+read reference;</li>
+<li>backend-native query passthrough escape hatches;</li>
+<li>an executable portable read corpus (the conformance tests run as
+code);</li>
+<li><strong>atomic Cypher transaction batches</strong>:
+<code>CypherTransaction</code> accumulates eagerly-planned write
+statements between <code>START TRANSACTION</code>/<code>BEGIN</code> and
+commit, executing them atomically behind the transaction surface.</li>
+</ul>
+<p>Reads are portable: <code>grust-cypher::read::run_read_query</code>
+executes Cypher against any <code>grust::Graph</code> with a reference
+executor, while stores like <code>SailGraphStore</code> push the
+identical query down to the backend. Writable Cypher is a strict,
+backend-neutral mutation plan (<code>cypher_mutation_plan</code>) that
+stores execute natively.</p>
+<h3 data-number="3.2.1"
+id="worked-example-cypher-over-the-semantic-graph"><span
+class="header-section-number">3.2.1</span> Worked example: Cypher over
+the semantic graph</h3>
+<p>Exactly how qg-rust queries its semantic graph
+(<code>src/cypher.rs</code>):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">grust_cypher::read::</span>run_read_query<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">grust_cypher::</span>CypherParameters<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> table <span class="op">=</span> run_read_query(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">&amp;</span>graph<span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;MATCH (m:Metric)-[:MEASURED_OVER]-&gt;(d:Dataset) </span><span class="sc">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="st">     RETURN m.expression, d.source&quot;</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">&amp;</span><span class="pp">CypherParameters::</span>new()<span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)<span class="op">?;</span></span></code></pre></div>
+<p>Through the Sail fork’s extension (Chapter 7), the same
+<code>MATCH</code> also runs from any Spark Connect session — PySpark
+included — against the graph the lakehouse projects.</p>
+<h3 data-number="3.2.2" id="api-reference-1"><span
+class="header-section-number">3.2.2</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grust_cypher::read::run_read_query(&amp;graph, cypher, &amp;params)</code></td>
+<td>portable reference executor over any <code>grust::Graph</code>;
+returns <code>CypherResultTable</code></td>
+</tr>
+<tr>
+<td><code>CypherParameters</code></td>
+<td><code>new()</code>, typed parameter binding</td>
+</tr>
+<tr>
+<td><code>cypher_mutation_plan(cypher)</code> /
+<code>sail_cypher_mutation_plan</code></td>
+<td>strict backend-neutral write plans</td>
+</tr>
+<tr>
+<td><code>SailGraphStore::run_read_query</code> /
+<code>execute_cypher_mutation*</code></td>
+<td>backend pushdown; <code>_returning_with_options</code> returns
+generated ids</td>
+</tr>
+<tr>
+<td><code>CypherTransaction</code></td>
+<td>accumulates eagerly-planned writes between
+<code>BEGIN</code>/<code>START TRANSACTION</code> and commit; atomic
+execution</td>
+</tr>
+<tr>
+<td><code>CypherSession</code> / <code>SessionCommand</code></td>
+<td>standalone <code>USE</code> and session commands</td>
+</tr>
+<tr>
+<td>Catalog procedures</td>
+<td><code>CALL db.labels()</code> and friends, over the projected
+graph</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="3.3"
+id="chapter-3.-typesec-capabilities-as-types"><span
+class="header-section-number">3.3</span> Chapter 3. TypeSec:
+Capabilities as Types</h2>
+<p>TypeSec encodes permissions as types. Most security systems check
+permissions at runtime — and a guard-based check can be forgotten,
+skipped, or bypassed:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ❌ Guard-based — one missed call and the policy is fiction.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> acl<span class="op">.</span>check(user<span class="op">,</span> <span class="st">&quot;write&quot;</span><span class="op">,</span> resource) <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    resource<span class="op">.</span>write(data)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>TypeSec inverts this. If your code does not hold a
+<code>Capability&lt;CanWrite, Report&gt;</code>, the write method
+<em>does not exist</em> for you:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ✅ Type-level — the capability IS the proof.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> write(cap<span class="op">:</span> Capability<span class="op">&lt;</span>CanWrite<span class="op">,</span> Report<span class="op">&gt;,</span> report<span class="op">:</span> <span class="op">&amp;</span>Report) <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// `cap` existing in scope means the policy engine approved this.</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <code>Capability&lt;P, R&gt;</code> struct is unforgeable by
+construction:</p>
+<ul>
+<li>its constructor is <code>pub(crate)</code> — only the policy engine
+creates one;</li>
+<li><code>P</code> and <code>R</code> are phantom types —
+<code>Capability&lt;CanRead, Report&gt;</code> and
+<code>Capability&lt;CanWrite, Report&gt;</code> are <em>different
+types</em>;</li>
+<li>the <code>Permission</code> trait is sealed — no new permissions
+outside <code>typesec-core</code>.</li>
+</ul>
+<p>The only production path to a capability runs a policy check and
+emits an audit event; a denial is a typed error carrying a receipt,
+never a capability. Policy violations are compile errors, not incident
+reports.</p>
+<p>QueryGraph’s supervised agent story (Part II, Chapter 16) mints
+capabilities for exactly the actions its topology needs:
+<code>AiCanInfer</code>, <code>CanReadSensitive</code>,
+<code>CanDelegate</code>, <code>CanAggregateSummaries</code>,
+<code>CanReadDatasetCompartment</code>, and
+<code>CanDeriveRedactedSummary</code>.</p>
+<h3 data-number="3.3.1"
+id="worked-example-a-capability-is-the-proof"><span
+class="header-section-number">3.3.1</span> Worked example: a capability
+is the proof</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">typesec::prelude::</span><span class="op">*;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Without a Capability&lt;CanRead, Report&gt; in hand, this function</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// cannot be called — the check is the type system&#39;s, not yours.</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> read_report(cap<span class="op">:</span> Capability<span class="op">&lt;</span>CanRead<span class="op">,</span> Report<span class="op">&gt;,</span> report<span class="op">:</span> <span class="op">&amp;</span>Report) <span class="op">-&gt;</span> Summary <span class="op">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    summarize(report) <span class="co">// `cap` in scope == the policy engine said yes</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> decision <span class="op">=</span> engine<span class="op">.</span>check(<span class="op">&amp;</span>subject<span class="op">,</span> <span class="pp">Action::</span><span class="bu">Read</span><span class="op">,</span> <span class="op">&amp;</span>report)<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> decision <span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(cap) <span class="op">=&gt;</span> read_report(cap<span class="op">,</span> <span class="op">&amp;</span>report)<span class="op">,</span>      <span class="co">// audit event already emitted</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Err</span>(denied) <span class="op">=&gt;</span> <span class="cf">return</span> <span class="cn">Err</span>(denied<span class="op">.</span>receipt()) <span class="co">// a denial is data, not panic</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<h3 data-number="3.3.2" id="api-reference-2"><span
+class="header-section-number">3.3.2</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Capability&lt;P, R&gt;</code></td>
+<td>unforgeable proof; <code>pub(crate)</code> constructor; phantom
+permission/resource types</td>
+</tr>
+<tr>
+<td><code>Permission</code> (sealed)</td>
+<td>e.g. <code>CanRead</code>, <code>CanWrite</code>; QueryGraph adds
+domain permissions (<code>AiCanInfer</code>,
+<code>CanReadSensitive</code>, <code>CanDelegate</code>,
+<code>CanAggregateSummaries</code>,
+<code>CanReadDatasetCompartment</code>,
+<code>CanDeriveRedactedSummary</code>)</td>
+</tr>
+<tr>
+<td><code>PolicyEngine::check(subject, action, resource)</code></td>
+<td><code>Ok(Capability)</code> — audit event emitted — or
+<code>Err(Denied)</code> with a receipt</td>
+</tr>
+<tr>
+<td><code>Capability::&lt;P, R&gt;::permission_name()</code></td>
+<td>stable permission strings for evidence reports</td>
+</tr>
+<tr>
+<td>Policy engines</td>
+<td>RBAC, ODRL, and graph policy backends behind one
+<code>check</code></td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="3.4"
+id="chapter-4.-typedid-identity-envelopes-and-the-torcello-platform"><span
+class="header-section-number">3.4</span> Chapter 4. TypeDID: Identity,
+Envelopes, and the Torcello Platform</h2>
+<p>On top of the capability core, TypeSec provides the machinery
+QueryGraph uses for agent identity and messaging:</p>
+<ul>
+<li><strong>Deterministic Ed25519 keys</strong>:
+<code>Ed25519DidKey::from_seed</code> derives a keypair from a seed
+(SHA-256 of the seed as the private key), so an agent recreated from the
+same seed signs identically across processes — and, as QueryGraph
+proves, across languages.</li>
+<li><strong><code>did:key</code> documents</strong>: public keys
+published as W3C DID identifiers anyone can resolve without a
+registry.</li>
+<li><strong>Signed, encrypted envelopes</strong> under the
+<code>ed25519-x25519-chacha20</code> profile, with a request/reply
+conversation model (the <code>typedid/a2a</code> protocol label — made
+literal by QueryGraph’s A2A card, Part III).</li>
+<li><strong>Audit-safe attestations</strong>: each verified envelope
+exposes who did what to which resource at which privacy level — without
+revealing the payload or the signing material. The envelope digest binds
+the attestation to the exact message.</li>
+</ul>
+<p>Torcello (0.12) grows this fabric into a platform other agent stacks
+plug into: an agent-framework <strong>interop plane</strong> guarding
+OpenAI, Anthropic, LangChain, and Pydantic-AI tool calls; an MCP dialect
+and <strong><code>mcp-gate</code></strong>, a deny-by-default MCP stdio
+proxy; <strong>signed decision receipts</strong> with decision logging
+and replay; JSON-Schema-validated tool bindings and a
+<code>#[typesec_tool]</code> macro; an OpenTelemetry audit sink; a WASM
+decision core for JS/TS agents; a PyPI-ready Python package; and an
+OpenAI/Anthropic-compatible <strong>enforcement proxy</strong> — the
+“governed inference proxy” pattern, built at the security layer.
+QueryGraph already builds against Torcello; adopting these surfaces
+rather than duplicating them is the next integration step (see Future
+Work).</p>
+<h3 data-number="3.4.1"
+id="worked-example-one-seed-one-identity-two-languages"><span
+class="header-section-number">3.4.1</span> Worked example: one seed, one
+identity, two languages</h3>
+<p>Python signs:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.typedid <span class="im">import</span> TypeDidAgent</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>supervisor <span class="op">=</span> TypeDidAgent.new(<span class="st">&quot;SupervisorAgent&quot;</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>envelope <span class="op">=</span> supervisor.request(</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    TypeDidAgent.new(<span class="st">&quot;FinanceAgent&quot;</span>),</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    action<span class="op">=</span><span class="st">&quot;summarize&quot;</span>, resource<span class="op">=</span><span class="st">&quot;compartment:finance&quot;</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    payload<span class="op">=</span>{<span class="st">&quot;question&quot;</span>: <span class="st">&quot;Where is fiscal stress highest?&quot;</span>},</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(envelope.signature[:<span class="dv">24</span>])            <span class="co"># ed25519:8a7a231b6f67f4…</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(envelope.verification_method[:<span class="dv">32</span>])  <span class="co"># did:key:z6Mkrdhpo…</span></span></code></pre></div>
+<p>Rust mints the identical identity from the identical seed:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">querygraph::agent::</span>PyTypeDidEnvelope<span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> envelope <span class="op">=</span> <span class="pp">PyTypeDidEnvelope::</span>signed(</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;querygraph-agent:SupervisorAgent&quot;</span><span class="op">,</span>   <span class="co">// same seed ⇒ same did:key</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;did:example:recipient&quot;</span><span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;summarize&quot;</span><span class="op">,</span> <span class="st">&quot;compartment:finance&quot;</span><span class="op">,</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">serde_json::json!</span>(<span class="op">{</span><span class="st">&quot;question&quot;</span><span class="op">:</span> <span class="st">&quot;Where is fiscal stress highest?&quot;</span><span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="pp">assert!</span>(envelope<span class="op">.</span>verify()<span class="op">.</span>signature_valid)<span class="op">;</span></span></code></pre></div>
+<p>A fixture test pins the shared <code>did:key</code>, so the
+derivations can never drift.</p>
+<h3 data-number="3.4.2" id="api-reference-3"><span
+class="header-section-number">3.4.2</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Ed25519DidKey::from_seed(bytes)</code></td>
+<td>deterministic keypair — sha256(seed) as private key</td>
+</tr>
+<tr>
+<td><code>Did::key(signing_public)</code></td>
+<td><code>did:key:z6Mk…</code> identifier</td>
+</tr>
+<tr>
+<td><code>TypeDidProfile::ed25519_x25519_chacha20()</code></td>
+<td>the negotiated envelope profile</td>
+</tr>
+<tr>
+<td><code>A2aTypeDidAdapter::wrap(TypeDidWrapRequest, resolver, key_store)</code></td>
+<td>sign + encrypt a payload into an envelope</td>
+</tr>
+<tr>
+<td><code>TypeDidGateway::open_message(&amp;envelope)</code></td>
+<td>verify + decrypt; yields <code>VerifiedTypeDidMessage</code></td>
+</tr>
+<tr>
+<td><code>VerifiedTypeDidMessage::attestation()</code></td>
+<td>audit-safe: action, resource, privacy, profile, envelope digest</td>
+</tr>
+<tr>
+<td>Torcello surfaces</td>
+<td>interop plane (OpenAI/Anthropic/LangChain/Pydantic-AI guards),
+<code>mcp-gate</code>, signed decision receipts + replay,
+<code>#[typesec_tool]</code>, OTel sink, WASM core, enforcement proxy,
+PyPI <code>typesec</code></td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="3.5"
+id="chapter-5.-lakecat-the-iceberg-rest-catalog"><span
+class="header-section-number">3.5</span> Chapter 5. LakeCat: The Iceberg
+REST Catalog</h2>
+<p>LakeCat is a Rust-native Apache Iceberg REST catalog and QueryGraph
+foundation. Standard Iceberg clients speak to it on ordinary REST
+catalog paths (<code>/catalog/v1</code>); underneath, it binds catalog
+state, governed Sail planning, TypeSec receipts, and Grust projection to
+the <em>same accepted table transition</em>, so the catalog’s view of a
+table and the governance evidence about it can never drift apart.</p>
+<p>The catalog spine runs on Turso MVCC: commits to different tables run
+truly concurrently, and a same-table race converges to exactly one
+winner through a pointer compare-and-swap — no global write lock. The
+audit event, the lineage outbox row, and the idempotency record are
+written in the <em>same transaction</em> as the table change, which is
+what lets a downstream consumer accept catalog state as proof rather
+than as a best-effort side effect.</p>
+<p>Scan planning routes through the Sail-facing engine: point-in-time
+scans produce opaque Iceberg REST plan-task tokens from stable Sail
+metadata; append-only incremental scans over a snapshot chain plan only
+the manifests added in the requested range, expanding delete manifests
+through Sail’s delete-file index. REST scan filters are validated
+against Sail’s generated Iceberg expression models before planning.</p>
+<p>Ocelot (0.3.0) proves the boundary from the stock client’s side:
+Iceberg REST conformance demonstrated by a <strong>PyIceberg
+round-trip</strong> — spec-correct error types (403 on authorization
+denial, 409 on a duplicate namespace, 404 on a missing one),
+<code>listTables</code>, honest update rejection on the default build,
+and fail-closed commit-requirement validation — over dependencies moved
+to Grust “Lobster” and TypeSec “Torcello”. The release rests on a
+recorded release-candidate proof harness (Chapter 6’s handoff, verified
+end to end, 40/40 QueryGraph tests green).</p>
+<h3 data-number="3.5.1" id="api-reference-4"><span
+class="header-section-number">3.5.1</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /catalog/v1/config</code></td>
+<td>standard Iceberg REST config — stock clients start here</td>
+</tr>
+<tr>
+<td><code>/catalog/v1/namespaces…</code></td>
+<td>namespace CRUD, <code>listTables</code>, table load/commit —
+Iceberg-spec error model (403/404/409 with spec <code>type</code>
+strings)</td>
+</tr>
+<tr>
+<td>Scan planning</td>
+<td>point-in-time and append-only incremental plans as opaque plan-task
+tokens from stable Sail metadata; filters validated against generated
+Iceberg expression models</td>
+</tr>
+<tr>
+<td><code>GET /querygraph/v1/bootstrap</code></td>
+<td>the bootstrap bundle: Croissant, CDIF, OSI, ODRL, OpenLineage,
+Grust-ready graph envelope</td>
+</tr>
+<tr>
+<td><code>lakecat-cli</code></td>
+<td><code>config --catalog URL</code> and friends</td>
+</tr>
+<tr>
+<td>Feature flags</td>
+<td><code>sail-local</code>, <code>typesec-local</code>,
+<code>grust-turso-local</code>, <code>turso-local</code> compose the
+local integration set</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="3.6" id="chapter-6.-the-bootstrap-handoff"><span
+class="header-section-number">3.6</span> Chapter 6. The Bootstrap
+Handoff</h2>
+<p>LakeCat’s signature surface for QueryGraph is the <strong>bootstrap
+bundle</strong> at <code>/querygraph/v1/bootstrap</code>: a projection
+of live catalog tables into Croissant, CDIF, OSI, ODRL, OpenLineage, and
+a Grust-ready graph envelope.</p>
+<p>The wire format and its verification live in a small shared crate,
+<code>qglake-bundle</code>, used by both producer and consumer. qg-rust
+does not keep a hand-written copy of those types: it deserializes the
+canonical <code>QueryGraphBootstrap</code>, runs LakeCat’s own
+<code>verify_manifest</code>, and layers its Cypher import plan on top.
+The bundle cannot mean two slightly different things on the two sides of
+the boundary.</p>
+<h3 data-number="3.6.1"
+id="worked-example-from-catalog-to-governed-import"><span
+class="header-section-number">3.6.1</span> Worked example: from catalog
+to governed import</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Terminal 1: the catalog, with Sail planning, TypeSec receipts,</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># and Grust projection bound to table transitions.</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="va">LAKECAT_BIND_ADDR</span><span class="op">=</span>127.0.0.1:8181 <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="va">LAKECAT_TURSO_PATH</span><span class="op">=</span>target/local/catalog.turso <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="va">LAKECAT_GRUST_TURSO_PATH</span><span class="op">=</span>target/local/catalog-graph.turso <span class="dt">\</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> lakecat-service <span class="dt">\</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--features</span> sail-local,typesec-local,grust-turso-local,turso-local</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Terminal 2: standard Iceberg clients see an ordinary REST catalog…</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> lakecat-cli <span class="at">--</span> config <span class="at">--catalog</span> http://127.0.0.1:8181</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># …and QueryGraph sees live tables projected into Croissant, CDIF,</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co"># OSI, ODRL, OpenLineage, and a Grust-ready graph envelope.</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> http://127.0.0.1:8181/querygraph/v1/bootstrap <span class="op">&gt;</span> bootstrap.json</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co"># qg-rust verifies the bundle with LakeCat&#39;s own shared wire crate</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co"># (qglake-bundle) and emits its import plan:</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> lakecat-import <span class="at">--bundle</span> bootstrap.json <span class="at">--output</span> import-plan.json</span></code></pre></div>
+<p>The import command prints the bundle’s verification report;
+QueryGraph accepts catalog state as <em>proof</em>.</p>
+<h3 data-number="3.6.2" id="api-reference-5"><span
+class="header-section-number">3.6.2</span> API reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Essentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>qglake-bundle</code> crate</td>
+<td>the shared wire format: <code>QueryGraphBootstrap</code> and its
+<code>verify_manifest</code></td>
+</tr>
+<tr>
+<td><code>LakeCatBootstrapBundle::from_path(path)</code> (qg-rust)</td>
+<td>parse a bundle file</td>
+</tr>
+<tr>
+<td><code>.import_plan()</code></td>
+<td>verification report + the Cypher import plan QueryGraph
+executes</td>
+</tr>
+<tr>
+<td>CLI</td>
+<td><code>querygraph lakecat-verify --bundle …</code> ·
+<code>querygraph lakecat-import --bundle … --output plan.json</code></td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="3.7"
+id="chapter-7.-sail-and-the-cypher-extension"><span
+class="header-section-number">3.7</span> Chapter 7. Sail and the Cypher
+Extension</h2>
+<p>Sail is the Spark-compatible lakehouse engine (from lakehq) that
+QueryGraph uses as its compute and storage substrate: typed Parquet
+tables registered in a Spark Connect-compatible server, queryable from
+PySpark, with the QueryGraph audit trail (<code>qg_audit</code>) living
+alongside the data it audits.</p>
+<p>The stack’s fork (branch <code>grust</code>) adds a <strong>Cypher
+graph-query extension compiled into Sail itself</strong> — roughly 5,600
+lines across twenty files: a Cypher AST in <code>sail-sql-parser</code>,
+graph analysis in <code>sail-sql-analyzer</code>, and plan resolution in
+<code>sail-plan</code>, with Spark Connect integration and a design
+document (<code>docs/development/graph-extension.md</code>). Crucially,
+it reuses Grust’s property-graph model and schema validation rather than
+reimplementing them.</p>
+<p>The consequence: the same semantic graph that QueryGraph loads
+through Grust is <code>MATCH</code>-able from any Spark Connect session
+— no separate graph database in the deployment, no second copy of the
+graph to drift.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From PySpark, against the Sail server the lakehouse already runs:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>spark.sql(<span class="st">&quot;MATCH (m:Metric)-[:MEASURED_OVER]-&gt;(d:Dataset) &quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;RETURN m.expression, d.source&quot;</span>).show()</span></code></pre></div>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-14" />
+  <title>The Stack: An Overview</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="book.css" />
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="chapter-001.html" accesskey="u" rel="up">The QueryGraph Stack</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">The QueryGraph Stack</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="chapter-004.html" accesskey="n" rel="next">Part I: The Substrate</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="chapter-002.html" accesskey="p" rel="previous">Executive Summary</a>
+</span>
+</div>
+</nav>
+<h1 data-number="2" id="the-stack-an-overview"><span
+class="header-section-number">2</span> The Stack: An Overview</h1>
+<h2 data-number="2.1" id="the-journey-of-a-question"><span
+class="header-section-number">2.1</span> The journey of a question</h2>
+<p>A question enters the stack at the top and evidence comes out at the
+bottom:</p>
+<ol type="1">
+<li>An agent — or a person, or another agent framework speaking MCP or
+HTTP — asks a question.</li>
+<li>QueryGraph searches the <strong>semantic model</strong> — OSI
+business terms, Croissant field semantics, ontology terms — for what the
+question means <em>here</em>, in this organization’s vocabulary.</li>
+<li>The <strong>rights layer</strong> decides, per source, whether this
+principal may read it: RBAC <em>and</em> ODRL must both allow. Every
+decision, allow or deny, becomes a receipt.</li>
+<li>SQL is planned only over allowed <strong>Sail</strong> sources;
+denied sources are named as off-limits, and never touched.</li>
+<li>Synthesis happens — deterministically, or via any LLM — and the
+answer travels in a <strong>TypeDID envelope</strong> signed with
+Ed25519 under a <code>did:key</code> verification method.</li>
+<li>An <strong>OpenLineage</strong> event (spec-conformant,
+schema-validated) records the run, and an Ed25519
+<strong>attestation</strong> anchors the event hash.</li>
+</ol>
+<p>Each step is somebody’s component. The semantic graph lives in Grust
+(and is queryable through Sail’s Cypher extension). The envelope
+machinery and the capability model are TypeSec. The tables come from a
+lakehouse whose catalog transitions LakeCat governs. And QueryGraph is
+the layer that makes them one system with one evidence chain.</p>
+<p>A useful way to read that chain — the sentence the whole stack exists
+to make true: <em>the answer used OSI metric X, resolved to Sail table
+Y, under capability C and <code>odrl:read</code>, emitting OpenLineage
+run R anchored by attestation A — and source Z was denied, with a
+receipt.</em> No mainstream agent framework offers that sentence.</p>
+<h2 data-number="2.2" id="versions-and-codenames"><span
+class="header-section-number">2.2</span> Versions and codenames</h2>
+<p>Stack releases are coordinated by codename, each repo keeping SemVer
+independently:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Version</th>
+<th>Codename</th>
+<th>Pool</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QueryGraph (both languages)</td>
+<td>0.4.0</td>
+<td>Sentinel</td>
+<td>birds of prey</td>
+</tr>
+<tr>
+<td>Grust</td>
+<td>0.12.0</td>
+<td>Lobster</td>
+<td>—</td>
+</tr>
+<tr>
+<td>TypeSec</td>
+<td>0.12.0</td>
+<td>Torcello</td>
+<td>Venetian landmarks</td>
+</tr>
+<tr>
+<td>LakeCat</td>
+<td>0.3.0</td>
+<td>Ocelot</td>
+<td>wild cats</td>
+</tr>
+</tbody>
+</table>
+<p>The 0.12 substrate wave landed together: Grust merged the Full39075
+GQL profile, TypeSec shipped its agent-interoperability platform, and
+LakeCat moved to both while proving stock-client Iceberg REST
+conformance — with QueryGraph verified green against all three.
+QueryGraph 0.4.0 “Sentinel” ships on top of that wave: where Goshawk
+opened the doors (MCP, A2A, <code>/v1</code>, cross-language crypto),
+Sentinel stands guard over what comes through them.</p>
+<h2 data-number="2.3" id="the-workspace"><span
+class="header-section-number">2.3</span> The workspace</h2>
+<p>The repositories expect sibling checkouts:</p>
+<pre class="text"><code>~/src/
+├── querygraph/          # meta-repo: README, FABLE-REVIEW-1, workspace map
+│   ├── qg-rust/         # reference implementation (this guide lives here)
+│   ├── qg-python/       # Pythonic mirror
+│   ├── sail/            # fork, branch `grust`, Cypher extension
+│   └── semantic/        # research: Polaris SemanticModel, OSI round-trips
+├── grust/               # path dependency of qg-rust
+├── lakecat/             # path dependency of qg-rust
+└── typesec/             # consumed from crates.io</code></pre>
+</body>
+</html>

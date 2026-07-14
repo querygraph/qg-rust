@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-14" />
+  <title>Part IV: Integration in Practice</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="book.css" />
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="chapter-001.html" accesskey="u" rel="up">The QueryGraph Stack</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">The QueryGraph Stack</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="chapter-008.html" accesskey="n" rel="next">Future Work</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="chapter-006.html" accesskey="p" rel="previous">Part III: The Interoperability Surfaces</a>
+</span>
+</div>
+</nav>
+<h1 data-number="6" id="part-iv-integration-in-practice"><span
+class="header-section-number">6</span> Part IV: Integration in
+Practice</h1>
+<h2 data-number="6.1"
+id="chapter-23.-assembling-the-lakehouse-in-ten-steps"><span
+class="header-section-number">6.1</span> Chapter 23. Assembling the
+Lakehouse in Ten Steps</h2>
+<p>The dedicated book walks this assembly in depth; here is the whole
+system in one sitting — the sequence the <code>dataverse-e2e</code> and
+lakehouse commands automate, each step naming the component that owns
+it:</p>
+<ol type="1">
+<li><strong>Load the lakehouse</strong> (Sail). Stream CSV/TSV/XLSX — or
+live Dataverse datasets — into typed Parquet tables; register views;
+write the load manifest.</li>
+<li><strong>Materialize Semantic Croissant</strong> (Chapter 8). A
+JSON-LD sidecar per dataset: files, record sets, fields, semantic
+types.</li>
+<li><strong>Project CDIF</strong> (Chapter 9). Discovery, access, and
+profile metadata derived from the Croissant document — never
+hand-maintained.</li>
+<li><strong>Build the OSI semantic model</strong> (Chapter 12). Fields
+become governed <code>SAIL_SQL</code> expressions; metrics get
+per-dialect SQL; ontology terms link shared meaning.</li>
+<li><strong>Load the Grust graph</strong> (Chapters 1–2). Datasets,
+fields, terms, agents, and policies become nodes and edges — queryable
+by Cypher, including from Spark via the Sail extension.</li>
+<li><strong>Identify agents with DIDs</strong> (Chapter 10).
+Deterministic <code>did:oyd</code> documents from seeds; the same seed
+yields the same identity in both languages.</li>
+<li><strong>Apply ODRL rights</strong> (Chapter 11). Permissions and
+prohibitions per dataset; the read/index/derive defaults that make
+training-by-default impossible.</li>
+<li><strong>Mint TypeSec capabilities</strong> (Chapter 3).
+<code>CanReadDatasetCompartment</code>,
+<code>CanDeriveRedactedSummary</code>,
+<code>CanAggregateSummaries</code>, … — proofs, not flags.</li>
+<li><strong>Route to compartmentalized agents</strong> (Chapter 16).
+Supervisor → specialists → restricted broker → synthesis; raw rows never
+cross compartments; denials are signed receipts.</li>
+<li><strong>Call the model through TypeDID</strong> (Chapters 4, 21).
+The prompt travels DID-encrypted and prompt-bound to Ollama (or any
+OpenAI-compatible endpoint via the loop); the reply comes back in a
+signed envelope; the run lands in OpenLineage with an Ed25519
+attestation.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The compressed version of all ten:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> dataverse-e2e <span class="at">--live-sail</span> <span class="at">--call-ollama</span> <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--question</span> <span class="st">&quot;Which governed datasets are relevant?&quot;</span></span></code></pre></div>
+<h2 data-number="6.2"
+id="chapter-24.-end-to-end-catalog-to-governed-answer"><span
+class="header-section-number">6.2</span> Chapter 24. End to End: Catalog
+to Governed Answer</h2>
+<p>The full path, using only released commands:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Start the platform.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> serve <span class="at">--port</span> 8080 <span class="at">--require-auth</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Import semantics — from a Croissant document (or LakeCat&#39;s</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#    bootstrap projection, Chapter 6, or an OSI YAML).</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-</span> <span class="op">&lt;&lt;&#39;PY&#39;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="st">from querygraph.api_auth import governed_post</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="st">from querygraph.typedid import TypeDidAgent</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="st">agent = TypeDidAgent.new(&quot;ApiClient&quot;)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="st">croissant = {</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;name&quot;: &quot;Energy Burden&quot;,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;recordSet&quot;: [{&quot;field&quot;: [</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="st">        {&quot;name&quot;: &quot;monthly_cost&quot;, &quot;description&quot;: &quot;Monthly energy cost&quot;}]}],</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="st">print(governed_post(&quot;http://127.0.0.1:8080&quot;,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="st">                    &quot;/v1/models/import/croissant&quot;, croissant, agent))</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="st"># {&#39;imported&#39;: &#39;energy_burden_semantic_model&#39;, &#39;datasets&#39;: 1, …}</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">PY</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Search it — open route, no auth needed for reads.</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://127.0.0.1:8080/v1/search?q=monthly&#39;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co"># {&quot;matches&quot;: [{&quot;kind&quot;: &quot;field&quot;, &quot;name&quot;: &quot;monthly_cost&quot;, …}]}</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Ask — governed route, signed envelope required.</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-</span> <span class="op">&lt;&lt;&#39;PY&#39;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="st">from querygraph.api_auth import governed_post</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="st">from querygraph.typedid import TypeDidAgent</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="st">result = governed_post(&quot;http://127.0.0.1:8080&quot;, &quot;/v1/answer&quot;,</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="st">    {&quot;question&quot;: &quot;What drives monthly energy burden?&quot;},</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="st">    TypeDidAgent.new(&quot;ApiClient&quot;))</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="st">print(result[&quot;answer&quot;])          # planned over sail.qg_lakehouse.energy_burden</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="st">print(result[&quot;envelope&quot;][&quot;payload_sha256&quot;][:16])  # …and it&#39;s signed</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="op">PY</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Verify the answer&#39;s envelope — anyone can, with no shared state.</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST http://127.0.0.1:8080/v1/audit/verify-envelope <span class="dt">\</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;content-type: application/json&#39;</span> <span class="at">-d</span> @answer-envelope.json</span></code></pre></div>
+<p>Every hop leaves evidence: the import is authorized by a path-bound
+envelope, the answer carries its plans and receipts, and the
+verification endpoint lets a third party check the signature.</p>
+<h2 data-number="6.3"
+id="chapter-25.-live-dataverse-to-governed-answer"><span
+class="header-section-number">6.3</span> Chapter 25. Live Dataverse to
+Governed Answer</h2>
+<p>The second integration walkthrough runs the whole chain over
+<em>live</em> research data: Harvard Dataverse, the largest public
+Dataverse instance. One command — every step of Chapter 23, against data
+QueryGraph has never seen:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> dataverse-e2e <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dataverse-url</span> https://dataverse.harvard.edu <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--query</span> <span class="st">&quot;municipal finance&quot;</span> <span class="at">--limit</span> 2 <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--question</span> <span class="st">&quot;Which governed datasets describe municipal fiscal capacity?&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--openlineage-file</span> lineage.jsonl <span class="at">--did-ledger-file</span> did-ledger.jsonl</span></code></pre></div>
+<p>What happened, from a real run:</p>
+<p><strong>1. Live search and staging.</strong> The Dataverse Search API
+returned two real datasets — <em>Graduate School Rankings for Public
+Administration Programs</em> (<code>doi:10.7910/DVN/YTAB7V</code>) and
+<em>Data Files for Criminal Municipal Courts</em>
+(<code>doi:10.7910/DVN/AXNUVP</code>) — whose metadata and file listings
+were staged into Sail as typed views
+(<code>dataverse_7424459_metadata</code>,
+<code>dataverse_7424459_files</code>, …).</p>
+<p><strong>2. Semantics, derived not hand-written.</strong> Each dataset
+projected to Croissant; an OSI model
+(<code>querygraph_dataverse_navigator</code>) was built over both, with
+ontology terms from their subjects and keywords; the four-layer bundle
+was generated for the first dataset.</p>
+<p><strong>3. The dual gate, with a receipt.</strong> The agent’s
+<code>answer</code> action passed RBAC (role <code>navigator</code>
+matched) <em>and</em> ODRL, and the receipt says so:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;answer&quot;</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;allowed&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;principal&quot;</span><span class="fu">:</span> <span class="st">&quot;did:oyd:zQmX7Cm5eikMzwMavBT4zoTUAsWxK3zGwqSbFHu729gb41r&quot;</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;rbac&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;allowed&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;matched_roles&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;navigator&quot;</span><span class="ot">]</span><span class="fu">},</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;odrl_allowed&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;TypeSec capabilities, RBAC role assignment, and ODRL</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="st">             policy allow the answer path&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>4. The signed request.</strong> The governed prompt —
+question plus the staged metadata, nothing else — traveled in a
+<code>typedid/a2a</code> envelope (<code>signature: a16f2cba…</code>),
+ready for <code>--call-ollama</code> to carry it, DID-encrypted and
+prompt-bound, to a local model.</p>
+<p><strong>5. Lineage over DOIs.</strong> The OpenLineage event lists
+the <em>DOIs as inputs</em> (<code>doi:10.7910/DVN/YTAB7V</code>,
+<code>doi:10.7910/DVN/AXNUVP</code>), carries the semantic bundle hash
+as a job facet, gets a spec-conformant run id
+(<code>f0539cd9-853f-589b-a70f-a9371f532c20</code> — UUIDv5, derived
+from the envelope signature), lands in <code>lineage.jsonl</code>, and
+is anchored by an Ed25519 attestation whose issuer is a resolvable
+<code>did:key</code>.</p>
+<p>Add <code>--live-sail --sail-endpoint http://127.0.0.1:50051</code>
+to execute against a running Sail server (views become queryable from
+PySpark), <code>--call-ollama --ollama-model llama3.2</code> for live
+synthesis through the TypeDID gateway, <code>--anchor-codata</code> to
+anchor the bundle DID with the CODATA ODRL service, and
+<code>--openlineage-url http://localhost:5000</code> to emit straight
+into Marquez.</p>
+<p>The point of this walkthrough: nothing above was fixture data. The
+evidence chain — receipts, envelopes, DOI-level lineage, attestation —
+assembled itself around unfamiliar, live research data with one
+command.</p>
+<h2 data-number="6.4"
+id="chapter-26.-plugging-in-agent-frameworks"><span
+class="header-section-number">6.4</span> Chapter 26. Plugging In Agent
+Frameworks</h2>
+<p><strong>Claude Code / Desktop (MCP, stdio).</strong> Point the client
+at either server:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;mcpServers&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;querygraph&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;querygraph&quot;</span><span class="fu">,</span> <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;mcp-serve&quot;</span><span class="ot">,</span> <span class="st">&quot;--osi&quot;</span><span class="ot">,</span> <span class="st">&quot;model.yaml&quot;</span><span class="ot">]</span><span class="fu">}}}</span></span></code></pre></div>
+<p><strong>LangChain.</strong> Either consume the MCP server via
+<code>langchain-mcp-adapters</code>, or wrap governed agents
+natively:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.agents <span class="im">import</span> TypeDidLangChainToolAdapter, deterministic_specialist</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.typedid <span class="im">import</span> TypeDidAgent</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>finance <span class="op">=</span> TypeDidAgent.new(<span class="st">&quot;FinanceAgent&quot;</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>adapter <span class="op">=</span> TypeDidLangChainToolAdapter(</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    finance, deterministic_specialist(finance, summary<span class="op">=</span><span class="st">&quot;Fiscal summary…&quot;</span>))</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>tool <span class="op">=</span> adapter.as_async_tool()          <span class="co"># a StructuredTool; results carry envelopes</span></span></code></pre></div>
+<p><strong>PydanticAI / OpenAI Agents SDK / LlamaIndex /
+CrewAI.</strong> All speak MCP — <code>querygraph mcp-serve</code> is
+the one integration. For direct function-calling, export schemas with
+<code>to_tool_schema()</code> (Chapter 20).</p>
+<p><strong>Local and hosted LLMs.</strong> The navigator loop binds any
+OpenAI-compatible endpoint
+(<code>openai_compatible_llm(base_url, model)</code>); the Rust Ollama
+path wraps calls in DID-encrypted, prompt-bound envelopes so even the
+inference call is attributable.</p>
+<p><strong>Your own governance.</strong> Both the MCP server and the
+loop accept your OSI model (<code>--osi</code>) and your RBAC+ODRL
+policy (<code>--rights governance.json</code> —
+<code>{"rbac": {...}, "odrl": {...}}</code>); the demo policies are
+defaults, not assumptions.</p>
+<h2 data-number="6.5" id="chapter-27.-operating-and-releasing"><span
+class="header-section-number">6.5</span> Chapter 27. Operating and
+Releasing</h2>
+<p><strong>Build and test.</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> qg-rust <span class="kw">&amp;&amp;</span> <span class="ex">cargo</span> test          <span class="co"># 40 tests; clippy -D warnings in CI</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> qg-python <span class="kw">&amp;&amp;</span> <span class="ex">uv</span> sync <span class="at">--extra</span> all <span class="kw">&amp;&amp;</span> <span class="ex">uv</span> run pytest   <span class="co"># 49 tests,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="co"># including the live cross-language contract</span></span></code></pre></div>
+<p><strong>Run.</strong> <code>serve</code> (with
+<code>--require-auth</code> in anything shared), <code>mcp-serve</code>,
+<code>qglake-story</code>, <code>answer</code>, <code>navigator</code>,
+<code>verify-envelope</code>, <code>lakecat-import</code>,
+<code>dataverse-e2e --live-sail --call-ollama</code> for the full
+kitchen sink.</p>
+<p><strong>CI.</strong> GitHub Actions in every repo; qg-rust’s workflow
+assembles the sibling <code>grust</code>/<code>lakecat</code> layout to
+satisfy the path dependencies; qg-python builds the wheel and
+<code>twine check</code>s it on a 3.11/3.13 matrix.</p>
+<p><strong>Release discipline.</strong> SemVer with codename pools per
+repo (birds of prey, Venetian landmarks, wild cats); coordinated stack
+waves; CHANGELOGs and RELEASES logs; versioned book artifacts
+(<code>stem (version-hash).{epub,pdf}</code>) published per release;
+GitHub releases with attached wheels.</p>
+<p><strong>Documentation.</strong> Two books in
+<code>qg-rust/docs</code> — the dedicated QueryGraph book
+(<code>book/</code>) and this guide (<code>guide/</code>) — plus the
+review deck (<code>slides/</code>) and the one-pager in HTML, typst, and
+troff (<code>onepager/</code>), all rebuilt at each release hash.</p>
+<h3 data-number="6.5.1" id="api-reference-the-clis"><span
+class="header-section-number">6.5.1</span> API reference (the CLIs)</h3>
+<p><code>qg-rust</code> (<code>cargo run -- &lt;command&gt;</code> or
+the <code>querygraph</code> binary):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Command</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>navigator</code></td>
+<td>build the four-layer bundle</td>
+</tr>
+<tr>
+<td><code>anchor-url</code></td>
+<td>CODATA ODRL URL→DID anchoring</td>
+</tr>
+<tr>
+<td><code>dataverse-e2e</code></td>
+<td>the live chain (Chapter 25); <code>--live-sail</code>,
+<code>--call-ollama</code>, <code>--anchor-codata</code>,
+<code>--openlineage-{file,url,sail}</code></td>
+</tr>
+<tr>
+<td><code>lakehouse-load</code> / <code>lakehouse-verify</code> /
+<code>lakehouse-validate</code></td>
+<td>stream files into typed Sail Parquet; verify and validate</td>
+</tr>
+<tr>
+<td><code>lakecat-verify</code> / <code>lakecat-import</code></td>
+<td>bootstrap-bundle verification and import planning</td>
+</tr>
+<tr>
+<td><code>qglake-story [--json]</code></td>
+<td>the Resilience Desk</td>
+</tr>
+<tr>
+<td><code>verify-envelope --file</code></td>
+<td>envelope verification (exit 1 on failure)</td>
+</tr>
+<tr>
+<td><code>serve [--port] [--require-auth]</code></td>
+<td>the <code>/v1</code> API + agent card</td>
+</tr>
+<tr>
+<td><code>agent-card [--base-url]</code></td>
+<td>print the A2A card</td>
+</tr>
+<tr>
+<td><code>mcp-serve</code></td>
+<td>MCP over stdio</td>
+</tr>
+</tbody>
+</table>
+<p><code>qg-python</code> (<code>querygraph &lt;command&gt;</code>):
+<code>navigator</code>, <code>anchor-url</code>,
+<code>qglake-story</code>, <code>lakehouse-register</code>,
+<code>audit-register</code>, <code>pyspark-examples</code>,
+<code>answer</code> (<code>--osi</code>, <code>--rights</code>,
+<code>--llm-base-url</code>, <code>--llm-model</code>),
+<code>agent-card</code>, <code>mcp-serve</code> (<code>--osi</code>,
+<code>--rights</code>, <code>--transport</code>).</p>
+</body>
+</html>

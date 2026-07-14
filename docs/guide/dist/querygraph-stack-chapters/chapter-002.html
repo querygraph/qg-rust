@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-14" />
+  <title>Executive Summary</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="book.css" />
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="chapter-001.html" accesskey="u" rel="up">The QueryGraph Stack</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">The QueryGraph Stack</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Next:</span> <a href="chapter-003.html" accesskey="n" rel="next">The Stack: An Overview</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="chapter-001.html" accesskey="p" rel="previous">The QueryGraph Stack</a>
+</span>
+</div>
+</nav>
+<h1 data-number="1" id="executive-summary"><span
+class="header-section-number">1</span> Executive Summary</h1>
+<p>The QueryGraph stack is a governed semantic lakehouse for agentic AI:
+five coordinated open-source components that let AI agents answer
+questions over enterprise data while <em>proving</em> what they did —
+which semantics they used, which policies allowed it, which sources they
+touched, and which they were denied. The stack’s thesis is that the
+differentiating infrastructure for enterprise AI is not a bigger model
+or a longer context window, but a verifiable chain from question to
+answer: deterministic identity, dual policy gating, signed envelopes,
+canonical hashing, and lineage anchoring, all projected through open
+standards.</p>
+<p>The five components, each independently useful, released in
+coordinated, codenamed versions:</p>
+<ul>
+<li><strong>Grust</strong> — a backend-neutral property-graph API for
+Rust with a standards-conformant GQL/Cypher read surface and a dozen
+storage backends. The semantic graph substrate. (Part I, Chapters
+1–2.)</li>
+<li><strong>TypeSec</strong> — agentic AI security in Rust’s type
+system: unforgeable capabilities, TypeDID signed agent envelopes, audit
+events, and — since Torcello — a security platform other agent stacks
+plug into. (Part I, Chapters 3–4.)</li>
+<li><strong>LakeCat</strong> — a Rust-native Apache Iceberg REST catalog
+that binds catalog state, governed Sail planning, TypeSec receipts, and
+Grust projection to the same table transitions. The catalog boundary.
+(Part I, Chapters 5–6.)</li>
+<li><strong>Sail</strong> (fork) — the Spark-compatible compute engine,
+extended with a Cypher graph-query surface compiled into its SQL
+frontend. The lakehouse engine. (Part I, Chapter 7.)</li>
+<li><strong>QueryGraph</strong> — the semantic layer itself, in Rust
+(<code>qg-rust</code>) and Python (<code>qg-python</code>): four
+semantic projections (Semantic Croissant, CDIF, W3C DID, ODRL) plus OSI
+business semantics, RBAC+ODRL dual gating, Ed25519-signed TypeDID
+envelopes verified across languages, OpenLineage audit with signed
+attestations, an HTTP <code>/v1</code> API with envelope authentication,
+MCP servers in both languages, an A2A agent card, and the governed
+navigator loop. (Parts II–III.)</li>
+</ul>
+<p>Part IV walks the integrations end to end — catalog to governed
+answer, agent frameworks plugging in, and operating the stack — and the
+closing chapter lays out future work.</p>
+<p>As of this guide, the current releases are <strong>QueryGraph 0.4.0
+“Sentinel”</strong> (the governed-answer release, in both languages,
+following 0.3.0 “Goshawk”, the interoperability release), over
+<strong>Grust 0.12.0 “Lobster”</strong>, <strong>TypeSec 0.12.0
+“Torcello”</strong>, and <strong>LakeCat 0.3.0 “Ocelot”</strong> — a
+coordinated substrate wave in which Grust merged its Full39075 GQL goal,
+TypeSec became an agent-interoperability security platform, and LakeCat
+proved stock-client Iceberg REST conformance.</p>
+<h2 data-number="1.1" id="links"><span
+class="header-section-number">1.1</span> Links</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>What</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Workspace meta-repo (map, review, this guide’s home)</td>
+<td><a href="https://github.com/querygraph/querygraph"
+class="uri">https://github.com/querygraph/querygraph</a></td>
+</tr>
+<tr>
+<td>QueryGraph Rust (<code>qg-rust</code>)</td>
+<td><a href="https://github.com/querygraph/qg-rust"
+class="uri">https://github.com/querygraph/qg-rust</a></td>
+</tr>
+<tr>
+<td>QueryGraph Python (<code>qg-python</code>)</td>
+<td><a href="https://github.com/querygraph/qg-python"
+class="uri">https://github.com/querygraph/qg-python</a></td>
+</tr>
+<tr>
+<td>Grust</td>
+<td><a href="https://github.com/querygraph/grust"
+class="uri">https://github.com/querygraph/grust</a></td>
+</tr>
+<tr>
+<td>TypeSec</td>
+<td><a href="https://github.com/querygraph/typesec"
+class="uri">https://github.com/querygraph/typesec</a></td>
+</tr>
+<tr>
+<td>LakeCat</td>
+<td><a href="https://github.com/querygraph/lakecat"
+class="uri">https://github.com/querygraph/lakecat</a></td>
+</tr>
+<tr>
+<td>Sail upstream (forked with the Cypher extension)</td>
+<td><a href="https://github.com/lakehq/sail"
+class="uri">https://github.com/lakehq/sail</a></td>
+</tr>
+<tr>
+<td>Sentinel releases</td>
+<td><a href="https://github.com/querygraph/qg-rust/releases/tag/v0.4.0"
+class="uri">https://github.com/querygraph/qg-rust/releases/tag/v0.4.0</a>
+· <a href="https://github.com/querygraph/qg-python/releases/tag/v0.4.0"
+class="uri">https://github.com/querygraph/qg-python/releases/tag/v0.4.0</a></td>
+</tr>
+<tr>
+<td>The dedicated QueryGraph book</td>
+<td><code>qg-rust/docs/book</code></td>
+</tr>
+<tr>
+<td>Semantic Croissant (MLCommons Croissant)</td>
+<td><a href="https://mlcommons.org/croissant/"
+class="uri">https://mlcommons.org/croissant/</a></td>
+</tr>
+<tr>
+<td>CDIF (CODATA Cross-Domain Interoperability Framework)</td>
+<td><a href="https://cdif.codata.org/"
+class="uri">https://cdif.codata.org/</a></td>
+</tr>
+<tr>
+<td>W3C DID / ODRL</td>
+<td><a href="https://www.w3.org/TR/did-core/"
+class="uri">https://www.w3.org/TR/did-core/</a> · <a
+href="https://www.w3.org/TR/odrl-model/"
+class="uri">https://www.w3.org/TR/odrl-model/</a></td>
+</tr>
+<tr>
+<td>OSI (Open Semantic Interchange)</td>
+<td><a href="https://github.com/open-semantic-interchange"
+class="uri">https://github.com/open-semantic-interchange</a></td>
+</tr>
+<tr>
+<td>OpenLineage</td>
+<td><a href="https://openlineage.io/"
+class="uri">https://openlineage.io/</a></td>
+</tr>
+<tr>
+<td>Model Context Protocol</td>
+<td><a href="https://modelcontextprotocol.io/"
+class="uri">https://modelcontextprotocol.io/</a></td>
+</tr>
+<tr>
+<td>Agent2Agent (A2A)</td>
+<td><a href="https://github.com/a2aproject/A2A"
+class="uri">https://github.com/a2aproject/A2A</a></td>
+</tr>
+</tbody>
+</table>
+<p>This guide is the stack-wide companion to the dedicated QueryGraph
+book (which walks the semantic layer itself as a textbook). It is
+written to be self-contained: each component gets its own part and
+chapters, each standard is explained before it is used, every chapter
+closes with worked examples in Rust and Python as applicable, and the
+outputs shown are captured from real runs against the released code.</p>
+</body>
+</html>

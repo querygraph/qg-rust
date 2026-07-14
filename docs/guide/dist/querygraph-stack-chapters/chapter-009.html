@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
+  <meta name="dcterms.date" content="2026-07-14" />
+  <title>Appendix: Glossary and Link Index</title>
+  <style>
+    div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
+    span.navlink { flex: 1; }
+    span.navlink-label { display: inline-block; min-width: 4em; }
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="book.css" />
+</head>
+<body>
+<nav id="sitenav">
+<div class="sitenav">
+<span class="navlink">
+<span class="navlink-label">Up:</span> <a href="chapter-001.html" accesskey="u" rel="up">The QueryGraph Stack</a>
+</span>
+<span class="navlink">
+<span class="navlink-label">Top:</span> <a href="index.html" accesskey="t" rel="top">The QueryGraph Stack</a>
+</span>
+</div>
+<div class="sitenav">
+<span class="navlink">
+</span>
+<span class="navlink">
+<span class="navlink-label">Previous:</span> <a href="chapter-008.html" accesskey="p" rel="previous">Future Work</a>
+</span>
+</div>
+</nav>
+<h1 data-number="8" id="appendix-glossary-and-link-index"><span
+class="header-section-number">8</span> Appendix: Glossary and Link
+Index</h1>
+<h2 data-number="8.1" id="glossary"><span
+class="header-section-number">8.1</span> Glossary</h2>
+<ul>
+<li><strong>Agent Card (A2A)</strong> — a discoverable JSON document
+describing an agent’s skills and security requirements, served at
+<code>/.well-known/agent-card.json</code>.</li>
+<li><strong>Attestation</strong> — an Ed25519 signature over a lineage
+event’s canonical hash, binding the audit record to its issuer.</li>
+<li><strong>Bootstrap bundle</strong> — LakeCat’s projection of live
+catalog tables into the QueryGraph semantic formats, verified by the
+shared <code>qglake-bundle</code> crate.</li>
+<li><strong>Capability</strong> — TypeSec’s unforgeable, typed proof
+that a policy check passed:
+<code>Capability&lt;Permission, Resource&gt;</code>.</li>
+<li><strong>Dual gate</strong> — QueryGraph’s access rule: RBAC
+<em>and</em> ODRL must both allow.</li>
+<li><strong>Envelope (TypeDID)</strong> — a signed agent message:
+sender, recipient, action, resource, canonically-hashed payload, Ed25519
+signature, <code>did:key</code> verification method.</li>
+<li><strong>Navigator bundle</strong> — the four-layer JSON-LD
+projection of one dataset: Semantic Croissant + CDIF + DID + ODRL.</li>
+<li><strong>OSI semantic model</strong> — business terms (datasets,
+fields, metrics, relationships, ontology terms) with per-dialect SQL and
+LLM-facing <code>ai_context</code>.</li>
+<li><strong>Receipt</strong> — the recorded outcome of a policy
+decision, allow or deny, with principal, resource, action, reason, and
+policy id.</li>
+<li><strong>Run id</strong> — a deterministic UUIDv5 under the
+QueryGraph namespace, identical across languages for the same seed.</li>
+<li><strong>Signing payload</strong> — the documented byte string a
+signature covers (<code>querygraph-typedid-signing-v1</code> for
+envelopes, <code>querygraph-lineage-attestation-v1</code> for
+attestations).</li>
+</ul>
+<h2 data-number="8.2" id="link-index"><span
+class="header-section-number">8.2</span> Link Index</h2>
+<ul>
+<li>Meta-repo: <a href="https://github.com/querygraph/querygraph"
+class="uri">https://github.com/querygraph/querygraph</a></li>
+<li>qg-rust: <a href="https://github.com/querygraph/qg-rust"
+class="uri">https://github.com/querygraph/qg-rust</a> · release <a
+href="https://github.com/querygraph/qg-rust/releases/tag/v0.4.0"
+class="uri">https://github.com/querygraph/qg-rust/releases/tag/v0.4.0</a></li>
+<li>qg-python: <a href="https://github.com/querygraph/qg-python"
+class="uri">https://github.com/querygraph/qg-python</a> · release <a
+href="https://github.com/querygraph/qg-python/releases/tag/v0.4.0"
+class="uri">https://github.com/querygraph/qg-python/releases/tag/v0.4.0</a></li>
+<li>Grust: <a href="https://github.com/querygraph/grust"
+class="uri">https://github.com/querygraph/grust</a></li>
+<li>TypeSec: <a href="https://github.com/querygraph/typesec"
+class="uri">https://github.com/querygraph/typesec</a></li>
+<li>LakeCat: <a href="https://github.com/querygraph/lakecat"
+class="uri">https://github.com/querygraph/lakecat</a></li>
+<li>Sail upstream: <a href="https://github.com/lakehq/sail"
+class="uri">https://github.com/lakehq/sail</a></li>
+<li>Standards: Croissant <a href="https://mlcommons.org/croissant/"
+class="uri">https://mlcommons.org/croissant/</a> · CDIF <a
+href="https://cdif.codata.org/" class="uri">https://cdif.codata.org/</a>
+· DID <a href="https://www.w3.org/TR/did-core/"
+class="uri">https://www.w3.org/TR/did-core/</a> · ODRL <a
+href="https://www.w3.org/TR/odrl-model/"
+class="uri">https://www.w3.org/TR/odrl-model/</a> · OSI <a
+href="https://github.com/open-semantic-interchange"
+class="uri">https://github.com/open-semantic-interchange</a> ·
+OpenLineage <a href="https://openlineage.io/"
+class="uri">https://openlineage.io/</a> · MCP <a
+href="https://modelcontextprotocol.io/"
+class="uri">https://modelcontextprotocol.io/</a> · A2A <a
+href="https://github.com/a2aproject/A2A"
+class="uri">https://github.com/a2aproject/A2A</a></li>
+</ul>
+</body>
+</html>
