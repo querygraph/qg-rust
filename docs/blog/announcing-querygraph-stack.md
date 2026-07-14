@@ -1,5 +1,7 @@
 # Announcing the QueryGraph stack: Lobster, Torcello, Ocelot, Sentinel
 
+![The QueryGraph fleet: a governed graph of ships, radios, and lighthouse beacons.](../../cover/querygraph-blog-headboard.png)
+
 QueryGraph is an AI Navigator over governed enterprise data. The thesis is not "throw the warehouse at a model." Serious questions are local, contextual, permissioned, and reproducible. An agent should be able to answer a hard question over enterprise data while knowing what the data is, where it came from, who is asking, which action is allowed, and how to replay the run.
 
 The current stack now has a coordinated substrate wave:

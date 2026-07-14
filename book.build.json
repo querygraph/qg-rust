@@ -1,0 +1,58 @@
+{
+  "$schema": "../../firstpair/publishing/book.build.schema.json",
+  "schemaVersion": 1,
+  "bookRoot": "docs/guide",
+  "manuscript": "docs/guide/manuscript.md",
+  "metadata": "docs/guide/metadata.yaml",
+  "cover": "docs/guide/cover.md",
+  "css": "docs/book/epub.css",
+  "stem": "querygraph-stack",
+  "version": {
+    "source": "cargo",
+    "file": "Cargo.toml"
+  },
+  "dist": "docs/guide/dist",
+  "buildDir": "docs/guide/build/firstpair",
+  "edition": "full",
+  "primaryFormat": "typst",
+  "mobi": true,
+  "pandoc": {
+    "reader": "markdown+smart",
+    "tocDepth": 2,
+    "resourcePaths": ["docs/guide", "${repoRoot}"]
+  },
+  "pdf": {
+    "coverImage": "cover/querygraph-cover.png",
+    "coverWidth": "8.5in",
+    "coverHeight": "11in",
+    "coverFit": "contain"
+  },
+  "epub": {
+    "coverImage": "cover/querygraph-cover.png",
+    "includeRenderedCover": false
+  },
+  "html": {
+    "splitLevel": 1
+  },
+  "pdfFormats": [
+    {
+      "name": "typst",
+      "renderer": "typst",
+      "stem": "querygraph-stack",
+      "primary": true
+    },
+    {
+      "name": "troff",
+      "renderer": "neatroff",
+      "stem": "querygraph-stack-troff"
+    }
+  ],
+  "hooks": {
+    "postEpub": "docs/guide/fix_epub_layout.sh \"${epub}\" \"${kindleName}\"",
+    "postBuild": "docs/guide/fix_pdf_covers.sh \"${distDir}/${stem}.pdf\" \"${distDir}/querygraph-stack-troff.pdf\""
+  },
+  "validators": [
+    "docs/guide/check_epub_metadata.sh \"${distDir}/${stem}.epub\" \"${kindleName}\"",
+    "docs/guide/check_pdf_layout.sh \"${distDir}/${stem}.pdf\" \"${distDir}/querygraph-stack-troff.pdf\""
+  ]
+}

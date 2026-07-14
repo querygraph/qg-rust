@@ -988,16 +988,26 @@ interop layer — and the two are held identical where they overlap
 
 ### API reference (package map)
 
-| Module | Provides |
-|---|---|
-| `querygraph.crypto` | `Ed25519Signer.from_seed/.generate/.sign/.did_key/.verification_method`, `verify(key, msg, sig)`, `public_key_from_did_key`, `unsigned_digest`, `CRYPTO_AVAILABLE` |
-| `querygraph.typedid` | `TypeDidAgent.new(name, seed=…)/.request/.answer/.signer/.did_key/.to_tool_schema`, `TypeDidEnvelope.create/.verify_payload/.verify_signature/.is_signed`, `AccessReceipt`, `GovernedPrompt`, `AgentResponse`, `signing_payload_v1` |
-| `querygraph.navigator_loop` | `GovernedNavigatorLoop(document, rights, llm=…, principal=…)`, `.answer(question) -> NavigatorAnswer`, `.demo()`, `openai_compatible_llm(base_url, model, api_key=…)` |
-| `querygraph.api_auth` | `mint_envelope_header(agent, path=…, body=…)`, `governed_post(base, path, payload, agent)` |
-| `querygraph.mcp_server` | `create_server(osi_path=…, rights_path=…)`, `serve(transport=…)`, `demo_rights_layer`, `load_rights_layer`, `parse_action` |
-| `querygraph.a2a` | `build_agent_card(base_url)`, `SKILLS`, `A2A_PROTOCOL_VERSION` |
-| `querygraph.agents` | `TypeDidLangChainToolAdapter(.invoke/.ainvoke/.as_tool/.as_async_tool)`, `to_tool_schema(agent, flavor=…)`, `deterministic_specialist`, `TypeDidAgentRun.aggregate` |
-| `querygraph.lakehouse` / `lineage` / `osi` / `croissant` / `cdif` / `did` / `odrl` / `odrl_rights` / `rbac` / `validation` | mirrors of the Rust layers (Chapters 8–15) |
+- **`querygraph.crypto`** — `Ed25519Signer` constructors and signing methods;
+  `verify`; `public_key_from_did_key`; `unsigned_digest`;
+  `CRYPTO_AVAILABLE`.
+- **`querygraph.typedid`** — `TypeDidAgent` construction, request, answer,
+  signer, DID key, and tool-schema methods; `TypeDidEnvelope` creation and
+  verification; `AccessReceipt`; `GovernedPrompt`; `AgentResponse`;
+  `signing_payload_v1`.
+- **`querygraph.navigator_loop`** — `GovernedNavigatorLoop`; `answer`;
+  `demo`; `openai_compatible_llm`.
+- **`querygraph.api_auth`** — `mint_envelope_header`; `governed_post`.
+- **`querygraph.mcp_server`** — `create_server`; `serve`;
+  `demo_rights_layer`; `load_rights_layer`; `parse_action`.
+- **`querygraph.a2a`** — `build_agent_card`; `SKILLS`;
+  `A2A_PROTOCOL_VERSION`.
+- **`querygraph.agents`** — `TypeDidLangChainToolAdapter` sync and async
+  invocation/tool methods; `to_tool_schema`; `deterministic_specialist`;
+  `TypeDidAgentRun.aggregate`.
+- **Layer mirrors** — `querygraph.lakehouse`, `lineage`, `osi`, `croissant`,
+  `cdif`, `did`, `odrl`, `odrl_rights`, `rbac`, and `validation` mirror the
+  Rust layers from Chapters 8–15.
 
 Extras: `crypto`, `mcp`, `agents`, `validation`, `lakehouse`, `all`; the
 package ships `py.typed`.

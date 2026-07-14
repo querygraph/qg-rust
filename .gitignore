@@ -6,3 +6,8 @@ lakehouse/python/.venv/
 docs/book/build/
 docs/book/dist/* (*).epub
 docs/book/dist/* (*).pdf
+docs/guide/build/
+docs/guide/dist/* (*).epub
+docs/guide/dist/* (*).pdf
+docs/guide/dist/* (*).html
+docs/guide/dist/* (*)-chapters

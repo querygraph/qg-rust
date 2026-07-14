@@ -1,106 +1,120 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -lt 1 || $# -gt 3 ]]; then
-  echo "usage: $0 path/to/querygraph.epub [kindle-title] [visible-title]" >&2
+if [[ $# -ne 2 ]]; then
+  echo "usage: $0 path/to/book.epub expected-title" >&2
   exit 2
 fi
 
 epub="$1"
-expected_title="${2:-querygraph}"
-visible_title="${3:-Querygraph}"
-title_stem="$(
-  awk -F: '
-    $1 ~ /^[[:space:]]*title_stem[[:space:]]*$/ {
-      value = $2
-      sub(/^[[:space:]]*/, "", value)
-      sub(/[[:space:]]*$/, "", value)
-      gsub(/^["'\''"]|["'\''"]$/, "", value)
-      print value
-      exit
-    }
-  ' "$(dirname "$0")/metadata.yaml"
-)"
-dist_dir="$(dirname "$epub")"
-stable="$dist_dir/$title_stem.epub"
-versioned="$dist_dir/$expected_title.epub"
-marker="$dist_dir/VERSION.md"
+expected_title="$2"
+epub_path="$(cd "$(dirname "$epub")" && pwd)/$(basename "$epub")"
+dist_dir="$(dirname "$epub_path")"
 
-if [[ ! -f "$epub" ]]; then
-  echo "EPUB not found: $epub" >&2
+if [[ ! -f "$epub_path" ]]; then
+  echo "EPUB not found: $epub_path" >&2
   exit 2
 fi
 
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
-unzip -q "$epub" -d "$tmpdir"
+unzip -q "$epub_path" -d "$tmpdir/book"
 
-opf="$tmpdir/EPUB/content.opf"
-nav="$tmpdir/EPUB/nav.xhtml"
-toc="$tmpdir/EPUB/toc.ncx"
-cover="$tmpdir/EPUB/text/ch001.xhtml"
-css="$tmpdir/EPUB/styles/stylesheet1.css"
+opf="$tmpdir/book/EPUB/content.opf"
+toc="$tmpdir/book/EPUB/toc.ncx"
+nav="$tmpdir/book/EPUB/nav.xhtml"
+cover="$tmpdir/book/EPUB/text/cover.xhtml"
+stylesheet="$tmpdir/book/EPUB/styles/stylesheet1.css"
+opf_flat="$tmpdir/content.flat"
+toc_flat="$tmpdir/toc.flat"
+tr '\n\r\t' '   ' < "$opf" > "$opf_flat"
+tr '\n\r\t' '   ' < "$toc" > "$toc_flat"
 
-require() {
+require_pattern() {
   local pattern="$1"
   local file="$2"
   local message="$3"
-  if ! perl -0ne "if (m{$pattern}s) { \$ok = 1 } END { exit(\$ok ? 0 : 1) }" "$file"; then
+  if ! grep -Eq "$pattern" "$file"; then
     echo "EPUB metadata check failed: $message" >&2
     exit 1
   fi
 }
 
-reject() {
+reject_pattern() {
   local pattern="$1"
   local file="$2"
   local message="$3"
-  if perl -0ne "if (m{$pattern}s) { \$bad = 1 } END { exit(\$bad ? 0 : 1) }" "$file"; then
+  if grep -Eq "$pattern" "$file"; then
     echo "EPUB metadata check failed: $message" >&2
     exit 1
   fi
 }
 
-escaped_title="$(printf '%s' "$expected_title" | perl -0777 -ne 'print quotemeta($_)')"
-escaped_visible="$(printf '%s' "$visible_title" | perl -0777 -ne 'print quotemeta($_)')"
+regex_escape() {
+  sed 's/[][(){}.^$*+?|\\]/\\&/g' <<< "$1"
+}
 
-require "<dc:title[^>]*>$escaped_title</dc:title>" "$opf" "OPF title is not $expected_title"
-require "<meta refines=\"\\#epub-title-1\" property=\"file-as\">$escaped_title</meta>" "$opf" "OPF file-as title is not $expected_title"
-require "<dc:creator[^>]*>Alexy Khrabrov and Slava Tykhonov</dc:creator>" "$opf" "OPF creator is not Alexy Khrabrov and Slava Tykhonov"
-require "<dc:language[^>]*>en-US</dc:language>" "$opf" "OPF language is not en-US"
-require "<docTitle>\\s*<text>$escaped_visible</text>\\s*</docTitle>" "$toc" "NCX title is not $visible_title"
-require "<title>$escaped_visible</title>" "$nav" "nav document title is not $visible_title"
-require "<h1[^>]*>$escaped_visible</h1>" "$nav" "nav heading is not $visible_title"
-require "<body epub:type=\"frontmatter\">" "$cover" "cover body is not frontmatter"
-require "Alexy Khrabrov and Slava Tykhonov" "$cover" "cover authors are not Alexy Khrabrov and Slava Tykhonov"
-require "querygraph\\.ai" "$cover" "cover site is not querygraph.ai"
-reject "chiefscientist\\.org" "$cover" "cover still references chiefscientist.org"
-reject "<h1 class=\"unnumbered\">$escaped_visible</h1>" "$cover" "generated cover heading remains in cover XHTML"
-reject "display:\\s*flex" "$cover" "cover uses flexbox"
-require "pre > code\\.sourceCode > span:empty" "$css" "compact code-block CSS missing"
+expected_title_pattern="$(regex_escape "$expected_title")"
+expected_stem="${expected_title% (*}"
+stable_epub="$dist_dir/$expected_stem.epub"
+version_marker="$dist_dir/VERSION.md"
 
-if [[ ! -f "$stable" ]]; then
-  echo "EPUB metadata check failed: missing stable EPUB $stable" >&2
-  exit 1
-fi
-if ! cmp -s "$epub" "$stable"; then
-  echo "EPUB metadata check failed: $epub and $stable differ" >&2
-  exit 1
-fi
-if [[ ! -L "$versioned" ]]; then
-  echo "EPUB metadata check failed: missing versioned symlink $versioned" >&2
-  exit 1
-fi
-if [[ "$(readlink "$versioned")" != "$title_stem.epub" ]]; then
-  echo "EPUB metadata check failed: $versioned does not point to $title_stem.epub" >&2
-  exit 1
-fi
-if [[ ! -f "$marker" ]]; then
-  echo "EPUB metadata check failed: missing $marker" >&2
-  exit 1
-fi
-grep -Fx "kindle_name: $expected_title" "$marker" >/dev/null
-grep -Fx "epub_file: $title_stem.epub" "$marker" >/dev/null
-grep -Fx "kindle_link: $expected_title.epub" "$marker" >/dev/null
+require_pattern "<dc:title[^>]*>$expected_title_pattern</dc:title>" "$opf" "missing dc:title"
+require_pattern "<meta[^>]*refines=\"#epub-title-1\"[^>]*property=\"file-as\"[^>]*>$expected_title_pattern</meta>" "$opf" "missing title sort metadata"
+require_pattern '<dc:creator[^>]*>Alexy Khrabrov and Slava Tykhonov</dc:creator>' "$opf" "missing dc:creator"
+require_pattern '<dc:publisher>First Pair Press</dc:publisher>' "$opf" "missing First Pair Press publisher metadata"
+require_pattern '<dc:language>en-US</dc:language>' "$opf" "missing dc:language"
+require_pattern '<dc:date[^>]*>[0-9]{4}-[0-9]{2}-[0-9]{2}</dc:date>' "$opf" "missing dc:date"
+require_pattern '<meta[^>]+property="dcterms:modified"' "$opf" "missing dcterms:modified"
+require_pattern '<meta name="cover" content="[^"]+" />' "$opf" "missing cover metadata"
+require_pattern '<item properties="cover-image"[^>]*href="media/[^"]+"' "$opf" "missing cover-image manifest item"
+require_pattern '<spine toc="ncx">[[:space:]]*<itemref idref="cover_xhtml" />[[:space:]]*<itemref idref="nav" linear="no" />[[:space:]]*<itemref idref="ch001_xhtml" />' "$opf_flat" "image cover is not first in the reading spine"
+require_pattern '<docTitle>[[:space:]]*<text>The QueryGraph Stack</text>[[:space:]]*</docTitle>' "$toc_flat" "NCX title is not The QueryGraph Stack"
+require_pattern '<title>The QueryGraph Stack</title>' "$nav" "nav document title is not The QueryGraph Stack"
+require_pattern '<h1[^>]*>The QueryGraph Stack</h1>' "$nav" "nav heading is not The QueryGraph Stack"
+require_pattern '<body id="cover">' "$cover" "cover XHTML is not the image cover"
+require_pattern '<div id="cover-image">' "$cover" "cover XHTML is missing its image wrapper"
+require_pattern '<svg[^>]*viewBox="0 0 1024 1536"' "$cover" "cover XHTML has the wrong geometry"
+require_pattern '<image[^>]*xlink:href="\.\./media/[^"]+"' "$cover" "cover XHTML does not reference the cover image"
+require_pattern 'div\.sourceCode' "$stylesheet" "stylesheet is missing sourceCode rules"
+require_pattern 'line-height:[[:space:]]*1\.12' "$stylesheet" "stylesheet is missing compact code line-height"
+require_pattern 'pre[[:space:]]*>[[:space:]]*code\.sourceCode[[:space:]]*>[[:space:]]*span:empty' "$stylesheet" "stylesheet is missing empty source-line rules"
+require_pattern 'display:[[:space:]]*none' "$stylesheet" "stylesheet is missing empty source-line suppression"
 
-echo "EPUB metadata check passed: $epub"
+reject_pattern 'UNTITLED|Unknown' "$opf" "fallback OPF metadata found"
+reject_pattern 'UNTITLED|Unknown' "$toc" "fallback NCX metadata found"
+reject_pattern 'UNTITLED|Unknown' "$nav" "fallback nav metadata found"
+reject_pattern 'display:[[:space:]]*flex' "$cover" "cover uses flexbox"
+
+cover_href="$(sed -n 's/.*properties="cover-image"[^>]*href="\([^"]*\)".*/\1/p' "$opf" | head -n 1)"
+[[ -n "$cover_href" ]] || { echo "EPUB metadata check failed: cover image href is missing" >&2; exit 1; }
+if ! cmp -s "$tmpdir/book/EPUB/$cover_href" "$(cd "$(dirname "$0")/../.." && pwd)/cover/querygraph-cover.png"; then
+  echo "EPUB metadata check failed: packaged cover differs from cover/querygraph-cover.png" >&2
+  exit 1
+fi
+
+if [[ -e "$tmpdir/book/EPUB/text/title_page.xhtml" ]]; then
+  echo "EPUB metadata check failed: generated empty title_page.xhtml is present" >&2
+  exit 1
+fi
+
+[[ -f "$stable_epub" ]] || { echo "EPUB metadata check failed: missing stable EPUB $stable_epub" >&2; exit 1; }
+cmp -s "$epub_path" "$stable_epub" || { echo "EPUB metadata check failed: stable EPUB differs" >&2; exit 1; }
+[[ -f "$version_marker" ]] || { echo "EPUB metadata check failed: VERSION.md is missing" >&2; exit 1; }
+
+kindle_link="$(awk -F': ' '/^kindle_link:/ { print $2 }' "$version_marker")"
+epub_link="$(awk -F': ' '/^epub_link:/ { print $2 }' "$version_marker")"
+pdf_link="$(awk -F': ' '/^pdf_link:/ { print $2 }' "$version_marker")"
+for link in "$kindle_link" "$epub_link"; do
+  [[ -L "$dist_dir/$link" ]] || { echo "EPUB metadata check failed: missing EPUB symlink $link" >&2; exit 1; }
+  [[ "$(readlink "$dist_dir/$link")" == "$expected_stem.epub" ]] || { echo "EPUB metadata check failed: bad EPUB symlink $link" >&2; exit 1; }
+done
+[[ -e "$dist_dir/$pdf_link" ]] || { echo "EPUB metadata check failed: missing PDF link $pdf_link" >&2; exit 1; }
+
+require_pattern "^kindle_name: $expected_title_pattern$" "$version_marker" "VERSION.md missing Kindle name"
+require_pattern '^version_stamp: [0-9]+\.[0-9]+\.[0-9]+-[0-9a-z]+$' "$version_marker" "VERSION.md missing version stamp"
+require_pattern '^built_at: [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' "$version_marker" "VERSION.md missing build timestamp"
+require_pattern "^epub_file: $(regex_escape "$(basename "$stable_epub")")$" "$version_marker" "VERSION.md missing stable EPUB filename"
+require_pattern "^pdf_file: $(regex_escape "$expected_stem.pdf")$" "$version_marker" "VERSION.md missing stable PDF filename"
+
+echo "EPUB metadata check passed: $epub_path"
