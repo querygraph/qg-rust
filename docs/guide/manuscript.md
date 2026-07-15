@@ -425,17 +425,14 @@ let space = MemorySpace::new("team:marciana", "shared");
 let write: Capability<CanWrite, MemorySpace> = mint_capability_for_id(
     &engine, specialist_did, space.resource_id(), &MintOptions::default(),
 )?;
-vault.remember(
-    &space,
-    &write,
-    MemoryDraft::new(
-        MemoryKind::Semantic,
-        MemoryContent::text("Energy burden is the governed signal"),
-        Provenance::Operator,
-    )
-    .with_label(Label::Internal)
-    .for_purposes(["resilience-research"]),
-)?;
+let draft = MemoryDraft::new(
+    MemoryKind::Semantic,
+    MemoryContent::text("Energy burden is the governed signal"),
+    Provenance::Operator,
+)
+.with_label(Label::Internal)
+.for_purposes(["resilience-research"]);
+vault.remember(&space, &write, draft)?;
 
 let read: Capability<CanRead, MemorySpace> = mint_capability_for_id(
     &engine, supervisor_did, space.resource_id(), &MintOptions::default(),
