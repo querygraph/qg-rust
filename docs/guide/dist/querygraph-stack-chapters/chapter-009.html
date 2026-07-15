@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
-  <meta name="dcterms.date" content="2026-07-14" />
+  <meta name="dcterms.date" content="2026-07-15" />
   <title>Appendix: Glossary and Link Index</title>
   <style>
     div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
@@ -66,6 +66,9 @@ shared <code>qglake-bundle</code> crate.</li>
 <li><strong>Capability</strong> — TypeSec’s unforgeable, typed proof
 that a policy check passed:
 <code>Capability&lt;Permission, Resource&gt;</code>.</li>
+<li><strong>Clearance / redacted hit</strong> — the maximum sensitivity
+a recall context may receive; records above it return metadata-only
+evidence rather than content.</li>
 <li><strong>Dual gate</strong> — QueryGraph’s access rule: RBAC
 <em>and</em> ODRL must both allow.</li>
 <li><strong>Envelope (TypeDID)</strong> — a signed agent message:
@@ -73,12 +76,23 @@ sender, recipient, action, resource, canonically-hashed payload, Ed25519
 signature, <code>did:key</code> verification method.</li>
 <li><strong>Navigator bundle</strong> — the four-layer JSON-LD
 projection of one dataset: Semantic Croissant + CDIF + DID + ODRL.</li>
+<li><strong>Marciana</strong> — TypeSec 0.13 Lido’s capability-secured
+memory subsystem, realized across <code>typesec-memory</code>, Grust
+<code>querygraph-memory</code>, qg-rust, and qg-python.</li>
+<li><strong>Memory space</strong> — an ordinary TypeSec resource
+(<code>memory/&lt;owner&gt;/&lt;space&gt;</code>) with distinct read,
+write, and delete capabilities.</li>
 <li><strong>OSI semantic model</strong> — business terms (datasets,
 fields, metrics, relationships, ontology terms) with per-dialect SQL and
 LLM-facing <code>ai_context</code>.</li>
 <li><strong>Receipt</strong> — the recorded outcome of a policy
 decision, allow or deny, with principal, resource, action, reason, and
 policy id.</li>
+<li><strong>Provenance quarantine</strong> — the safe birth posture for
+raw model text; quarantined records are excluded from ordinary,
+neighborhood, semantic, and planner-fed consolidation inputs. Explicit
+low-level consolidation plans still require post-v1 promotion
+hardening.</li>
 <li><strong>Run id</strong> — a deterministic UUIDv5 under the
 QueryGraph namespace, identical across languages for the same seed.</li>
 <li><strong>Signing payload</strong> — the documented byte string a
@@ -103,6 +117,9 @@ class="uri">https://github.com/querygraph/qg-python/releases/tag/v0.4.0</a></li>
 class="uri">https://github.com/querygraph/grust</a></li>
 <li>TypeSec: <a href="https://github.com/querygraph/typesec"
 class="uri">https://github.com/querygraph/typesec</a></li>
+<li>TypeSec 0.13.0 “Lido”: <a
+href="https://github.com/querygraph/typesec/releases/tag/v0.13.0"
+class="uri">https://github.com/querygraph/typesec/releases/tag/v0.13.0</a></li>
 <li>LakeCat: <a href="https://github.com/querygraph/lakecat"
 class="uri">https://github.com/querygraph/lakecat</a></li>
 <li>Sail upstream: <a href="https://github.com/lakehq/sail"

@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
-  <meta name="dcterms.date" content="2026-07-14" />
+  <meta name="dcterms.date" content="2026-07-15" />
   <title>Future Work</title>
   <style>
     div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
@@ -61,11 +61,15 @@ today; the LLM binding is Python-first).</li>
 <li><strong>The remaining <code>/v1</code> surface</strong>: lineage
 event queries, audit verification listings, access <em>explanation</em>
 (why was this denied?) — all behind envelope auth.</li>
-<li><strong>Adopting Torcello</strong>: TypeSec’s interop plane,
-<code>mcp-gate</code> in front of QueryGraph’s own MCP servers, signed
-decision receipts unified with QueryGraph’s access receipts, and the
-enforcement proxy as the governed inference layer. The dependency bump
-is done; the integration is the work.</li>
+<li><strong>Marciana after v1</strong>: replace process-local memory ids
+with durable, collision-safe identifiers; add replica-wide replay and
+mutation idempotency; preserve assertion-level lineage; require audited
+declassification and quarantine propagation; prove fuller temporal and
+policy predicate pushdown; add persistent tenant-scoped ANN and
+distributed Sail cognition without moving content authority out of the
+vault; then build the hosted multi-tenant control plane with explicit
+isolation, migration, backup, deletion, observability, and SLO
+contracts.</li>
 </ul>
 <p>The wider arc (from the workspace review, FABLE-REVIEW-1 in the
 meta-repo):</p>

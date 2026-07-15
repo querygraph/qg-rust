@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
-  <meta name="dcterms.date" content="2026-07-14" />
+  <meta name="dcterms.date" content="2026-07-15" />
   <title>The Stack: An Overview</title>
   <style>
     div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
@@ -73,6 +73,13 @@ Ed25519 under a <code>did:key</code> verification method.</li>
 <li>An <strong>OpenLineage</strong> event (spec-conformant,
 schema-validated) records the run, and an Ed25519
 <strong>attestation</strong> anchors the event hash.</li>
+<li>If policy permits, the agent commits the governed result to a
+<strong>Marciana memory space</strong>. A later agent recalls it only
+through a distinct read capability, under its own verified DID and
+requested clearance; a restart does not erase the record, and a denial
+remains evidence. TypeSec can bind records to purposes, although
+qg-rust’s current HTTP writer does not persist a per-record
+purpose.</li>
 </ol>
 <p>Each step is somebody’s component. The semantic graph lives in Grust
 (and is queryable through Sail’s Cypher extension). The envelope
@@ -112,8 +119,8 @@ independently:</p>
 </tr>
 <tr>
 <td>TypeSec</td>
-<td>0.12.0</td>
-<td>Torcello</td>
+<td>0.13.0</td>
+<td>Lido</td>
 <td>Venetian landmarks</td>
 </tr>
 <tr>
@@ -125,12 +132,14 @@ independently:</p>
 </tbody>
 </table>
 <p>The 0.12 substrate wave landed together: Grust merged the Full39075
-GQL profile, TypeSec shipped its agent-interoperability platform, and
-LakeCat moved to both while proving stock-client Iceberg REST
-conformance — with QueryGraph verified green against all three.
-QueryGraph 0.4.0 “Sentinel” ships on top of that wave: where Goshawk
-opened the doors (MCP, A2A, <code>/v1</code>, cross-language crypto),
-Sentinel stands guard over what comes through them.</p>
+GQL profile, TypeSec shipped Torcello’s agent-interoperability platform,
+and LakeCat moved to both while proving stock-client Iceberg REST
+conformance. QueryGraph 0.4.0 “Sentinel” shipped on that wave: where
+Goshawk opened the doors (MCP, A2A, <code>/v1</code>, cross-language
+crypto), Sentinel stands guard over what comes through them. TypeSec
+0.13.0 “Lido” is the next released substrate step. QueryGraph main is
+verified against it and uses Marciana to carry the same typed authority
+into durable memory.</p>
 <h2 data-number="2.3" id="the-workspace"><span
 class="header-section-number">2.3</span> The workspace</h2>
 <p>The repositories expect sibling checkouts:</p>
@@ -142,6 +151,6 @@ class="header-section-number">2.3</span> The workspace</h2>
 │   └── semantic/        # research: Polaris SemanticModel, OSI round-trips
 ├── grust/               # path dependency of qg-rust
 ├── lakecat/             # path dependency of qg-rust
-└── typesec/             # consumed from crates.io</code></pre>
+└── typesec/             # v0.13 Lido path dependency: authority + Marciana</code></pre>
 </body>
 </html>

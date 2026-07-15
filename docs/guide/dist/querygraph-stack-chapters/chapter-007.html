@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
-  <meta name="dcterms.date" content="2026-07-14" />
+  <meta name="dcterms.date" content="2026-07-15" />
   <title>Part IV: Integration in Practice</title>
   <style>
     div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
@@ -119,9 +119,9 @@
 class="header-section-number">6</span> Part IV: Integration in
 Practice</h1>
 <h2 data-number="6.1"
-id="chapter-23.-assembling-the-lakehouse-in-ten-steps"><span
+id="chapter-23.-assembling-the-lakehouse-in-eleven-steps"><span
 class="header-section-number">6.1</span> Chapter 23. Assembling the
-Lakehouse in Ten Steps</h2>
+Lakehouse in Eleven Steps</h2>
 <p>The dedicated book walks this assembly in depth; here is the whole
 system in one sitting — the sequence the <code>dataverse-e2e</code> and
 lakehouse commands automate, each step naming the component that owns
@@ -160,11 +160,22 @@ The prompt travels DID-encrypted and prompt-bound to Ollama (or any
 OpenAI-compatible endpoint via the loop); the reply comes back in a
 signed envelope; the run lands in OpenLineage with an Ed25519
 attestation.</li>
+<li><strong>Remember under Marciana</strong> (Chapters 3, 18). An
+authorized writer commits the governed result to a policy-scoped memory
+space. After restart or re-entry, another agent recalls it only under
+its own DID, read capability, and requested clearance; unsigned and
+policy-denied attempts remain explicit evidence. The current HTTP proof
+carries purpose in request context but does not persist it on the
+record.</li>
 </ol>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The compressed version of all ten:</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Steps 1–10, compressed:</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--</span> dataverse-e2e <span class="at">--live-sail</span> <span class="at">--call-ollama</span> <span class="dt">\</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--question</span> <span class="st">&quot;Which governed datasets are relevant?&quot;</span></span></code></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--question</span> <span class="st">&quot;Which governed datasets are relevant?&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 11, including a real qg-rust restart:</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../qg-python</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python examples/pydantic_ai_v2_memory_agents.py</span></code></pre></div>
 <h2 data-number="6.2"
 id="chapter-24.-end-to-end-catalog-to-governed-answer"><span
 class="header-section-number">6.2</span> Chapter 24. End to End: Catalog
@@ -296,9 +307,20 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a hr
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>adapter <span class="op">=</span> TypeDidLangChainToolAdapter(</span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    finance, deterministic_specialist(finance, summary<span class="op">=</span><span class="st">&quot;Fiscal summary…&quot;</span>))</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>tool <span class="op">=</span> adapter.as_async_tool()          <span class="co"># a StructuredTool; results carry envelopes</span></span></code></pre></div>
-<p><strong>PydanticAI / OpenAI Agents SDK / LlamaIndex /
-CrewAI.</strong> All speak MCP — <code>querygraph mcp-serve</code> is
-the one integration. For direct function-calling, export schemas with
+<p><strong>Pydantic AI v2.</strong>
+<code>build_querygraph_agent(name)</code> constructs a provider-free
+agent with both the TypeDID credential and Marciana memory capabilities.
+The private seed remains in <code>QueryGraphAgentDeps</code>;
+model-facing tool schemas, arguments, and prompt context see the public
+DID and governed results, never the credential material. Trusted
+capability handlers use the dependency-held credential to sign. Use the
+direct capabilities when the agent needs signed QueryGraph access and
+durable memory in one typed runtime, or consume the same platform
+through MCP.</p>
+<p><strong>OpenAI Agents SDK / LlamaIndex / CrewAI.</strong> All speak
+MCP, so <code>querygraph mcp-serve</code> provides one shared
+integration for the MCP-exposed semantic and governance tools. For
+direct function-calling, export schemas with
 <code>to_tool_schema()</code> (Chapter 20).</p>
 <p><strong>Local and hosted LLMs.</strong> The navigator loop binds any
 OpenAI-compatible endpoint
@@ -315,8 +337,8 @@ class="header-section-number">6.5</span> Chapter 27. Operating and
 Releasing</h2>
 <p><strong>Build and test.</strong></p>
 <div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> qg-rust <span class="kw">&amp;&amp;</span> <span class="ex">cargo</span> test          <span class="co"># 40 tests; clippy -D warnings in CI</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> qg-python <span class="kw">&amp;&amp;</span> <span class="ex">uv</span> sync <span class="at">--extra</span> all <span class="kw">&amp;&amp;</span> <span class="ex">uv</span> run pytest   <span class="co"># 49 tests,</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> qg-rust <span class="kw">&amp;&amp;</span> <span class="ex">cargo</span> test          <span class="co"># 41 tests; clippy -D warnings in CI</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> qg-python <span class="kw">&amp;&amp;</span> <span class="ex">uv</span> sync <span class="at">--extra</span> all <span class="kw">&amp;&amp;</span> <span class="ex">uv</span> run pytest   <span class="co"># 52 tests,</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="co"># including the live cross-language contract</span></span></code></pre></div>
 <p><strong>Run.</strong> <code>serve</code> (with
 <code>--require-auth</code> in anything shared), <code>mcp-serve</code>,

@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
-  <meta name="dcterms.date" content="2026-07-14" />
+  <meta name="dcterms.date" content="2026-07-15" />
   <title>Executive Summary</title>
   <style>
     div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
@@ -72,7 +72,9 @@ storage backends. The semantic graph substrate. (Part I, Chapters
 <li><strong>TypeSec</strong> — agentic AI security in Rust’s type
 system: unforgeable capabilities, TypeDID signed agent envelopes, audit
 events, and — since Torcello — a security platform other agent stacks
-plug into. (Part I, Chapters 3–4.)</li>
+plug into. Lido adds <strong>Marciana</strong>, capability-secured
+memory with clearance-aware recall, provenance quarantine, retention
+policy, and audited forgetting. (Part I, Chapters 3–4.)</li>
 <li><strong>LakeCat</strong> — a Rust-native Apache Iceberg REST catalog
 that binds catalog state, governed Sail planning, TypeSec receipts, and
 Grust projection to the same table transitions. The catalog boundary.
@@ -87,19 +89,23 @@ business semantics, RBAC+ODRL dual gating, Ed25519-signed TypeDID
 envelopes verified across languages, OpenLineage audit with signed
 attestations, an HTTP <code>/v1</code> API with envelope authentication,
 MCP servers in both languages, an A2A agent card, and the governed
-navigator loop. (Parts II–III.)</li>
+navigator loop. Current main also exposes identity-bound Marciana memory
+through persistent Grust/Turso storage and native Pydantic AI v2
+capabilities. (Parts II–III.)</li>
 </ul>
 <p>Part IV walks the integrations end to end — catalog to governed
 answer, agent frameworks plugging in, and operating the stack — and the
 closing chapter lays out future work.</p>
 <p>As of this guide, the current releases are <strong>QueryGraph 0.4.0
 “Sentinel”</strong> (the governed-answer release, in both languages,
-following 0.3.0 “Goshawk”, the interoperability release), over
-<strong>Grust 0.12.0 “Lobster”</strong>, <strong>TypeSec 0.12.0
-“Torcello”</strong>, and <strong>LakeCat 0.3.0 “Ocelot”</strong> — a
-coordinated substrate wave in which Grust merged its Full39075 GQL goal,
-TypeSec became an agent-interoperability security platform, and LakeCat
-proved stock-client Iceberg REST conformance.</p>
+following 0.3.0 “Goshawk”, the interoperability release), <strong>Grust
+0.12.0 “Lobster”</strong>, <strong>TypeSec 0.13.0 “Lido”</strong>, and
+<strong>LakeCat 0.3.0 “Ocelot”</strong>. Sentinel originally shipped on
+the Torcello substrate wave; current QueryGraph main now resolves the
+released Lido crates and carries the post-Sentinel Marciana integration
+described in this edition. Lido preserves Torcello’s
+agent-interoperability platform and adds the governed-memory contract,
+while Grust supplies its durable adapter.</p>
 <h2 data-number="1.1" id="links"><span
 class="header-section-number">1.1</span> Links</h2>
 <table>
@@ -140,6 +146,11 @@ class="uri">https://github.com/querygraph/grust</a></td>
 class="uri">https://github.com/querygraph/typesec</a></td>
 </tr>
 <tr>
+<td>TypeSec 0.13.0 “Lido”</td>
+<td><a href="https://github.com/querygraph/typesec/releases/tag/v0.13.0"
+class="uri">https://github.com/querygraph/typesec/releases/tag/v0.13.0</a></td>
+</tr>
+<tr>
 <td>LakeCat</td>
 <td><a href="https://github.com/querygraph/lakecat"
 class="uri">https://github.com/querygraph/lakecat</a></td>
@@ -157,8 +168,9 @@ class="uri">https://github.com/querygraph/qg-rust/releases/tag/v0.4.0</a>
 class="uri">https://github.com/querygraph/qg-python/releases/tag/v0.4.0</a></td>
 </tr>
 <tr>
-<td>The dedicated QueryGraph book</td>
-<td><code>qg-rust/docs/book</code></td>
+<td>The QueryGraph stack guide</td>
+<td><a href="https://github.com/querygraph/qg-rust/tree/main/docs/guide"
+class="uri">https://github.com/querygraph/qg-rust/tree/main/docs/guide</a></td>
 </tr>
 <tr>
 <td>Semantic Croissant (MLCommons Croissant)</td>
@@ -204,6 +216,7 @@ book (which walks the semantic layer itself as a textbook). It is
 written to be self-contained: each component gets its own part and
 chapters, each standard is explained before it is used, every chapter
 closes with worked examples in Rust and Python as applicable, and the
-outputs shown are captured from real runs against the released code.</p>
+outputs shown are captured from real runs against tagged releases and
+verified current-main integrations.</p>
 </body>
 </html>

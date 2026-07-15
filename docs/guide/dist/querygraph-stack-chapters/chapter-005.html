@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
-  <meta name="dcterms.date" content="2026-07-14" />
+  <meta name="dcterms.date" content="2026-07-15" />
   <title>Part II: QueryGraph, the Semantic Layer</title>
   <style>
     div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
@@ -725,14 +725,21 @@ card</strong> (Chapters 19–20).</li>
 <li><strong>Framework adapters</strong>: LangChain
 <code>StructuredTool</code> (sync and async), vendor-neutral
 <code>to_tool_schema()</code>.</li>
+<li><strong>Pydantic AI v2 capabilities</strong>
+(<code>pydantic-ai</code> extra):
+<code>querygraph.typedid-credential</code> keeps the private signing
+seed in typed runtime dependencies and exposes only signed access plus
+the public DID; <code>querygraph.marciana-memory</code> supplies
+policy-scoped remember, recall, and forget tools backed by qg-rust and
+Turso.</li>
 <li><strong>Lakehouse helpers</strong>: PySpark against Sail’s Spark
 Connect endpoint.</li>
 </ul>
 <p>Install: <code>pip install querygraph</code> (core is pure Pydantic),
 with extras <code>crypto</code>, <code>mcp</code>, <code>agents</code>,
-<code>validation</code>, <code>lakehouse</code>, or <code>all</code>.
-The package ships <code>py.typed</code>; the CLI mirrors the Rust
-commands.</p>
+<code>pydantic-ai</code>, <code>validation</code>,
+<code>lakehouse</code>, or <code>all</code>. The package ships
+<code>py.typed</code>; the CLI mirrors the Rust commands.</p>
 <p>The division of labor: Rust loads and verifies the warehouse and
 serves the platform; Python gives notebooks, PySpark users, and agent
 frameworks a typed interop layer — and the two are held identical where
@@ -755,6 +762,12 @@ verification; <code>AccessReceipt</code>; <code>GovernedPrompt</code>;
 <code>demo</code>; <code>openai_compatible_llm</code>.</li>
 <li><strong><code>querygraph.api_auth</code></strong> —
 <code>mint_envelope_header</code>; <code>governed_post</code>.</li>
+<li><strong><code>querygraph.pydantic_ai_capabilities</code></strong> —
+<code>QueryGraphAgentDeps</code>;
+<code>build_access_credential_capability</code>;
+<code>build_memory_capability</code>;
+<code>build_querygraph_agent</code>; <code>run_specialist</code>;
+<code>run_recaller</code>.</li>
 <li><strong><code>querygraph.mcp_server</code></strong> —
 <code>create_server</code>; <code>serve</code>;
 <code>demo_rights_layer</code>; <code>load_rights_layer</code>;
@@ -774,7 +787,8 @@ methods; <code>to_tool_schema</code>;
 mirror the Rust layers from Chapters 8–15.</li>
 </ul>
 <p>Extras: <code>crypto</code>, <code>mcp</code>, <code>agents</code>,
-<code>validation</code>, <code>lakehouse</code>, <code>all</code>; the
-package ships <code>py.typed</code>.</p>
+<code>pydantic-ai</code>, <code>validation</code>,
+<code>lakehouse</code>, <code>all</code>; the package ships
+<code>py.typed</code>.</p>
 </body>
 </html>

@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Alexy Khrabrov and Slava Tykhonov" />
-  <meta name="dcterms.date" content="2026-07-14" />
+  <meta name="dcterms.date" content="2026-07-15" />
   <title>Part III: The Interoperability Surfaces</title>
   <style>
     div.sitenav { display: flex; flex-direction: row; flex-wrap: wrap; }
@@ -232,10 +232,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a hr
 the governed answer).</p>
 <h3 data-number="5.1.2" id="api-reference-10"><span
 class="header-section-number">5.1.2</span> API reference</h3>
-<p><code>querygraph serve --port 8080 [--require-auth] [--memory-policy POLICY --memory-db DATABASE]</code>.
-The <code>x-qg-envelope</code> header is a compact-JSON TypeDID
-envelope; the middleware checks, in order: signature validity (against
-the envelope’s <code>did:key</code> <code>verification_method</code>),
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">querygraph</span> serve <span class="at">--port</span> 8080 <span class="at">--require-auth</span> <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--memory-policy</span> POLICY <span class="at">--memory-db</span> DATABASE</span></code></pre></div>
+<p>The authentication and memory flags are independently optional.
+Memory routes always require a signed identity; without configured
+memory, an authenticated call receives <code>503</code>. The
+<code>x-qg-envelope</code> header is a compact-JSON TypeDID envelope;
+the middleware checks, in order: signature validity (against the
+envelope’s <code>did:key</code> <code>verification_method</code>),
 sender equality with that verification-method DID,
 <code>action == "invoke"</code>,
 <code>resource == &lt;request path&gt;</code>, and
@@ -243,21 +248,174 @@ sender equality with that verification-method DID,
 <code>401 {error, receipt: {allowed: false, path, checks, contract}}</code>.
 Clients: <code>querygraph.api_auth.mint_envelope_header</code> /
 <code>governed_post</code>.</p>
-<h3 data-number="5.1.3" id="durable-capability-secured-memory"><span
-class="header-section-number">5.1.3</span> Durable capability-secured
-memory</h3>
+<h3 data-number="5.1.3" id="marciana-at-the-v1-boundary"><span
+class="header-section-number">5.1.3</span> Marciana at the
+<code>/v1</code> boundary</h3>
 <p>Supplying <code>--memory-policy</code> opens and bootstraps a
 file-backed <code>querygraph-memory::TursoMemoryStore</code> (default
-path <code>.querygraph/memory.db</code>). The three memory routes are
-authenticated even when <code>--require-auth</code> is absent: without
-the verified DID there is no legitimate subject for TypeSec to mint a
-read, write, or delete capability. Each call runs through
-<code>ToolCallGuard</code>, <code>MemoryToolRouter</code>,
-<code>MemoryVault</code>, and then the Grust store. Clearance-aware
-recall and tenant policy remain TypeSec concerns; durability and
-transactions remain Grust concerns. A body <code>subject</code> field is
-ignored. The runnable Pydantic AI v2 demo in qg-python proves specialist
-write, server restart, supervisor recall, and outsider denial.</p>
+path <code>.querygraph/memory.db</code>). The network path preserves the
+same division as the in-process Lido API:</p>
+<pre class="text"><code>Pydantic AI v2 agent
+  -&gt; TypeDID signed envelope
+  -&gt; qg-rust authentication
+  -&gt; TypeSec ToolCallGuard
+  -&gt; MemoryToolRouter (mint read/write/delete capability)
+  -&gt; MemoryVault (space, policy, clearance, quarantine)
+  -&gt; querygraph-memory
+  -&gt; Grust on Turso/libSQL</code></pre>
+<p>qg-rust exposes no raw graph endpoint: every supported HTTP recall
+returns through the vault. That is a service-boundary guarantee, not
+permission to hand untrusted code the adapter’s raw backend handle.</p>
+<h4 data-number="5.1.3.1" id="policy-and-transport-contract"><span
+class="header-section-number">5.1.3.1</span> Policy and transport
+contract</h4>
+<p>Memory routes are authenticated even when <code>--require-auth</code>
+is absent. Without a verified DID there is no legitimate subject for
+TypeSec to authorize. The envelope must be Ed25519-signed, addressed to
+<code>did:web:qg-server</code>, bound to the exact route and body hash,
+and carry a sender equal to the <code>did:key</code> that verifies the
+signature. qg-rust uses that verified sender—not a caller-supplied
+<code>subject</code> field—as the RBAC principal.</p>
+<p>The policy names public DIDs and ordinary TypeSec permissions:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">roles</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> research-memory</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">permissions</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">read</span><span class="kw">,</span><span class="at"> write</span><span class="kw">,</span><span class="at"> delete</span><span class="kw">]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">resources</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;memory/team:marciana/shared&quot;</span><span class="kw">]</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">assignments</span><span class="kw">:</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">subject</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;did:key:z6Mk...specialist&quot;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">roles</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">research-memory</span><span class="kw">]</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">subject</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;did:key:z6Mk...supervisor&quot;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">roles</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">research-memory</span><span class="kw">]</span></span></code></pre></div>
+<p>The service distinguishes failures deliberately:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Result</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>401</code></td>
+<td>missing or invalid envelope, wrong recipient, sender/signing-key
+mismatch, route/body binding failure</td>
+</tr>
+<tr>
+<td><code>403</code></td>
+<td>cryptographically authenticated DID, but TypeSec policy denied the
+requested memory capability</td>
+</tr>
+<tr>
+<td><code>500</code></td>
+<td>the guarded operation reached a missing record or backend/store
+failure</td>
+</tr>
+<tr>
+<td><code>503</code></td>
+<td>memory was not configured for this server</td>
+</tr>
+<tr>
+<td><code>200</code></td>
+<td>the capability was minted and the guarded vault operation
+completed</td>
+</tr>
+</tbody>
+</table>
+<p>This ordering matters. Authentication does not imply authority, and
+an authenticated denial remains different from an unauthenticated
+request.</p>
+<h4 data-number="5.1.3.2"
+id="worked-example-pydantic-ai-v2-remembers-across-a-restart"><span
+class="header-section-number">5.1.3.2</span> Worked example: Pydantic AI
+v2 remembers across a restart</h4>
+<p>qg-python’s provider-free demonstration gives each agent two native
+<code>Capability</code> objects:</p>
+<ul>
+<li><code>querygraph.typedid-credential</code> keeps the Ed25519 seed
+inside <code>QueryGraphAgentDeps</code> and exposes signed governed
+access plus the public DID;</li>
+<li><code>querygraph.marciana-memory</code> exposes remember, recall,
+and forget through the qg-rust service.</li>
+</ul>
+<p>The seed never appears in model instructions, tool arguments, policy
+files, or serialized agent models. <code>TestModel</code> makes the
+language-model turn deterministic, while the TypeDID signatures, HTTP
+service, policy decisions, process restart, and Turso database are
+real.</p>
+<p>Run the proof from the Python checkout:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> qg-python</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync <span class="at">--extra</span> test <span class="at">--extra</span> crypto <span class="at">--extra</span> pydantic-ai</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python examples/pydantic_ai_v2_memory_agents.py</span></code></pre></div>
+<p>The script builds qg-rust, creates a policy keyed to the exact DIDs,
+and exercises this sequence:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unsigned probe</td>
+<td>governed access returns <code>401</code></td>
+</tr>
+<tr>
+<td>specialist before restart</td>
+<td>obtains a governed answer and remembers it in
+<code>memory/team:marciana/shared</code></td>
+</tr>
+<tr>
+<td>qg-rust restart</td>
+<td>process-local service and registry state disappears; the same Turso
+file is reopened</td>
+</tr>
+<tr>
+<td>supervisor after restart</td>
+<td>a different authorized DID recalls the durable record</td>
+</tr>
+<tr>
+<td>signed outsider</td>
+<td>signature verifies, but missing policy assignment yields a TypeSec
+<code>403</code> denial</td>
+</tr>
+</tbody>
+</table>
+<p>The proof separates persistence from authority. Restarting the
+service does not erase the memory, but knowing its space or signing a
+syntactically valid request does not grant access.</p>
+<h4 data-number="5.1.3.3"
+id="what-this-provesand-what-it-does-not"><span
+class="header-section-number">5.1.3.3</span> What this proves—and what
+it does not</h4>
+<p>The TypeSec core behind qg-rust already supports purpose-tagged
+records, expiry and retention reaping, guarded reveal, quarantine
+controls, consolidation, neighborhood recall, and semantic recall.
+Signed deletion receipts are available when TypeSec’s optional
+<code>receipts</code> feature is enabled; the current qg-rust dependency
+enables <code>agent</code>, not <code>receipts</code>. Its HTTP surface
+is deliberately narrower: it exposes only remember, recall, and forget.
+Router writes currently use <code>Provenance::Conversation</code> with
+the default <code>Internal</code> label; request purpose participates in
+policy/recall context but is not persisted as a per-record purpose field
+by these routes, and the HTTP body does not yet expose expiry or
+promotion controls.</p>
+<p>The vertical slice therefore proves a durable, identity-bound local
+service, not a hosted multi-tenant product. Collision-safe durable ids,
+replica-wide anti-replay and idempotency, assertion-level lineage,
+mandatory audited declassification, persistent ANN, broader predicate
+pushdown, distributed Sail cognition, and hosted operational controls
+remain explicit post-v1 work.</p>
 <h2 data-number="5.2"
 id="chapter-19.-mcp-one-server-every-framework"><span
 class="header-section-number">5.2</span> Chapter 19. MCP: One Server,
@@ -282,23 +440,26 @@ sharing the <code>/v1</code> internals (the answer core is literally the
 same function).</li>
 </ul>
 <p>Any MCP client — Claude Code/Desktop, LangChain via
-<code>langchain-mcp-adapters</code>, PydanticAI, LlamaIndex, CrewAI, the
-OpenAI Agents SDK — reaches everything with zero adapter code.</p>
+<code>langchain-mcp-adapters</code>, Pydantic AI, LlamaIndex, CrewAI, or
+the OpenAI Agents SDK — reaches the MCP-exposed semantic and governance
+surfaces with no QueryGraph-specific adapter code. Marciana’s current
+qg-rust memory routes remain an authenticated HTTP capability surface
+rather than MCP tools.</p>
 <h3 data-number="5.2.1" id="worked-example-an-mcp-session-by-hand"><span
 class="header-section-number">5.2.1</span> Worked example: an MCP
 session, by hand</h3>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> printf <span class="st">&#39;%s\n%s\n%s\n&#39;</span> <span class="dt">\</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{}}&#39;</span> <span class="dt">\</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;method&quot;:&quot;notifications/initialized&quot;}&#39;</span> <span class="dt">\</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:2,&quot;method&quot;:&quot;tools/list&quot;}&#39;</span> <span class="dt">\</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">querygraph</span> mcp-serve</span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;protocolVersion&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-11-05&quot;</span><span class="fu">,</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;serverInfo&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;querygraph&quot;</span><span class="fu">,</span> <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;0.4.0&quot;</span><span class="fu">},</span> <span class="er">…</span><span class="fu">}}</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;tools&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;build_navigator_bundle&quot;</span><span class="ot">,</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;run_qglake_story&quot;</span><span class="ot">,</span> <span class="st">&quot;verify_envelope&quot;</span><span class="ot">,</span> <span class="st">&quot;import_semantic_model&quot;</span><span class="ot">,</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;search_semantic_models&quot;</span><span class="ot">,</span> <span class="st">&quot;answer_question&quot;</span><span class="ot">]</span><span class="fu">}}</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> printf <span class="st">&#39;%s\n%s\n%s\n&#39;</span> <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{}}&#39;</span> <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;method&quot;:&quot;notifications/initialized&quot;}&#39;</span> <span class="dt">\</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:2,&quot;method&quot;:&quot;tools/list&quot;}&#39;</span> <span class="dt">\</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">querygraph</span> mcp-serve</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;protocolVersion&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-11-05&quot;</span><span class="fu">,</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;serverInfo&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;querygraph&quot;</span><span class="fu">,</span> <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;0.4.0&quot;</span><span class="fu">},</span> <span class="er">…</span><span class="fu">}}</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="dt">&quot;result&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;tools&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;build_navigator_bundle&quot;</span><span class="ot">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;run_qglake_story&quot;</span><span class="ot">,</span> <span class="st">&quot;verify_envelope&quot;</span><span class="ot">,</span> <span class="st">&quot;import_semantic_model&quot;</span><span class="ot">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;search_semantic_models&quot;</span><span class="ot">,</span> <span class="st">&quot;answer_question&quot;</span><span class="ot">]</span><span class="fu">}}</span></span></code></pre></div>
 <h3 data-number="5.2.2" id="api-reference-tools"><span
 class="header-section-number">5.2.2</span> API reference (tools)</h3>
 <table>
@@ -379,13 +540,13 @@ skills, capabilities, and security schemes.</p>
 <p><strong>Tool schemas.</strong> For function-calling runtimes rather
 than MCP, one agent exports both flavors — accepted by OpenAI,
 Anthropic, Mistral, vLLM, Ollama, and most local servers:</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>agent <span class="op">=</span> TypeDidAgent.new(<span class="st">&quot;FinanceAgent&quot;</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>agent.to_tool_schema()                    <span class="co"># {&quot;type&quot;: &quot;function&quot;, &quot;function&quot;:</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                                          <span class="co">#  {&quot;name&quot;: &quot;FinanceAgent&quot;,</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                                          <span class="co">#   &quot;parameters&quot;: {…</span><span class="re">}}}</span><span class="co">   ← OpenAI</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>agent.to_tool_schema(flavor<span class="op">=</span><span class="st">&quot;anthropic&quot;</span>)  <span class="co"># {&quot;name&quot;: &quot;FinanceAgent&quot;,</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                                          <span class="co">#  &quot;input_schema&quot;: {…}}   ← Anthropic</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>agent <span class="op">=</span> TypeDidAgent.new(<span class="st">&quot;FinanceAgent&quot;</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>agent.to_tool_schema()                    <span class="co"># {&quot;type&quot;: &quot;function&quot;, &quot;function&quot;:</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                                          <span class="co">#  {&quot;name&quot;: &quot;FinanceAgent&quot;,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                                          <span class="co">#   &quot;parameters&quot;: {…</span><span class="re">}}}</span><span class="co">   ← OpenAI</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>agent.to_tool_schema(flavor<span class="op">=</span><span class="st">&quot;anthropic&quot;</span>)  <span class="co"># {&quot;name&quot;: &quot;FinanceAgent&quot;,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                                          <span class="co">#  &quot;input_schema&quot;: {…}}   ← Anthropic</span></span></code></pre></div>
 <p><strong>LangChain.</strong> <code>TypeDidLangChainToolAdapter</code>
 wraps a governed agent as a <code>StructuredTool</code> —
 <code>as_tool()</code> for sync runtimes, <code>as_async_tool()</code>
@@ -423,38 +584,38 @@ tool (one shared function).</p>
 id="worked-example-the-loop-receipts-and-all"><span
 class="header-section-number">5.4.1</span> Worked example: the loop,
 receipts and all</h3>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.navigator_loop <span class="im">import</span> GovernedNavigatorLoop</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>loop <span class="op">=</span> GovernedNavigatorLoop.demo()   <span class="co"># or (your_osi_doc, your_rights, llm=…)</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> loop.answer(</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Where do fiscal capacity and energy burden overlap with health risk?&quot;</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.navigator_loop <span class="im">import</span> GovernedNavigatorLoop</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>loop <span class="op">=</span> GovernedNavigatorLoop.demo()   <span class="co"># or (your_osi_doc, your_rights, llm=…)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> loop.answer(</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Where do fiscal capacity and energy burden overlap with health risk?&quot;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <p>Captured from a real run:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;answer&quot;</span><span class="fu">:</span> <span class="st">&quot;Answerable from governed sources</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="st">     sail.qg_lakehouse.access_2018__access_data,</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">     sail.qg_lakehouse.government_finance__countydata via 3 planned</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="st">     queries. Restricted sources were denied with receipts:</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="st">     sail.qg_lakehouse.haalsi_baseline__restricted_raw.&quot;</span><span class="fu">,</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;denied_sources&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;sail.qg_lakehouse.haalsi_baseline__restricted_raw&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;plans&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT * FROM sail.qg_lakehouse.government_finance__countydata&quot;</span><span class="ot">,</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT `monthly_cost` FROM sail.qg_lakehouse.access_2018__access_data&quot;</span><span class="ot">,</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT SUM(total_revenue - mandated_spend)</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="st">       FROM sail.qg_lakehouse.government_finance__countydata&quot;</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;answer&quot;</span><span class="fu">:</span> <span class="st">&quot;Answerable from governed sources</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="st">     sail.qg_lakehouse.access_2018__access_data,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="st">     sail.qg_lakehouse.government_finance__countydata via 3 planned</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="st">     queries. Restricted sources were denied with receipts:</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="st">     sail.qg_lakehouse.haalsi_baseline__restricted_raw.&quot;</span><span class="fu">,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;denied_sources&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;sail.qg_lakehouse.haalsi_baseline__restricted_raw&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;plans&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT * FROM sail.qg_lakehouse.government_finance__countydata&quot;</span><span class="ot">,</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT `monthly_cost` FROM sail.qg_lakehouse.access_2018__access_data&quot;</span><span class="ot">,</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT SUM(total_revenue - mandated_spend)</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="st">       FROM sail.qg_lakehouse.government_finance__countydata&quot;</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Swap in a live model with one callable — the governance is
 unchanged:</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.navigator_loop <span class="im">import</span> openai_compatible_llm</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>loop <span class="op">=</span> GovernedNavigatorLoop.demo(</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    llm<span class="op">=</span>openai_compatible_llm(<span class="st">&quot;http://localhost:11434&quot;</span>, <span class="st">&quot;llama3.2&quot;</span>),</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    llm_name<span class="op">=</span><span class="st">&quot;ollama:llama3.2&quot;</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> querygraph.navigator_loop <span class="im">import</span> openai_compatible_llm</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>loop <span class="op">=</span> GovernedNavigatorLoop.demo(</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    llm<span class="op">=</span>openai_compatible_llm(<span class="st">&quot;http://localhost:11434&quot;</span>, <span class="st">&quot;llama3.2&quot;</span>),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    llm_name<span class="op">=</span><span class="st">&quot;ollama:llama3.2&quot;</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <h3 data-number="5.4.2" id="api-reference-11"><span
 class="header-section-number">5.4.2</span> API reference</h3>
 <table>
@@ -525,7 +686,7 @@ capabilities, and security schemes.</li>
 <code>qg-rust serve --require-auth</code> rejects a bare POST (401 +
 receipt) and accepts a Python-minted header (200 + answer).</li>
 </ul>
-<p>The suite runs 49 Python tests (12 at the start of the
-interoperability work) alongside 40 Rust tests, in CI on every push.</p>
+<p>The suite now runs 52 Python tests (12 at the start of the
+interoperability work) alongside 41 Rust tests, in CI on every push.</p>
 </body>
 </html>
