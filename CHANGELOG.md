@@ -47,6 +47,11 @@ recorded here. The codename pool and the shared version line live in
   macros are standalone-only and render blank otherwise). Both books' iCloud
   publishing now prunes superseded versioned copies before delivering.
 
+### Changed
+- **TypeSec Lido alignment**: the qg-rust agent, policy, TypeDID, and Marciana
+  dependencies now resolve the `0.13.0` TypeSec release, keeping fresh local
+  builds and the persistent memory integration on the same substrate line.
+
 ## 0.4.0 "Sentinel" — 2026-07-04
 
 The governed-answer release: where Goshawk opened the doors (MCP, A2A, `/v1`,

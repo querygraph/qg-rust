@@ -4161,7 +4161,7 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
 name = "typesec-agent"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "jsonschema",
  "serde",
@@ -4173,7 +4173,7 @@ dependencies = [
 
 [[package]]
 name = "typesec-core"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "chrono",
  "glob",
@@ -4185,7 +4185,7 @@ dependencies = [
 
 [[package]]
 name = "typesec-integrations"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "base64",
  "chacha20poly1305",
@@ -4205,7 +4205,7 @@ dependencies = [
 
 [[package]]
 name = "typesec-memory"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "chrono",
  "serde",
@@ -4218,7 +4218,7 @@ dependencies = [
 
 [[package]]
 name = "typesec-rbac"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "garde",
  "glob",

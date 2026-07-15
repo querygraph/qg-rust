@@ -27,11 +27,11 @@ serde_yaml = "0.9"
 sha2 = "0.10"
 thiserror = "2.0"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-typesec-agent = { version = "0.12.0", path = "../../typesec/crates/typesec-agent" }
-typesec-core = { version = "0.12.0", path = "../../typesec/crates/typesec-core" }
-typesec-integrations = { version = "0.12.0", path = "../../typesec/crates/typesec-integrations" }
-typesec-memory = { version = "0.12.0", path = "../../typesec/crates/typesec-memory", features = ["agent"] }
-typesec-rbac = { version = "0.12.0", path = "../../typesec/crates/typesec-rbac", default-features = false }
+typesec-agent = { version = "0.13.0", path = "../../typesec/crates/typesec-agent" }
+typesec-core = { version = "0.13.0", path = "../../typesec/crates/typesec-core" }
+typesec-integrations = { version = "0.13.0", path = "../../typesec/crates/typesec-integrations" }
+typesec-memory = { version = "0.13.0", path = "../../typesec/crates/typesec-memory", features = ["agent"] }
+typesec-rbac = { version = "0.13.0", path = "../../typesec/crates/typesec-rbac", default-features = false }
 uuid = { version = "1", features = ["v5"] }
 
 [dev-dependencies]
