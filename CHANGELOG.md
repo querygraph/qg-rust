@@ -24,7 +24,7 @@ recorded here. The codename pool and the shared version line live in
   ODRL, plus OSI, the dual gate, lineage, the lakehouse path, the QGLake
   story, qg-python), III. The Interoperability Surfaces (`/v1` + envelope
   auth, MCP, A2A + tool schemas, the navigator loop, the cross-language
-  contract), IV. Integration in Practice (the ten-step assembly, catalog to
+  contract), IV. Integration in Practice (the eleven-step assembly, catalog to
   governed answer, plugging in agent frameworks, operating and releasing) —
   closed by Future Work and a glossary/link appendix. 27 chapters; worked
   Rust/Python examples throughout, with outputs (bundle layers, receipts,
@@ -51,6 +51,12 @@ recorded here. The codename pool and the shared version line live in
 - **TypeSec Lido alignment**: the qg-rust agent, policy, TypeDID, and Marciana
   dependencies now resolve the `0.13.0` TypeSec release, keeping fresh local
   builds and the persistent memory integration on the same substrate line.
+- **Marciana guide refresh**: the stack book now treats TypeSec 0.13.0
+  "Lido" as the current security substrate, explains its capability-secured
+  memory contract and QueryGraph `/v1` boundary, walks the Pydantic AI v2
+  restart proof, and separates shipped v1 guarantees from post-v1 scale and
+  hosted-service work. The verified suite ledger is now 41 Rust and 52 Python
+  tests.
 
 ## 0.4.0 "Sentinel" — 2026-07-04
 

@@ -22,7 +22,9 @@ codenamed versions:
   The semantic graph substrate. (Part I, Chapters 1–2.)
 - **TypeSec** — agentic AI security in Rust's type system: unforgeable
   capabilities, TypeDID signed agent envelopes, audit events, and — since
-  Torcello — a security platform other agent stacks plug into. (Part I,
+  Torcello — a security platform other agent stacks plug into. Lido adds
+  **Marciana**, capability-secured memory with clearance-aware recall,
+  provenance quarantine, retention policy, and audited forgetting. (Part I,
   Chapters 3–4.)
 - **LakeCat** — a Rust-native Apache Iceberg REST catalog that binds catalog
   state, governed Sail planning, TypeSec receipts, and Grust projection to
@@ -36,7 +38,9 @@ codenamed versions:
   Ed25519-signed TypeDID envelopes verified across languages, OpenLineage
   audit with signed attestations, an HTTP `/v1` API with envelope
   authentication, MCP servers in both languages, an A2A agent card, and the
-  governed navigator loop. (Parts II–III.)
+  governed navigator loop. Current main also exposes identity-bound Marciana
+  memory through persistent Grust/Turso storage and native Pydantic AI v2
+  capabilities. (Parts II–III.)
 
 Part IV walks the integrations end to end — catalog to governed answer,
 agent frameworks plugging in, and operating the stack — and the closing
@@ -44,11 +48,12 @@ chapter lays out future work.
 
 As of this guide, the current releases are **QueryGraph 0.4.0 "Sentinel"**
 (the governed-answer release, in both languages, following 0.3.0 "Goshawk",
-the interoperability release), over **Grust 0.12.0 "Lobster"**, **TypeSec
-0.12.0 "Torcello"**, and **LakeCat 0.3.0 "Ocelot"** — a coordinated substrate
-wave in which Grust merged its Full39075 GQL goal, TypeSec became an
-agent-interoperability security platform, and LakeCat proved stock-client
-Iceberg REST conformance.
+the interoperability release), **Grust 0.12.0 "Lobster"**, **TypeSec 0.13.0
+"Lido"**, and **LakeCat 0.3.0 "Ocelot"**. Sentinel originally shipped on the
+Torcello substrate wave; current QueryGraph main now resolves the released
+Lido crates and carries the post-Sentinel Marciana integration described in
+this edition. Lido preserves Torcello's agent-interoperability platform and
+adds the governed-memory contract, while Grust supplies its durable adapter.
 
 ## Links
 
@@ -59,10 +64,11 @@ Iceberg REST conformance.
 | QueryGraph Python (`qg-python`) | <https://github.com/querygraph/qg-python> |
 | Grust | <https://github.com/querygraph/grust> |
 | TypeSec | <https://github.com/querygraph/typesec> |
+| TypeSec 0.13.0 "Lido" | <https://github.com/querygraph/typesec/releases/tag/v0.13.0> |
 | LakeCat | <https://github.com/querygraph/lakecat> |
 | Sail upstream (forked with the Cypher extension) | <https://github.com/lakehq/sail> |
 | Sentinel releases | <https://github.com/querygraph/qg-rust/releases/tag/v0.4.0> · <https://github.com/querygraph/qg-python/releases/tag/v0.4.0> |
-| The dedicated QueryGraph book | `qg-rust/docs/book` |
+| The QueryGraph stack guide | <https://github.com/querygraph/qg-rust/tree/main/docs/guide> |
 | Semantic Croissant (MLCommons Croissant) | <https://mlcommons.org/croissant/> |
 | CDIF (CODATA Cross-Domain Interoperability Framework) | <https://cdif.codata.org/> |
 | W3C DID / ODRL | <https://www.w3.org/TR/did-core/> · <https://www.w3.org/TR/odrl-model/> |
@@ -76,7 +82,7 @@ This guide is the stack-wide companion to the dedicated QueryGraph book
 self-contained: each component gets its own part and chapters, each standard
 is explained before it is used, every chapter closes with worked examples in
 Rust and Python as applicable, and the outputs shown are captured from real
-runs against the released code.
+runs against tagged releases and verified current-main integrations.
 
 # The Stack: An Overview
 
@@ -99,6 +105,12 @@ A question enters the stack at the top and evidence comes out at the bottom:
    verification method.
 6. An **OpenLineage** event (spec-conformant, schema-validated) records the
    run, and an Ed25519 **attestation** anchors the event hash.
+7. If policy permits, the agent commits the governed result to a **Marciana
+   memory space**. A later agent recalls it only through a distinct read
+   capability, under its own verified DID and requested clearance; a restart
+   does not erase the record, and a denial remains evidence. TypeSec can bind
+   records to purposes, although qg-rust's current HTTP writer does not persist
+   a per-record purpose.
 
 Each step is somebody's component. The semantic graph lives in Grust (and is
 queryable through Sail's Cypher extension). The envelope machinery and the
@@ -121,15 +133,17 @@ independently:
 |---|---|---|---|
 | QueryGraph (both languages) | 0.4.0 | Sentinel | birds of prey |
 | Grust | 0.12.0 | Lobster | — |
-| TypeSec | 0.12.0 | Torcello | Venetian landmarks |
+| TypeSec | 0.13.0 | Lido | Venetian landmarks |
 | LakeCat | 0.3.0 | Ocelot | wild cats |
 
 The 0.12 substrate wave landed together: Grust merged the Full39075 GQL
-profile, TypeSec shipped its agent-interoperability platform, and LakeCat
-moved to both while proving stock-client Iceberg REST conformance — with
-QueryGraph verified green against all three. QueryGraph 0.4.0 "Sentinel"
-ships on top of that wave: where Goshawk opened the doors (MCP, A2A, `/v1`,
-cross-language crypto), Sentinel stands guard over what comes through them.
+profile, TypeSec shipped Torcello's agent-interoperability platform, and
+LakeCat moved to both while proving stock-client Iceberg REST conformance.
+QueryGraph 0.4.0 "Sentinel" shipped on that wave: where Goshawk opened the
+doors (MCP, A2A, `/v1`, cross-language crypto), Sentinel stands guard over
+what comes through them. TypeSec 0.13.0 "Lido" is the next released substrate
+step. QueryGraph main is verified against it and uses Marciana to carry the
+same typed authority into durable memory.
 
 ## The workspace
 
@@ -144,7 +158,7 @@ The repositories expect sibling checkouts:
 │   └── semantic/        # research: Polaris SemanticModel, OSI round-trips
 ├── grust/               # path dependency of qg-rust
 ├── lakecat/             # path dependency of qg-rust
-└── typesec/             # consumed from crates.io
+└── typesec/             # v0.13 Lido path dependency: authority + Marciana
 ```
 
 # Part I: The Substrate
@@ -366,7 +380,138 @@ match decision {
 | `Capability::<P, R>::permission_name()` | stable permission strings for evidence reports |
 | Policy engines | RBAC, ODRL, and graph policy backends behind one `check` |
 
-## Chapter 4. TypeDID: Identity, Envelopes, and the Torcello Platform
+### Marciana: capability-secured memory
+
+TypeSec 0.13.0 "Lido" applies the same rule to agent memory: remembering is
+not merely retrieval, and a memory space is not merely a vector-store
+namespace. An agent's durable context accumulates sensitive facts, generated
+claims, tool results, and instructions across sessions. The governing question
+is therefore not only *what is similar?* but *which verified agent may read,
+write, transform, share, or forget this record, for which purpose and at which
+clearance, with what evidence afterward?*
+
+Marciana is the Lido memory subsystem. Its security core lives in
+`typesec-memory`; the durable adapter lives in Grust's `querygraph-memory`;
+qg-rust supplies the authenticated service; and qg-python supplies native
+Pydantic AI v2 capabilities. That division keeps authority, persistence,
+transport, and framework ergonomics in their proper layers.
+
+#### Memory spaces and operation-specific proof
+
+A `MemorySpace` is an ordinary TypeSec resource such as
+`memory/team:marciana/shared`. Existing RBAC, graph, and ODRL engines govern it
+without a parallel policy language. Read, write, and delete are different
+proofs:
+
+```text
+Capability<CanRead, MemorySpace>
+Capability<CanWrite, MemorySpace>
+Capability<CanDelete, MemorySpace>
+```
+
+Write authority does not imply forget authority, and a proof for one space
+cannot be used against another. The vault requires the proof in its API:
+
+```rust
+use typesec_core::policy::{MintOptions, RequestContext, mint_capability_for_id};
+use typesec_core::secure_value::Internal;
+use typesec_core::{CanRead, CanWrite, Capability, Resource};
+use typesec_memory::{
+    Label, MemoryContent, MemoryDraft, MemoryKind, MemorySpace, Provenance,
+    Recall, RecallQuery,
+};
+
+let space = MemorySpace::new("team:marciana", "shared");
+let write: Capability<CanWrite, MemorySpace> = mint_capability_for_id(
+    &engine, specialist_did, space.resource_id(), &MintOptions::default(),
+)?;
+vault.remember(
+    &space,
+    &write,
+    MemoryDraft::new(
+        MemoryKind::Semantic,
+        MemoryContent::text("Energy burden is the governed signal"),
+        Provenance::Operator,
+    )
+    .with_label(Label::Internal)
+    .for_purposes(["resilience-research"]),
+)?;
+
+let read: Capability<CanRead, MemorySpace> = mint_capability_for_id(
+    &engine, supervisor_did, space.resource_id(), &MintOptions::default(),
+)?;
+let recalled: Recall<Internal> = vault.recall::<Internal>(
+    &space,
+    &read,
+    RecallQuery::text("energy burden"),
+    &RequestContext::default().with_purpose("resilience-research"),
+)?;
+```
+
+The model never receives a capability constructor or an unguarded handle to
+stored content. A short-lived read proof may be delegated without widening it
+to write or delete.
+
+#### Labels, provenance, and time
+
+Every record carries a runtime `Public`, `Internal`, `Sensitive`, or `Secret`
+label. Rust recall names the receiving context's ceiling in the type:
+`Recall<Internal>` returns records at or below `Internal` and metadata-only
+`RedactedHit`s for hotter records. `CanReadSensitive` provides a guarded reveal
+path through `Sensitive`; `Secret` remains sealed in v1. Purpose is an
+independent use-time gate, so a record permitted for `support` may remain
+absent from an `analytics` recall even when the caller holds read authority.
+
+Provenance determines the birth posture. Verified envelopes, operators,
+guarded tools, conversations, and raw model text do not have equal trust. In
+the shipped core, raw `Provenance::ModelText` is born quarantined and excluded
+from ordinary, neighborhood, semantic, and planner-fed consolidation inputs by
+default. That lets an injected sentence be retained for inspection without
+silently becoming durable truth. An explicit low-level `ConsolidationPlan` can
+still name quarantined ids without a governed promotion step; closing that v1
+hardening gap remains post-v1 work.
+
+Marciana is bi-temporal: observation time and validity time are distinct.
+Superseding a fact invalidates the previous assertion rather than overwriting
+history. Explicit forgetting is a separate, capability-gated tombstone path;
+retention reaping follows the same delete authority and audit trail, with
+signed deletion receipts available through the optional `receipts` feature
+when offline evidence is required.
+Consolidation joins source labels and submits the supersede-and-replace plan as
+one `MemoryStore::apply_batch`, so it cannot lower the joined sensitivity label
+or leave a transactional backend half-merged.
+
+#### Retrieval ranks; the vault reveals
+
+Within the supported memory APIs, the graph store and semantic index return
+candidate record identifiers and the vault rehydrates content. Ordinary recall
+applies space, requested purpose, point-in-time validity, quarantine, and
+clearance. Neighborhood and semantic recall enforce the target space,
+invalidation/quarantine state, and clearance, but do not yet reproduce the
+ordinary path's purpose and `valid_at` query filters. Faster retrieval can
+narrow or reorder candidates; it cannot widen the checks those paths perform.
+TypeSec ships a deterministic `KeywordIndex` and a versioned backend
+conformance corpus. Grust adds entity relationships, neighborhood recall,
+transactional persistence, and QueryGraph's Turso/libSQL adapter. Direct raw
+backend access is not an authorization boundary and must remain outside
+untrusted application code.
+
+#### The Lido v1 boundary
+
+Lido's shipped core includes typed memory capabilities, guarded recall and
+reveal, purpose and retention policy, provenance quarantine, bi-temporal
+supersession, audited forgetting, transactional consolidation, guarded
+Rust/Python/WASM/MCP surfaces, Grust reference storage, semantic-index hooks,
+and the shared conformance suite. QueryGraph adds persistent Turso storage,
+identity-bound routes, and the restart proof in Chapter 18.
+
+It is a durable local-service v1, not a hosted multi-tenant product. Durable
+collision-safe ids across restart, replica-safe replay and idempotency,
+assertion-level lineage for structurally identical graph edges, mandatory
+audited declassification, persistent tenant-scoped ANN, distributed Sail
+cognition, and hosted control-plane operations remain post-v1 work.
+
+## Chapter 4. TypeDID: Identity, Envelopes, and the TypeSec Platform
 
 On top of the capability core, TypeSec provides the machinery QueryGraph
 uses for agent identity and messaging:
@@ -385,7 +530,7 @@ uses for agent identity and messaging:
   the signing material. The envelope digest binds the attestation to the
   exact message.
 
-Torcello (0.12) grows this fabric into a platform other agent stacks plug
+Torcello (0.12) grew this fabric into a platform other agent stacks plug
 into: an agent-framework **interop plane** guarding OpenAI, Anthropic,
 LangChain, and Pydantic-AI tool calls; an MCP dialect and **`mcp-gate`**, a
 deny-by-default MCP stdio proxy; **signed decision receipts** with decision
@@ -393,9 +538,17 @@ logging and replay; JSON-Schema-validated tool bindings and a
 `#[typesec_tool]` macro; an OpenTelemetry audit sink; a WASM decision core
 for JS/TS agents; a PyPI-ready Python package; and an
 OpenAI/Anthropic-compatible **enforcement proxy** — the "governed inference
-proxy" pattern, built at the security layer. QueryGraph already builds
-against Torcello; adopting these surfaces rather than duplicating them is the
-next integration step (see Future Work).
+proxy" pattern, built at the security layer.
+
+Lido (0.13) carries that guarded-tool contract into Marciana.
+`memory_bindings()` registers `memory.remember`, `memory.recall`, and
+`memory.forget` with the same `ToolCallGuard`; dialect adapters normalize
+external calls into `ToolCallRequest`, and `MemoryToolRouter` mints the
+operation-specific capability. `MemoryVault` is the supported content-reveal
+path. QueryGraph now builds against the released Lido crates and uses those
+exact layers rather than growing a parallel memory policy system. The TypeDID
+identity established here becomes the memory policy subject at the HTTP
+boundary in Chapter 18.
 
 ### Worked example: one seed, one identity, two languages
 
@@ -441,6 +594,7 @@ A fixture test pins the shared `did:key`, so the derivations can never drift.
 | `TypeDidGateway::open_message(&envelope)` | verify + decrypt; yields `VerifiedTypeDidMessage` |
 | `VerifiedTypeDidMessage::attestation()` | audit-safe: action, resource, privacy, profile, envelope digest |
 | Torcello surfaces | interop plane (OpenAI/Anthropic/LangChain/Pydantic-AI guards), `mcp-gate`, signed decision receipts + replay, `#[typesec_tool]`, OTel sink, WASM core, enforcement proxy, PyPI `typesec` |
+| Lido surfaces | `typesec-memory`, `MemoryToolRouter`, clearance-aware `MemoryVault`, guarded Python/WASM/MCP memory, conformance suite |
 
 ## Chapter 5. LakeCat: The Iceberg REST Catalog
 
@@ -975,11 +1129,16 @@ Python is for:
 - **MCP server** (`mcp` extra) and **A2A card** (Chapters 19–20).
 - **Framework adapters**: LangChain `StructuredTool` (sync and async),
   vendor-neutral `to_tool_schema()`.
+- **Pydantic AI v2 capabilities** (`pydantic-ai` extra):
+  `querygraph.typedid-credential` keeps the private signing seed in typed
+  runtime dependencies and exposes only signed access plus the public DID;
+  `querygraph.marciana-memory` supplies policy-scoped remember, recall, and
+  forget tools backed by qg-rust and Turso.
 - **Lakehouse helpers**: PySpark against Sail's Spark Connect endpoint.
 
 Install: `pip install querygraph` (core is pure Pydantic), with extras
-`crypto`, `mcp`, `agents`, `validation`, `lakehouse`, or `all`. The package
-ships `py.typed`; the CLI mirrors the Rust commands.
+`crypto`, `mcp`, `agents`, `pydantic-ai`, `validation`, `lakehouse`, or `all`.
+The package ships `py.typed`; the CLI mirrors the Rust commands.
 
 The division of labor: Rust loads and verifies the warehouse and serves the
 platform; Python gives notebooks, PySpark users, and agent frameworks a typed
@@ -998,6 +1157,9 @@ interop layer — and the two are held identical where they overlap
 - **`querygraph.navigator_loop`** — `GovernedNavigatorLoop`; `answer`;
   `demo`; `openai_compatible_llm`.
 - **`querygraph.api_auth`** — `mint_envelope_header`; `governed_post`.
+- **`querygraph.pydantic_ai_capabilities`** — `QueryGraphAgentDeps`;
+  `build_access_credential_capability`; `build_memory_capability`;
+  `build_querygraph_agent`; `run_specialist`; `run_recaller`.
 - **`querygraph.mcp_server`** — `create_server`; `serve`;
   `demo_rights_layer`; `load_rights_layer`; `parse_action`.
 - **`querygraph.a2a`** — `build_agent_card`; `SKILLS`;
@@ -1009,8 +1171,8 @@ interop layer — and the two are held identical where they overlap
   `cdif`, `did`, `odrl`, `odrl_rights`, `rbac`, and `validation` mirror the
   Rust layers from Chapters 8–15.
 
-Extras: `crypto`, `mcp`, `agents`, `validation`, `lakehouse`, `all`; the
-package ships `py.typed`.
+Extras: `crypto`, `mcp`, `agents`, `pydantic-ai`, `validation`, `lakehouse`,
+`all`; the package ships `py.typed`.
 
 # Part III: The Interoperability Surfaces
 
@@ -1089,9 +1251,15 @@ with a Python-minted header (asserting the governed answer).
 
 ### API reference
 
-`querygraph serve --port 8080 [--require-auth] [--memory-policy POLICY
---memory-db DATABASE]`. The `x-qg-envelope` header
-is a compact-JSON TypeDID envelope; the middleware checks, in order:
+```bash
+querygraph serve --port 8080 --require-auth \
+  --memory-policy POLICY --memory-db DATABASE
+```
+
+The authentication and memory flags are independently optional. Memory routes
+always require a signed identity; without configured memory, an authenticated
+call receives `503`. The `x-qg-envelope` header is a compact-JSON TypeDID
+envelope; the middleware checks, in order:
 signature validity (against the envelope's `did:key` `verification_method`),
 sender equality with that verification-method DID, `action == "invoke"`,
 `resource == <request path>`, and
@@ -1099,18 +1267,121 @@ sender equality with that verification-method DID, `action == "invoke"`,
 `401 {error, receipt: {allowed: false, path, checks, contract}}`. Clients:
 `querygraph.api_auth.mint_envelope_header` / `governed_post`.
 
-### Durable capability-secured memory
+### Marciana at the `/v1` boundary
 
 Supplying `--memory-policy` opens and bootstraps a file-backed
 `querygraph-memory::TursoMemoryStore` (default path
-`.querygraph/memory.db`). The three memory routes are authenticated even when
-`--require-auth` is absent: without the verified DID there is no legitimate
-subject for TypeSec to mint a read, write, or delete capability. Each call runs
-through `ToolCallGuard`, `MemoryToolRouter`, `MemoryVault`, and then the Grust
-store. Clearance-aware recall and tenant policy remain TypeSec concerns;
-durability and transactions remain Grust concerns. A body `subject` field is
-ignored. The runnable Pydantic AI v2 demo in qg-python proves specialist write,
-server restart, supervisor recall, and outsider denial.
+`.querygraph/memory.db`). The network path preserves the same division as the
+in-process Lido API:
+
+```text
+Pydantic AI v2 agent
+  -> TypeDID signed envelope
+  -> qg-rust authentication
+  -> TypeSec ToolCallGuard
+  -> MemoryToolRouter (mint read/write/delete capability)
+  -> MemoryVault (space, policy, clearance, quarantine)
+  -> querygraph-memory
+  -> Grust on Turso/libSQL
+```
+
+qg-rust exposes no raw graph endpoint: every supported HTTP recall returns
+through the vault. That is a service-boundary guarantee, not permission to
+hand untrusted code the adapter's raw backend handle.
+
+#### Policy and transport contract
+
+Memory routes are authenticated even when `--require-auth` is absent. Without
+a verified DID there is no legitimate subject for TypeSec to authorize. The
+envelope must be Ed25519-signed, addressed to `did:web:qg-server`, bound to the
+exact route and body hash, and carry a sender equal to the `did:key` that
+verifies the signature. qg-rust uses that verified sender—not a caller-supplied
+`subject` field—as the RBAC principal.
+
+The policy names public DIDs and ordinary TypeSec permissions:
+
+```yaml
+roles:
+  - name: research-memory
+    permissions: [read, write, delete]
+    resources: ["memory/team:marciana/shared"]
+assignments:
+  - subject: "did:key:z6Mk...specialist"
+    roles: [research-memory]
+  - subject: "did:key:z6Mk...supervisor"
+    roles: [research-memory]
+```
+
+The service distinguishes failures deliberately:
+
+| Result | Meaning |
+|---|---|
+| `401` | missing or invalid envelope, wrong recipient, sender/signing-key mismatch, route/body binding failure |
+| `403` | cryptographically authenticated DID, but TypeSec policy denied the requested memory capability |
+| `500` | the guarded operation reached a missing record or backend/store failure |
+| `503` | memory was not configured for this server |
+| `200` | the capability was minted and the guarded vault operation completed |
+
+This ordering matters. Authentication does not imply authority, and an
+authenticated denial remains different from an unauthenticated request.
+
+#### Worked example: Pydantic AI v2 remembers across a restart
+
+qg-python's provider-free demonstration gives each agent two native
+`Capability` objects:
+
+- `querygraph.typedid-credential` keeps the Ed25519 seed inside
+  `QueryGraphAgentDeps` and exposes signed governed access plus the public DID;
+- `querygraph.marciana-memory` exposes remember, recall, and forget through the
+  qg-rust service.
+
+The seed never appears in model instructions, tool arguments, policy files, or
+serialized agent models. `TestModel` makes the language-model turn
+deterministic, while the TypeDID signatures, HTTP service, policy decisions,
+process restart, and Turso database are real.
+
+Run the proof from the Python checkout:
+
+```bash
+cd qg-python
+uv sync --extra test --extra crypto --extra pydantic-ai
+uv run python examples/pydantic_ai_v2_memory_agents.py
+```
+
+The script builds qg-rust, creates a policy keyed to the exact DIDs, and
+exercises this sequence:
+
+| Stage | Evidence |
+|---|---|
+| unsigned probe | governed access returns `401` |
+| specialist before restart | obtains a governed answer and remembers it in `memory/team:marciana/shared` |
+| qg-rust restart | process-local service and registry state disappears; the same Turso file is reopened |
+| supervisor after restart | a different authorized DID recalls the durable record |
+| signed outsider | signature verifies, but missing policy assignment yields a TypeSec `403` denial |
+
+The proof separates persistence from authority. Restarting the service does
+not erase the memory, but knowing its space or signing a syntactically valid
+request does not grant access.
+
+#### What this proves—and what it does not
+
+The TypeSec core behind qg-rust already supports purpose-tagged records,
+expiry and retention reaping, guarded reveal, quarantine controls,
+consolidation, neighborhood recall, and semantic recall. Signed deletion
+receipts are available when TypeSec's optional `receipts` feature is enabled;
+the current qg-rust dependency enables `agent`, not `receipts`. Its HTTP
+surface is deliberately narrower: it exposes only remember, recall, and
+forget. Router writes currently use
+`Provenance::Conversation` with the default `Internal` label; request purpose
+participates in policy/recall context but is not persisted as a per-record
+purpose field by these routes, and the HTTP body does not yet expose expiry or
+promotion controls.
+
+The vertical slice therefore proves a durable, identity-bound local service,
+not a hosted multi-tenant product. Collision-safe durable ids, replica-wide
+anti-replay and idempotency, assertion-level lineage, mandatory audited
+declassification, persistent ANN, broader predicate pushdown, distributed
+Sail cognition, and hosted operational controls remain explicit post-v1 work.
 
 ## Chapter 19. MCP: One Server, Every Framework
 
@@ -1130,8 +1401,10 @@ and the stack speaks it from both languages:
   literally the same function).
 
 Any MCP client — Claude Code/Desktop, LangChain via `langchain-mcp-adapters`,
-PydanticAI, LlamaIndex, CrewAI, the OpenAI Agents SDK — reaches everything
-with zero adapter code.
+Pydantic AI, LlamaIndex, CrewAI, or the OpenAI Agents SDK — reaches the
+MCP-exposed semantic and governance surfaces with no QueryGraph-specific
+adapter code. Marciana's current qg-rust memory routes remain an authenticated
+HTTP capability surface rather than MCP tools.
 
 ### Worked example: an MCP session, by hand
 
@@ -1289,12 +1562,12 @@ Rust and Python are held equivalent by an executable contract
 - **Auth, live**: a running `qg-rust serve --require-auth` rejects a bare
   POST (401 + receipt) and accepts a Python-minted header (200 + answer).
 
-The suite runs 49 Python tests (12 at the start of the interoperability
-work) alongside 40 Rust tests, in CI on every push.
+The suite now runs 52 Python tests (12 at the start of the interoperability
+work) alongside 41 Rust tests, in CI on every push.
 
 # Part IV: Integration in Practice
 
-## Chapter 23. Assembling the Lakehouse in Ten Steps
+## Chapter 23. Assembling the Lakehouse in Eleven Steps
 
 The dedicated book walks this assembly in depth; here is the whole system in
 one sitting — the sequence the `dataverse-e2e` and lakehouse commands
@@ -1329,11 +1602,21 @@ automate, each step naming the component that owns it:
     DID-encrypted and prompt-bound to Ollama (or any OpenAI-compatible
     endpoint via the loop); the reply comes back in a signed envelope; the
     run lands in OpenLineage with an Ed25519 attestation.
+11. **Remember under Marciana** (Chapters 3, 18). An authorized writer commits
+    the governed result to a policy-scoped memory space. After restart or
+    re-entry, another agent recalls it only under its own DID, read capability,
+    and requested clearance; unsigned and policy-denied attempts remain
+    explicit evidence. The current HTTP proof carries purpose in request
+    context but does not persist it on the record.
 
 ```bash
-# The compressed version of all ten:
+# Steps 1–10, compressed:
 cargo run -- dataverse-e2e --live-sail --call-ollama \
   --question "Which governed datasets are relevant?"
+
+# Step 11, including a real qg-rust restart:
+cd ../qg-python
+uv run python examples/pydantic_ai_v2_memory_agents.py
 ```
 
 ## Chapter 24. End to End: Catalog to Governed Answer
@@ -1472,9 +1755,19 @@ adapter = TypeDidLangChainToolAdapter(
 tool = adapter.as_async_tool()          # a StructuredTool; results carry envelopes
 ```
 
-**PydanticAI / OpenAI Agents SDK / LlamaIndex / CrewAI.** All speak MCP —
-`querygraph mcp-serve` is the one integration. For direct function-calling,
-export schemas with `to_tool_schema()` (Chapter 20).
+**Pydantic AI v2.** `build_querygraph_agent(name)` constructs a provider-free
+agent with both the TypeDID credential and Marciana memory capabilities. The
+private seed remains in `QueryGraphAgentDeps`; model-facing tool schemas,
+arguments, and prompt context see the public DID and governed results, never
+the credential material. Trusted capability handlers use the dependency-held
+credential to sign. Use the direct capabilities when the agent needs signed
+QueryGraph access and durable memory in one typed runtime, or consume the same
+platform through MCP.
+
+**OpenAI Agents SDK / LlamaIndex / CrewAI.** All speak MCP, so `querygraph
+mcp-serve` provides one shared integration for the MCP-exposed semantic and
+governance tools. For direct function-calling, export schemas with
+`to_tool_schema()` (Chapter 20).
 
 **Local and hosted LLMs.** The navigator loop binds any OpenAI-compatible
 endpoint (`openai_compatible_llm(base_url, model)`); the Rust Ollama path
@@ -1491,8 +1784,8 @@ assumptions.
 **Build and test.**
 
 ```bash
-cd qg-rust && cargo test          # 40 tests; clippy -D warnings in CI
-cd qg-python && uv sync --extra all && uv run pytest   # 49 tests,
+cd qg-rust && cargo test          # 41 tests; clippy -D warnings in CI
+cd qg-python && uv sync --extra all && uv run pytest   # 52 tests,
                                   # including the live cross-language contract
 ```
 
@@ -1547,10 +1840,14 @@ The near line (post-Sentinel):
 - **The remaining `/v1` surface**: lineage event queries, audit verification
   listings, access *explanation* (why was this denied?) — all behind envelope
   auth.
-- **Adopting Torcello**: TypeSec's interop plane, `mcp-gate` in front of
-  QueryGraph's own MCP servers, signed decision receipts unified with
-  QueryGraph's access receipts, and the enforcement proxy as the governed
-  inference layer. The dependency bump is done; the integration is the work.
+- **Marciana after v1**: replace process-local memory ids with durable,
+  collision-safe identifiers; add replica-wide replay and mutation
+  idempotency; preserve assertion-level lineage; require audited
+  declassification and quarantine propagation; prove fuller temporal and
+  policy predicate pushdown; add persistent tenant-scoped ANN and distributed
+  Sail cognition without moving content authority out of the vault; then build
+  the hosted multi-tenant control plane with explicit isolation, migration,
+  backup, deletion, observability, and SLO contracts.
 
 The wider arc (from the workspace review, FABLE-REVIEW-1 in the meta-repo):
 
@@ -1584,17 +1881,28 @@ The wider arc (from the workspace review, FABLE-REVIEW-1 in the meta-repo):
   crate.
 - **Capability** — TypeSec's unforgeable, typed proof that a policy check
   passed: `Capability<Permission, Resource>`.
+- **Clearance / redacted hit** — the maximum sensitivity a recall context may
+  receive; records above it return metadata-only evidence rather than content.
 - **Dual gate** — QueryGraph's access rule: RBAC *and* ODRL must both allow.
 - **Envelope (TypeDID)** — a signed agent message: sender, recipient,
   action, resource, canonically-hashed payload, Ed25519 signature, `did:key`
   verification method.
 - **Navigator bundle** — the four-layer JSON-LD projection of one dataset:
   Semantic Croissant + CDIF + DID + ODRL.
+- **Marciana** — TypeSec 0.13 Lido's capability-secured memory subsystem,
+  realized across `typesec-memory`, Grust `querygraph-memory`, qg-rust, and
+  qg-python.
+- **Memory space** — an ordinary TypeSec resource (`memory/<owner>/<space>`)
+  with distinct read, write, and delete capabilities.
 - **OSI semantic model** — business terms (datasets, fields, metrics,
   relationships, ontology terms) with per-dialect SQL and LLM-facing
   `ai_context`.
 - **Receipt** — the recorded outcome of a policy decision, allow or deny,
   with principal, resource, action, reason, and policy id.
+- **Provenance quarantine** — the safe birth posture for raw model text;
+  quarantined records are excluded from ordinary, neighborhood, semantic, and
+  planner-fed consolidation inputs. Explicit low-level consolidation plans
+  still require post-v1 promotion hardening.
 - **Run id** — a deterministic UUIDv5 under the QueryGraph namespace,
   identical across languages for the same seed.
 - **Signing payload** — the documented byte string a signature covers
@@ -1610,6 +1918,8 @@ The wider arc (from the workspace review, FABLE-REVIEW-1 in the meta-repo):
   <https://github.com/querygraph/qg-python/releases/tag/v0.4.0>
 - Grust: <https://github.com/querygraph/grust>
 - TypeSec: <https://github.com/querygraph/typesec>
+- TypeSec 0.13.0 "Lido":
+  <https://github.com/querygraph/typesec/releases/tag/v0.13.0>
 - LakeCat: <https://github.com/querygraph/lakecat>
 - Sail upstream: <https://github.com/lakehq/sail>
 - Standards: Croissant <https://mlcommons.org/croissant/> · CDIF

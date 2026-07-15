@@ -69,10 +69,11 @@ machine-readable report.
 
 ## Stack versions
 
-This is **QueryGraph 0.4.0 "Sentinel"** (release codenames are birds of prey;
-see [`RELEASES.md`](RELEASES.md)). It builds on
-three coordinated, named open-source releases. The full story is in the stack
-announcement at
+The latest tagged QueryGraph release is **0.4.0 "Sentinel"** (release
+codenames are birds of prey; see [`RELEASES.md`](RELEASES.md)). Current main
+carries the unreleased post-Sentinel Marciana integration tracked under
+`0.5.0-dev` in [`CHANGELOG.md`](CHANGELOG.md), and builds on three coordinated,
+named open-source releases. The full story is in the stack announcement at
 [`docs/blog/announcing-querygraph-stack.md`](docs/blog/announcing-querygraph-stack.md)
 and the stack guide at [`docs/guide`](docs/guide).
 
@@ -81,11 +82,12 @@ and the stack guide at [`docs/guide`](docs/guide).
   Full39075 profile: `CALL { … }` subqueries, table-valued functions,
   `shortestPath()`, passthrough escape hatches, and atomic Cypher transaction
   batches.
-- **TypeSec 0.12.0 "Torcello"** — the type-safe security fabric grown into an
-  agent-interoperability platform: unforgeable capabilities and audit-safe
-  TypeDID attestations, plus framework guards (OpenAI/Anthropic/LangChain/
-  Pydantic-AI), a deny-by-default MCP gate, signed decision receipts with
-  replay, and an OpenAI/Anthropic-compatible enforcement proxy.
+- **TypeSec 0.13.0 "Lido"** — the released Marciana line: Torcello's
+  unforgeable capabilities, audit-safe TypeDID attestations, framework guards,
+  MCP gate, receipts, and enforcement proxy, plus `typesec-memory` with
+  clearance-typed recall, provenance quarantine, purpose and retention policy,
+  audited forgetting, transactional consolidation, guarded Rust/Python/WASM/
+  MCP surfaces, and a shared backend conformance contract.
 - **LakeCat 0.3.0 "Ocelot"** — the thin Iceberg REST catalog boundary with
   governance, lineage, and proof on a Turso MVCC spine, now with stock-client
   Iceberg REST conformance proven by a PyIceberg round-trip. QueryGraph
@@ -230,9 +232,10 @@ same audit sink without `--live-sail`.
 
 ## Persistent, Identity-Bound Agent Memory
 
-`serve` can attach Marciana memory to a file-backed Turso/libSQL graph. Memory
-is opt-in: provide an RBAC policy whose assignment subjects are the exact
-`did:key` identities used by client TypeDID credentials.
+`serve` can attach TypeSec 0.13's Marciana memory to a file-backed Turso/libSQL
+graph through Grust's `querygraph-memory` adapter. Memory is opt-in: provide an
+RBAC policy whose assignment subjects are the exact `did:key` identities used
+by client TypeDID credentials.
 
 ```yaml
 roles:
@@ -261,7 +264,10 @@ JSON body has no authority.
 
 See [`docs/memory-service.md`](docs/memory-service.md) for request shapes,
 deployment checks, and the Pydantic AI v2 multi-agent demo in the sibling
-qg-python repository.
+qg-python repository. That provider-free proof gives each agent separate
+`querygraph.typedid-credential` and `querygraph.marciana-memory` capabilities,
+persists a specialist's governed result, restarts qg-rust, recalls the result
+as an authorized supervisor, and rejects unsigned and policy-denied callers.
 
 ## Test
 
